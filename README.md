@@ -2,7 +2,7 @@
 
 ### Better splats. 5.4× faster.
 
-[![Preview License](https://img.shields.io/badge/license-Preview-blue)](LICENSE) [![Blender 5.3](https://img.shields.io/badge/Blender-5.3-orange)](#bring-it-into-blender-53) [![Voyager Cloud](https://img.shields.io/badge/Voyager_Cloud-preinstalled-5b5bd6)](#one-command-on-voyager-cloud)
+[![Rust CI](https://github.com/voyager-so/vauss/actions/workflows/ci.yml/badge.svg)](https://github.com/voyager-so/vauss/actions/workflows/ci.yml) [![Preview License](https://img.shields.io/badge/license-Preview-blue)](LICENSE) [![Blender 5.3](https://img.shields.io/badge/Blender-5.3-orange)](#bring-it-into-blender-53) [![Voyager Cloud](https://img.shields.io/badge/Voyager_Cloud-preinstalled-5b5bd6)](#one-command-on-voyager-cloud)
 
 **The fastest Gaussian splat trainer. 5.4× faster training than gsplat-MCMC, with better perceptual quality on all seven comparison scenes. About half the GPU memory.** Built for you and your agent.
 
@@ -44,7 +44,7 @@ For Windows, or to install manually, download the matching archive from [Release
 vauss doctor
 ```
 
-The primary executable is **`vauss`**; `splat` and `voyager-splat` remain silent compatibility aliases. The currently installed Voyager Cloud image still uses **`voyager-splat`** until its next refresh. A GPU with 8 GB memory, 16 GB system RAM and several CPU cores is a good starting point.
+The primary executable is **`vauss`**; `splat` and `voyager-splat` remain silent compatibility aliases. Voyager Cloud ships the same **`vauss`** CLI and compatibility aliases. A GPU with 8 GB memory, 16 GB system RAM and several CPU cores is a good starting point.
 
 <details>
 <summary>Build from source</summary>
@@ -132,13 +132,13 @@ The server uses stdout for MCP and stderr for logs. `vauss tools` lists the tool
 
 ## One command on Voyager Cloud
 
-**The solver and Blender 5.3 are preinstalled, side by side.** The current Cloud image exposes the solver as `voyager-splat`; use that installed name until the image is refreshed with `vauss`. Open [Voyager Cloud](https://voyager.so/cloud), start a GPU machine with the creative image, upload your clip, and run:
+**Vauss and Blender 5.3 are preinstalled, side by side.** Open [Voyager Cloud](https://voyager.so/cloud), start a GPU machine with the creative image, upload your clip, and run:
 
 ```sh
-voyager-splat run room.mp4 --goal "walk-through of my living room" --driver fixed --run-dir runs/room
+vauss run room.mp4 --goal "walk-through of my living room" --driver fixed --run-dir runs/room
 ```
 
-Or ask the machine's agent to reconstruct the video and import the result into Blender. Use `voyager-splat` in place of `vauss` for the commands in this README, and `blender-5.3` for the Blender executable. Run `voyager-splat doctor` to inspect the GPU and helper setup.
+Or ask the machine's agent to reconstruct the video and import the result into Blender. The commands in this README work unchanged; use `blender-5.3` for the Blender executable. Run `vauss doctor` to inspect the GPU and helper setup. `splat` and `voyager-splat` remain compatibility aliases.
 
 ## Bring it into Blender 5.3
 

@@ -11,11 +11,11 @@ with you. Please give us a reasonable time to ship a fix before disclosing publi
 
 ## Scope
 
-In scope: the `splat` CLI and its crates, the exported browser viewers (`crates/splat-webexport`), the
-MCP server (`splat mcp`), the downloader (`crates/splat-fetch`: pinned URLs and sha256 checks),
+In scope: the `vauss` CLI and its crates, the exported browser viewers (`crates/splat-webexport`), the
+MCP server (`vauss serve`), the downloader (`crates/splat-fetch`: pinned URLs and sha256 checks),
 and the release archives and install scripts.
 
-Out of scope: third-party helpers that splat downloads or runs as separate programs (FFmpeg,
+Out of scope: third-party helpers that Vauss downloads or runs as separate programs (FFmpeg,
 COLMAP, ONNX Runtime, Spirula, hosted models on fal.ai). Report those to their projects.
 
 ## Supported versions

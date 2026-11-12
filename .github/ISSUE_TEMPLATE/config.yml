@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/voyager-so/vauss/security/advisories/new
+    about: Please do not disclose security vulnerabilities in public issues.
+  - name: Installation and usage guide
+    url: https://github.com/voyager-so/vauss#quickstart
+    about: Install Vauss, reconstruct a scene and export a viewer.

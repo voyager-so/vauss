@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible problem with Vauss.
+body:
+  - type: markdown
+    attributes:
+      value: "For security vulnerabilities, use the private reporting link instead. For other bugs, share the smallest example you have permission to publish."
+  - type: input
+    id: version
+    attributes:
+      label: Vauss version
+      description: Paste the output of vauss --version.
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: System and GPU
+      description: OS, GPU model and driver version; include relevant vauss doctor output.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Exact command, expected result, actual result and a shareable sample if available.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove credentials, private footage links and personal paths before posting.
+      render: text

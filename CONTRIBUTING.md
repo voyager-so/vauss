@@ -1,4 +1,4 @@
-# Contributing to splat
+# Contributing to Vauss
 
 Thanks for helping. Bug reports, fixes and small focused features are all welcome.
 
@@ -20,6 +20,11 @@ skipped without them.
 
 ## Pull requests
 
+This repository is the public source mirror. Open issues and pull requests here; you do not need
+access to another repository. Maintainers review contributions here, integrate accepted changes into
+the upstream development repository, and publish a new public snapshot. A contribution PR may be
+closed with a link to that snapshot instead of merging its commits directly into this mirror.
+
 - One topic per PR. Explain what changed and why, and how you checked it: a test, or the
   command you ran and what it printed. A change that affects quality or speed needs a measured
   before/after on the same data.
@@ -28,9 +33,12 @@ skipped without them.
   licence forbids redistribution. Public example clips and their licences are listed in
   [examples/DATA.md](examples/DATA.md).
 - New dependencies must pass `cargo deny check licenses bans sources`. No GPL, AGPL or LGPL code
-  linked into splat, and no non-commercial model weights as defaults.
+  linked into Vauss, and no non-commercial model weights as defaults.
 
 ## Licence
 
-splat is Apache-2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)). By contributing you agree that
-your contribution is licensed under the same terms.
+Original Vauss code is source-available under the [Vauss Preview License](LICENSE), not open source.
+Read the Contributions section of the [license](LICENSE) before submitting changes. Separately licensed
+components retain their own terms: Brush-derived code remains Apache-2.0, and vendored CubeCL
+remains MIT OR Apache-2.0. Preserve component license files, attribution headers and [NOTICE](NOTICE);
+the Preview License does not replace those upstream grants.
