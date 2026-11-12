@@ -1,0 +1,35 @@
+splat-train* crates
+===================
+
+The crates under crates/splat-train* are derived from Brush
+(https://github.com/ArthurBrussee/brush) at commit
+1388f74c6fe0236f68ee4915564bf00e9d2e3747, Copyright (c) Arthur Brussee and the
+Brush contributors, licensed under the Apache License, Version 2.0 (see LICENSE
+in this directory).
+
+Mapping (fork crate <- upstream crate; library names are kept so code is unchanged):
+  splat-train              <- crates/brush-train
+  splat-train-render       <- crates/brush-render
+  splat-train-loss         <- crates/brush-loss
+  splat-train-cube         <- crates/brush-cube
+  splat-train-sort         <- crates/brush-sort
+  splat-train-scan         <- crates/brush-scan
+  splat-train-dataset      <- crates/brush-dataset
+  splat-train-serde        <- crates/brush-serde
+  splat-train-serde-macros <- crates/brush-serde-macros
+  splat-train-vfs          <- crates/brush-vfs
+  splat-train-async        <- crates/brush-async
+  splat-train-colmap       <- crates/colmap-reader
+  splat-train-rrfd         <- crates/rrfd
+  splat-train-lpips        <- crates/lpips
+
+Changes made by Nullframe are recorded in git history of this repository.
+Notable fork-level changes:
+  - package names renamed to splat-train-*; Cargo manifests carry a derivation header
+  - LPIPS VGG weights (burn_mapped.bpk) are not vendored; loaded at runtime from SPLAT_LPIPS_BPK
+
+The marked neural appearance implementation and derived per-scene configurations
+are derived from nerficg-project/efficient-gaussian-appearance at 4efbe67
+(https://github.com/nerficg-project/efficient-gaussian-appearance),
+Copyright 2026 The Efficient Gaussian Appearance Authors, Apache-2.0.
+These portions remain Apache-2.0 and are excluded from the Vauss Preview License.

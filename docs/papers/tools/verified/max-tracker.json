@@ -1,0 +1,948 @@
+{
+ "schema": "pubs-verify/max-tracker/v1",
+ "claim_id": "pubs:systems:MAX-tracker",
+ "claim_lines": "archived study registry (not distributed) lines 182 (registration, pre_launch) and 240 (RESULT amendment, ruled reference = gap.py MCMC-published 28.30) on historical source archive historical-build-012",
+ "generated_at": "2026-10-09T07:00:00-07:00",
+ "verdict": "VERIFIED. Rows, protocol, build and timing check out; recomputed per-scene and group means match O1's table.txt / gap-maxauto.txt to the reported precision. Primary rule: 360-9 MAX PSNR 28.163 vs published 3DGS-MCMC 9-scene mean 28.298 (rounds to 28.30), delta -0.135 dB -> BEHIND (worse than -0.10). Label: 'vs published numbers, not reproduced by us; protocol differences possible'. Class stays PROVISIONAL (tracker, not same-runner paired).",
+ "inputs": {
+  "rows": "$SPLAT_DATA/runs/perf/results.jsonl engine.label == q1-maxauto-historical-build-019 (39 rows)",
+  "lane_tables": [
+   "$SPLAT_DATA/runs/perf/fal/maxtrack/table.txt",
+   "$SPLAT_DATA/runs/perf/fal/maxtrack/gap-maxauto.txt"
+  ],
+  "queue": "$SPLAT_DATA/runs/perf/fal/maxtrack/queue.log, jobs.txt",
+  "experiment": "historical-record",
+  "mcmc_published": "$SPLAT_DATA/runs/q1/literature.json method 3DGS-MCMC per_scene (as read by runs/q1/gap/gap.py; docs/benchmarks/standard-benchmark.md section 2)",
+  "default_arms": [
+   "q1t-historical-build-019 (batch 1, historical-record, verified/q1-tracker-historical-build-019.json)",
+   "q1t-historical-build-019-r2 (prospective repeat)"
+  ]
+ },
+ "method": "Per-scene = mean over seeds 1/2/3 of row metrics (sd = sample SD over seeds); group = unweighted mean of per-scene means. MCMC-published deltas use literature.json per-scene PSNR exactly as gap.py does. MAX - default uses the same scenes, seeds, sha base and views.",
+ "checks": {
+  "row_count": "39 rows; 39 unique (scene, seed) = 13 scenes x seeds {1,2,3}; 39 unique historical-record and fal request ids",
+  "views": "n_scored == views_expected == views_scored == n_test on 39/39 (N/N); split every8_idx0_sorted; views_hash and resolution per scene identical to q1t-historical-build-019 and q1t-historical-build-019-r2",
+  "lpips_scale": "full on 39/39",
+  "binary": "engine.binary path contains sha256 a3ad6ffc536e325e85dbfe8769183093d9ebc14340f8d0df4db78d0ab9edbda5 on 39/39; notes carry brush_sha256:a3ad6ffc536e325e on 39/39; local runs/perf/bin/brush-maxauto-historical-build-027 hashes to the same value",
+  "args": "39/39 identical to the Q1 default arm (--total-train-iters 30000 --eval-split-every 8 --eval-every 30000 --eval-save-to-disk --export-every 30000 --export-path <dir> --seed N) plus only --max-budget",
+  "build": "historical-build-027 is a single commit on historical-build-019 changing only crates/splat-train/src/config.rs: max_budget from #[arg(skip)] to #[arg(long, hide=true)] (doc comment updated); no behaviour change other than exposing the flag",
+  "hardware": "L40S 48GB on 39/39 (fal splat-gpu-l40-v14 / -r1-v14), steps 30000, qualified and timing_valid true on 39/39",
+  "registration_timing": "Registration commit historical-build-013 merged to main as historical-build-089 at 2026-10-09T05:02:45-07:00. historical-record created/claimed 05:02:58, binary upload 05:03:04, first submit 05:03:04; rows 12:08:42Z-13:17:40Z (05:08:42-06:17:40 PDT). Launch is 13 s after the registration merge -> pre-registered.",
+  "retries_cancels": "queue.log: 39 submits, 39 unique request ids, 39 done (3 per scene), no retry/error/cancel lines; 0 maxauto entries in runs/fal/cancelled.jsonl and stalls.jsonl; 39 in runs/fal/jobs.jsonl; historical-record jobs 39 ok 39, status done; results.jsonl has exactly 39 rows under the label (no re-launch)."
+ },
+ "groups": {
+  "360-9": {
+   "max": {
+    "psnr": 28.16294,
+    "ssim": 0.8329,
+    "lpips_vgg": 0.21161,
+    "lpips_alex": 0.13369,
+    "lpips_vgg_3dgs": 0.1761
+   },
+   "default_b1": {
+    "psnr": 28.12698,
+    "ssim": 0.83105,
+    "lpips_vgg": 0.22257,
+    "lpips_alex": 0.14323,
+    "lpips_vgg_3dgs": 0.18493
+   },
+   "default_r2": {
+    "psnr": 28.12534,
+    "ssim": 0.83096,
+    "lpips_vgg": 0.22267,
+    "lpips_alex": 0.14333,
+    "lpips_vgg_3dgs": 0.18503
+   },
+   "d_default_b1": {
+    "psnr": 0.03595,
+    "ssim": 0.00185,
+    "lpips_vgg": -0.01096,
+    "lpips_alex": -0.00954,
+    "lpips_vgg_3dgs": -0.00883
+   },
+   "d_default_r2": {
+    "psnr": 0.0376,
+    "ssim": 0.00194,
+    "lpips_vgg": -0.01107,
+    "lpips_alex": -0.00964,
+    "lpips_vgg_3dgs": -0.00893
+   },
+   "n_psnr_gt_default_b1": 6,
+   "n_psnr_gt_default_r2": 6,
+   "n_scenes": 9,
+   "mcmc_pub_psnr_mean": 28.29778,
+   "d_mcmc_pub_psnr": -0.13484
+  },
+  "T&T-2": {
+   "max": {
+    "psnr": 24.36052,
+    "ssim": 0.86973,
+    "lpips_vgg": 0.15262,
+    "lpips_alex": 0.08884,
+    "lpips_vgg_3dgs": 0.12506
+   },
+   "default_b1": {
+    "psnr": 24.36539,
+    "ssim": 0.86929,
+    "lpips_vgg": 0.15616,
+    "lpips_alex": 0.09093,
+    "lpips_vgg_3dgs": 0.12773
+   },
+   "default_r2": {
+    "psnr": 24.34748,
+    "ssim": 0.86931,
+    "lpips_vgg": 0.15627,
+    "lpips_alex": 0.09107,
+    "lpips_vgg_3dgs": 0.12788
+   },
+   "d_default_b1": {
+    "psnr": -0.00486,
+    "ssim": 0.00044,
+    "lpips_vgg": -0.00354,
+    "lpips_alex": -0.00209,
+    "lpips_vgg_3dgs": -0.00267
+   },
+   "d_default_r2": {
+    "psnr": 0.01304,
+    "ssim": 0.00042,
+    "lpips_vgg": -0.00365,
+    "lpips_alex": -0.00223,
+    "lpips_vgg_3dgs": -0.00281
+   },
+   "n_psnr_gt_default_b1": 1,
+   "n_psnr_gt_default_r2": 2,
+   "n_scenes": 2
+  },
+  "DB-2": {
+   "max": {
+    "psnr": 30.35371,
+    "ssim": 0.91247,
+    "lpips_vgg": 0.2916,
+    "lpips_alex": 0.15303,
+    "lpips_vgg_3dgs": 0.22821
+   },
+   "default_b1": {
+    "psnr": 30.34632,
+    "ssim": 0.9126,
+    "lpips_vgg": 0.29145,
+    "lpips_alex": 0.15274,
+    "lpips_vgg_3dgs": 0.22804
+   },
+   "default_r2": {
+    "psnr": 30.3599,
+    "ssim": 0.91257,
+    "lpips_vgg": 0.29139,
+    "lpips_alex": 0.15284,
+    "lpips_vgg_3dgs": 0.22816
+   },
+   "d_default_b1": {
+    "psnr": 0.00739,
+    "ssim": -0.00013,
+    "lpips_vgg": 0.00015,
+    "lpips_alex": 0.00029,
+    "lpips_vgg_3dgs": 0.00018
+   },
+   "d_default_r2": {
+    "psnr": -0.00619,
+    "ssim": -0.00011,
+    "lpips_vgg": 0.00021,
+    "lpips_alex": 0.00019,
+    "lpips_vgg_3dgs": 5e-05
+   },
+   "n_psnr_gt_default_b1": 2,
+   "n_psnr_gt_default_r2": 1,
+   "n_scenes": 2
+  },
+  "outdoor-5": {
+   "max": {
+    "psnr": 24.9522,
+    "ssim": 0.75077,
+    "lpips_vgg": 0.21691,
+    "lpips_alex": 0.15121,
+    "lpips_vgg_3dgs": 0.18859
+   },
+   "default_b1": {
+    "psnr": 24.92158,
+    "ssim": 0.74765,
+    "lpips_vgg": 0.23503,
+    "lpips_alex": 0.16744,
+    "lpips_vgg_3dgs": 0.20334
+   },
+   "default_r2": {
+    "psnr": 24.91053,
+    "ssim": 0.74741,
+    "lpips_vgg": 0.23533,
+    "lpips_alex": 0.16774,
+    "lpips_vgg_3dgs": 0.20356
+   },
+   "d_default_b1": {
+    "psnr": 0.03062,
+    "ssim": 0.00312,
+    "lpips_vgg": -0.01813,
+    "lpips_alex": -0.01623,
+    "lpips_vgg_3dgs": -0.01475
+   },
+   "d_default_r2": {
+    "psnr": 0.04167,
+    "ssim": 0.00336,
+    "lpips_vgg": -0.01842,
+    "lpips_alex": -0.01653,
+    "lpips_vgg_3dgs": -0.01498
+   },
+   "n_psnr_gt_default_b1": 3,
+   "n_psnr_gt_default_r2": 4,
+   "n_scenes": 5
+  },
+  "indoor-4": {
+   "max": {
+    "psnr": 32.17636,
+    "ssim": 0.93557,
+    "lpips_vgg": 0.20498,
+    "lpips_alex": 0.11179,
+    "lpips_vgg_3dgs": 0.1605
+   },
+   "default_b1": {
+    "psnr": 32.13374,
+    "ssim": 0.9353,
+    "lpips_vgg": 0.20699,
+    "lpips_alex": 0.11296,
+    "lpips_vgg_3dgs": 0.16192
+   },
+   "default_r2": {
+    "psnr": 32.14385,
+    "ssim": 0.93539,
+    "lpips_vgg": 0.20686,
+    "lpips_alex": 0.11282,
+    "lpips_vgg_3dgs": 0.16186
+   },
+   "d_default_b1": {
+    "psnr": 0.04262,
+    "ssim": 0.00026,
+    "lpips_vgg": -0.00201,
+    "lpips_alex": -0.00117,
+    "lpips_vgg_3dgs": -0.00142
+   },
+   "d_default_r2": {
+    "psnr": 0.03252,
+    "ssim": 0.00018,
+    "lpips_vgg": -0.00188,
+    "lpips_alex": -0.00103,
+    "lpips_vgg_3dgs": -0.00136
+   },
+   "n_psnr_gt_default_b1": 3,
+   "n_psnr_gt_default_r2": 2,
+   "n_scenes": 4
+  }
+ },
+ "o1_reported_vs_recomputed": {
+  "360-9": {
+   "o1": {
+    "psnr": 28.16,
+    "lpips_vgg": 0.212,
+    "lpips_vgg_3dgs": 0.176
+   },
+   "recomputed": {
+    "psnr": 28.16294,
+    "lpips_vgg": 0.21161,
+    "lpips_vgg_3dgs": 0.1761
+   },
+   "match": true
+  },
+  "T&T-2": {
+   "o1": {
+    "psnr": 24.36,
+    "lpips_vgg": 0.153,
+    "lpips_vgg_3dgs": 0.125
+   },
+   "recomputed": {
+    "psnr": 24.36052,
+    "lpips_vgg": 0.15262,
+    "lpips_vgg_3dgs": 0.12506
+   },
+   "match": true
+  },
+  "DB-2": {
+   "o1": {
+    "psnr": 30.35,
+    "lpips_vgg": 0.292,
+    "lpips_vgg_3dgs": 0.228
+   },
+   "recomputed": {
+    "psnr": 30.35371,
+    "lpips_vgg": 0.2916,
+    "lpips_vgg_3dgs": 0.22821
+   },
+   "match": true
+  },
+  "mcmc_pub": {
+   "o1": -0.13,
+   "recomputed": -0.13484,
+   "match": true
+  },
+  "max_minus_default_360_9": {
+   "o1": {
+    "psnr": 0.036,
+    "lpips_vgg": -0.011,
+    "n_psnr_higher": "6/9 (9/13)"
+   },
+   "recomputed_b1": {
+    "psnr": 0.03595,
+    "lpips_vgg": -0.01096,
+    "n_psnr_higher": "6/9 (9/13)"
+   },
+   "recomputed_r2": {
+    "psnr": 0.0376,
+    "lpips_vgg": -0.01107,
+    "n_psnr_higher": "6/9 (9/13)"
+   },
+   "match": true
+  },
+  "per_scene": "all 13 per-scene PSNR/SSIM/LPIPS/L3DGS, splat counts, peak MiB and per-scene MAX-default and MAX-MCMC-published deltas in table.txt / gap-maxauto.txt match recomputation at their printed precision"
+ },
+ "primary_ruling": {
+  "reference": "published 3DGS-MCMC per-scene (literature.json), 9-scene mean 28.29778 (= 28.30 as stated)",
+  "max_360_9_psnr": 28.16294,
+  "delta_db": -0.13484,
+  "rule": "AHEAD > +0.10, PARITY within +/-0.10, BEHIND otherwise",
+  "result": "BEHIND",
+  "lpips_alongside": "MAX 360-9 LPIPS-VGG 0.2116 (canonical) / 0.1761 (3DGS-code VGG). Published MCMC per-scene LPIPS (3DGS-code convention, 2 d.p.) mean 0.2111 -> MAX lpips_vgg_3dgs lower by 0.035 (context only; published LPIPS rounded to 2 d.p., mixed protocol).",
+  "per_scene_psnr_delta_vs_mcmc_pub": {
+   "bicycle": -0.50286,
+   "flowers": -0.60296,
+   "garden": -0.18067,
+   "stump": -0.94729,
+   "treehill": -0.54523,
+   "room": 0.41825,
+   "counter": 0.32315,
+   "kitchen": -0.03415,
+   "bonsai": 0.8582
+  },
+  "context_not_verdict": "Same-JPEG-protocol 3DGS-MCMC+SH 28.21 (NHT paper Tab. 8, no per-scene breakdown) would give -0.05 (PARITY); the ruling on line 240 keeps 28.30 as the primary reference."
+ },
+ "per_scene": {
+  "bicycle": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 25.64714,
+   "sd_psnr": 0.01627,
+   "ssim": 0.7921,
+   "sd_ssim": 0.00032,
+   "lpips_vgg": 0.18387,
+   "sd_lpips_vgg": 0.0003,
+   "lpips_alex": 0.12685,
+   "sd_lpips_alex": 0.00025,
+   "lpips_vgg_3dgs": 0.1606,
+   "sd_lpips_vgg_3dgs": 0.00032,
+   "splats": 4620861.66667,
+   "splats_by_seed": [
+    4617955,
+    4615748,
+    4628882
+   ],
+   "board_peak_mib_max": 4919,
+   "board_peak_mib_by_seed": [
+    4911,
+    4910,
+    4919
+   ],
+   "d_default_b1": {
+    "psnr": -0.00404,
+    "ssim": 0.00483,
+    "lpips_vgg": -0.02661,
+    "lpips_alex": -0.02083,
+    "lpips_vgg_3dgs": -0.02121
+   },
+   "d_default_r2": {
+    "psnr": 0.00837,
+    "ssim": 0.00502,
+    "lpips_vgg": -0.027,
+    "lpips_alex": -0.02089,
+    "lpips_vgg_3dgs": -0.02142
+   },
+   "default_b1_splats": 1937761,
+   "default_r2_splats": 1930941,
+   "mcmc_pub_psnr": 26.15,
+   "d_mcmc_pub_psnr": -0.50286
+  },
+  "flowers": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 21.51704,
+   "sd_psnr": 0.01508,
+   "ssim": 0.63549,
+   "sd_ssim": 0.00041,
+   "lpips_vgg": 0.27563,
+   "sd_lpips_vgg": 0.0003,
+   "lpips_alex": 0.19717,
+   "sd_lpips_alex": 0.00033,
+   "lpips_vgg_3dgs": 0.24769,
+   "sd_lpips_vgg_3dgs": 0.00027,
+   "splats": 4729459,
+   "splats_by_seed": [
+    4732491,
+    4726961,
+    4728925
+   ],
+   "board_peak_mib_max": 4673,
+   "board_peak_mib_by_seed": [
+    4672,
+    4671,
+    4673
+   ],
+   "d_default_b1": {
+    "psnr": 0.09196,
+    "ssim": 0.00662,
+    "lpips_vgg": -0.02813,
+    "lpips_alex": -0.03257,
+    "lpips_vgg_3dgs": -0.02371
+   },
+   "d_default_r2": {
+    "psnr": 0.10338,
+    "ssim": 0.00723,
+    "lpips_vgg": -0.02852,
+    "lpips_alex": -0.03295,
+    "lpips_vgg_3dgs": -0.02434
+   },
+   "default_b1_splats": 1948903,
+   "default_r2_splats": 1952692,
+   "mcmc_pub_psnr": 22.12,
+   "d_mcmc_pub_psnr": -0.60296
+  },
+  "garden": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 27.97933,
+   "sd_psnr": 0.01009,
+   "ssim": 0.87927,
+   "sd_ssim": 0.00017,
+   "lpips_vgg": 0.10224,
+   "sd_lpips_vgg": 6e-05,
+   "lpips_alex": 0.06375,
+   "sd_lpips_alex": 0.00022,
+   "lpips_vgg_3dgs": 0.08884,
+   "sd_lpips_vgg_3dgs": 5e-05,
+   "splats": 3395919.66667,
+   "splats_by_seed": [
+    3391939,
+    3381347,
+    3414473
+   ],
+   "board_peak_mib_max": 3872,
+   "board_peak_mib_by_seed": [
+    3620,
+    3249,
+    3872
+   ],
+   "d_default_b1": {
+    "psnr": 0.13129,
+    "ssim": 0.0048,
+    "lpips_vgg": -0.0123,
+    "lpips_alex": -0.00706,
+    "lpips_vgg_3dgs": -0.00974
+   },
+   "d_default_r2": {
+    "psnr": 0.13364,
+    "ssim": 0.00484,
+    "lpips_vgg": -0.01241,
+    "lpips_alex": -0.00712,
+    "lpips_vgg_3dgs": -0.00987
+   },
+   "default_b1_splats": 1968656,
+   "default_r2_splats": 1972383,
+   "mcmc_pub_psnr": 28.16,
+   "d_mcmc_pub_psnr": -0.18067
+  },
+  "stump": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 26.85271,
+   "sd_psnr": 0.11184,
+   "ssim": 0.79725,
+   "sd_ssim": 0.0016,
+   "lpips_vgg": 0.20538,
+   "sd_lpips_vgg": 0.00141,
+   "lpips_alex": 0.12087,
+   "sd_lpips_alex": 0.00145,
+   "lpips_vgg_3dgs": 0.17507,
+   "sd_lpips_vgg_3dgs": 0.00109,
+   "splats": 3511068,
+   "splats_by_seed": [
+    3511186,
+    3511059,
+    3510959
+   ],
+   "board_peak_mib_max": 3966,
+   "board_peak_mib_by_seed": [
+    3966,
+    3902,
+    3886
+   ],
+   "d_default_b1": {
+    "psnr": 0.00177,
+    "ssim": 0.00067,
+    "lpips_vgg": -0.01169,
+    "lpips_alex": -0.00841,
+    "lpips_vgg_3dgs": -0.00907
+   },
+   "d_default_r2": {
+    "psnr": 0.01746,
+    "ssim": 0.00094,
+    "lpips_vgg": -0.01212,
+    "lpips_alex": -0.00851,
+    "lpips_vgg_3dgs": -0.0093
+   },
+   "default_b1_splats": 1916645,
+   "default_r2_splats": 1916162,
+   "mcmc_pub_psnr": 27.8,
+   "d_mcmc_pub_psnr": -0.94729
+  },
+  "treehill": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 22.76477,
+   "sd_psnr": 0.03503,
+   "ssim": 0.64973,
+   "sd_ssim": 0.00021,
+   "lpips_vgg": 0.31742,
+   "sd_lpips_vgg": 3e-05,
+   "lpips_alex": 0.24741,
+   "sd_lpips_alex": 0.0008,
+   "lpips_vgg_3dgs": 0.27073,
+   "sd_lpips_vgg_3dgs": 0.00024,
+   "splats": 2496542.33333,
+   "splats_by_seed": [
+    2494894,
+    2494519,
+    2500214
+   ],
+   "board_peak_mib_max": 2632,
+   "board_peak_mib_by_seed": [
+    2632,
+    2600,
+    2521
+   ],
+   "d_default_b1": {
+    "psnr": -0.06789,
+    "ssim": -0.00131,
+    "lpips_vgg": -0.0119,
+    "lpips_alex": -0.01227,
+    "lpips_vgg_3dgs": -0.01003
+   },
+   "d_default_r2": {
+    "psnr": -0.0545,
+    "ssim": -0.00125,
+    "lpips_vgg": -0.01206,
+    "lpips_alex": -0.01317,
+    "lpips_vgg_3dgs": -0.00996
+   },
+   "default_b1_splats": 1925555,
+   "default_r2_splats": 1913403,
+   "mcmc_pub_psnr": 23.31,
+   "d_mcmc_pub_psnr": -0.54523
+  },
+  "room": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 32.89825,
+   "sd_psnr": 0.04157,
+   "ssim": 0.93311,
+   "sd_ssim": 4e-05,
+   "lpips_vgg": 0.24966,
+   "sd_lpips_vgg": 9e-05,
+   "lpips_alex": 0.13527,
+   "sd_lpips_alex": 8e-05,
+   "lpips_vgg_3dgs": 0.18803,
+   "sd_lpips_vgg_3dgs": 0.00019,
+   "splats": 1200000,
+   "splats_by_seed": [
+    1200000,
+    1200000,
+    1200000
+   ],
+   "board_peak_mib_max": 2416,
+   "board_peak_mib_by_seed": [
+    2277,
+    2416,
+    1983
+   ],
+   "d_default_b1": {
+    "psnr": -0.00471,
+    "ssim": 0.00016,
+    "lpips_vgg": -0.00033,
+    "lpips_alex": -0.00036,
+    "lpips_vgg_3dgs": -0.00019
+   },
+   "d_default_r2": {
+    "psnr": 0.06008,
+    "ssim": 2e-05,
+    "lpips_vgg": 1e-05,
+    "lpips_alex": -4e-05,
+    "lpips_vgg_3dgs": -2e-05
+   },
+   "default_b1_splats": 1200000,
+   "default_r2_splats": 1200000,
+   "mcmc_pub_psnr": 32.48,
+   "d_mcmc_pub_psnr": 0.41825
+  },
+  "counter": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 29.83315,
+   "sd_psnr": 0.01518,
+   "ssim": 0.92028,
+   "sd_ssim": 5e-05,
+   "lpips_vgg": 0.22396,
+   "sd_lpips_vgg": 0.00017,
+   "lpips_alex": 0.12681,
+   "sd_lpips_alex": 0.00023,
+   "lpips_vgg_3dgs": 0.1721,
+   "sd_lpips_vgg_3dgs": 0.00011,
+   "splats": 1172730.33333,
+   "splats_by_seed": [
+    1173241,
+    1172088,
+    1172862
+   ],
+   "board_peak_mib_max": 1614,
+   "board_peak_mib_by_seed": [
+    1614,
+    1614,
+    1614
+   ],
+   "d_default_b1": {
+    "psnr": 0.00102,
+    "ssim": 2e-05,
+    "lpips_vgg": -2e-05,
+    "lpips_alex": -0.0,
+    "lpips_vgg_3dgs": -7e-05
+   },
+   "d_default_r2": {
+    "psnr": -0.00751,
+    "ssim": 3e-05,
+    "lpips_vgg": -9e-05,
+    "lpips_alex": 8e-05,
+    "lpips_vgg_3dgs": -0.00011
+   },
+   "default_b1_splats": 1172748,
+   "default_r2_splats": 1172283,
+   "mcmc_pub_psnr": 29.51,
+   "d_mcmc_pub_psnr": 0.32315
+  },
+  "kitchen": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 32.23585,
+   "sd_psnr": 0.04651,
+   "ssim": 0.93518,
+   "sd_ssim": 0.00014,
+   "lpips_vgg": 0.13976,
+   "sd_lpips_vgg": 5e-05,
+   "lpips_alex": 0.08465,
+   "sd_lpips_alex": 0.00012,
+   "lpips_vgg_3dgs": 0.11341,
+   "sd_lpips_vgg_3dgs": 8e-05,
+   "splats": 1181675.33333,
+   "splats_by_seed": [
+    1185540,
+    1179331,
+    1180155
+   ],
+   "board_peak_mib_max": 1716,
+   "board_peak_mib_by_seed": [
+    1716,
+    1585,
+    1649
+   ],
+   "d_default_b1": {
+    "psnr": 0.00559,
+    "ssim": -7e-05,
+    "lpips_vgg": 4e-05,
+    "lpips_alex": 4e-05,
+    "lpips_vgg_3dgs": 5e-05
+   },
+   "d_default_r2": {
+    "psnr": -0.07713,
+    "ssim": -0.00013,
+    "lpips_vgg": 5e-05,
+    "lpips_alex": 0.00014,
+    "lpips_vgg_3dgs": 8e-05
+   },
+   "default_b1_splats": 1181621,
+   "default_r2_splats": 1180668,
+   "mcmc_pub_psnr": 32.27,
+   "d_mcmc_pub_psnr": -0.03415
+  },
+  "bonsai": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 33.7382,
+   "sd_psnr": 0.09341,
+   "ssim": 0.95371,
+   "sd_ssim": 0.00038,
+   "lpips_vgg": 0.20654,
+   "sd_lpips_vgg": 0.00038,
+   "lpips_alex": 0.10042,
+   "sd_lpips_alex": 0.00029,
+   "lpips_vgg_3dgs": 0.16845,
+   "sd_lpips_vgg_3dgs": 0.00018,
+   "splats": 4328599.33333,
+   "splats_by_seed": [
+    4326589,
+    4333564,
+    4325645
+   ],
+   "board_peak_mib_max": 4391,
+   "board_peak_mib_by_seed": [
+    4374,
+    4355,
+    4391
+   ],
+   "d_default_b1": {
+    "psnr": 0.1686,
+    "ssim": 0.00094,
+    "lpips_vgg": -0.00773,
+    "lpips_alex": -0.00437,
+    "lpips_vgg_3dgs": -0.00547
+   },
+   "d_default_r2": {
+    "psnr": 0.15463,
+    "ssim": 0.0008,
+    "lpips_vgg": -0.00748,
+    "lpips_alex": -0.0043,
+    "lpips_vgg_3dgs": -0.0054
+   },
+   "default_b1_splats": 1967041,
+   "default_r2_splats": 1964073,
+   "mcmc_pub_psnr": 32.88,
+   "d_mcmc_pub_psnr": 0.8582
+  },
+  "truck-full": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 26.31531,
+   "sd_psnr": 0.03015,
+   "ssim": 0.89944,
+   "sd_ssim": 0.00018,
+   "lpips_vgg": 0.11095,
+   "sd_lpips_vgg": 0.00015,
+   "lpips_alex": 0.06025,
+   "sd_lpips_alex": 0.00017,
+   "lpips_vgg_3dgs": 0.09057,
+   "sd_lpips_vgg_3dgs": 0.00012,
+   "splats": 3120160,
+   "splats_by_seed": [
+    3115127,
+    3121465,
+    3123888
+   ],
+   "board_peak_mib_max": 3136,
+   "board_peak_mib_by_seed": [
+    3129,
+    3134,
+    3136
+   ],
+   "d_default_b1": {
+    "psnr": 0.00756,
+    "ssim": 0.00074,
+    "lpips_vgg": -0.00757,
+    "lpips_alex": -0.00435,
+    "lpips_vgg_3dgs": -0.00607
+   },
+   "d_default_r2": {
+    "psnr": 0.00241,
+    "ssim": 0.00068,
+    "lpips_vgg": -0.00776,
+    "lpips_alex": -0.00441,
+    "lpips_vgg_3dgs": -0.00613
+   },
+   "default_b1_splats": 1966937,
+   "default_r2_splats": 1973805
+  },
+  "train": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 22.40573,
+   "sd_psnr": 0.04955,
+   "ssim": 0.84002,
+   "sd_ssim": 0.0007,
+   "lpips_vgg": 0.19429,
+   "sd_lpips_vgg": 0.00131,
+   "lpips_alex": 0.11743,
+   "sd_lpips_alex": 0.00096,
+   "lpips_vgg_3dgs": 0.15956,
+   "sd_lpips_vgg_3dgs": 0.00082,
+   "splats": 1200000,
+   "splats_by_seed": [
+    1200000,
+    1200000,
+    1200000
+   ],
+   "board_peak_mib_max": 1426,
+   "board_peak_mib_by_seed": [
+    1362,
+    1426,
+    1362
+   ],
+   "d_default_b1": {
+    "psnr": -0.01729,
+    "ssim": 0.00014,
+    "lpips_vgg": 0.00049,
+    "lpips_alex": 0.00016,
+    "lpips_vgg_3dgs": 0.00073
+   },
+   "d_default_r2": {
+    "psnr": 0.02367,
+    "ssim": 0.00016,
+    "lpips_vgg": 0.00045,
+    "lpips_alex": -6e-05,
+    "lpips_vgg_3dgs": 0.0005
+   },
+   "default_b1_splats": 1200000,
+   "default_r2_splats": 1200000
+  },
+  "playroom": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 30.6607,
+   "sd_psnr": 0.06002,
+   "ssim": 0.91501,
+   "sd_ssim": 0.00022,
+   "lpips_vgg": 0.2832,
+   "sd_lpips_vgg": 0.00023,
+   "lpips_alex": 0.1423,
+   "sd_lpips_alex": 0.00014,
+   "lpips_vgg_3dgs": 0.22544,
+   "sd_lpips_vgg_3dgs": 0.00015,
+   "splats": 1192135.33333,
+   "splats_by_seed": [
+    1182976,
+    1193430,
+    1200000
+   ],
+   "board_peak_mib_max": 1661,
+   "board_peak_mib_by_seed": [
+    1661,
+    1405,
+    1411
+   ],
+   "d_default_b1": {
+    "psnr": 0.01297,
+    "ssim": -0.00011,
+    "lpips_vgg": 1e-05,
+    "lpips_alex": 7e-05,
+    "lpips_vgg_3dgs": 1e-05
+   },
+   "d_default_r2": {
+    "psnr": -0.01703,
+    "ssim": -0.00011,
+    "lpips_vgg": 0.00019,
+    "lpips_alex": 6e-05,
+    "lpips_vgg_3dgs": 2e-05
+   },
+   "default_b1_splats": 1190873,
+   "default_r2_splats": 1192141
+  },
+  "drjohnson": {
+   "n": 3,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "psnr": 30.04672,
+   "sd_psnr": 0.04485,
+   "ssim": 0.90993,
+   "sd_ssim": 0.00053,
+   "lpips_vgg": 0.3,
+   "sd_lpips_vgg": 0.00032,
+   "lpips_alex": 0.16375,
+   "sd_lpips_alex": 0.0005,
+   "lpips_vgg_3dgs": 0.23099,
+   "sd_lpips_vgg_3dgs": 0.0004,
+   "splats": 1178056.66667,
+   "splats_by_seed": [
+    1179625,
+    1177621,
+    1176924
+   ],
+   "board_peak_mib_max": 1436,
+   "board_peak_mib_by_seed": [
+    1436,
+    1403,
+    1371
+   ],
+   "d_default_b1": {
+    "psnr": 0.00181,
+    "ssim": -0.00015,
+    "lpips_vgg": 0.00029,
+    "lpips_alex": 0.00051,
+    "lpips_vgg_3dgs": 0.00034
+   },
+   "d_default_r2": {
+    "psnr": 0.00465,
+    "ssim": -0.0001,
+    "lpips_vgg": 0.00023,
+    "lpips_alex": 0.00031,
+    "lpips_vgg_3dgs": 7e-05
+   },
+   "default_b1_splats": 1179499,
+   "default_r2_splats": 1178242
+  }
+ },
+ "splat_growth": "MAX grows past the default budget on bicycle 4.62M, flowers 4.73M, garden 3.40M, stump 3.51M, treehill 2.50M, bonsai 4.33M, truck-full 3.12M (default about 1.92-1.97M). room/counter/kitchen/train/playroom/drjohnson stay at the same about 1.2M as default, so MAX-default there is run-to-run noise (|dPSNR| <= 0.08 vs r2). Peak board NVML max per scene 1426-4919 MiB (bicycle 4919 MiB = 4.8 GiB).",
+ "deviations": [
+  "Claim line 182 registered_at says 05:04:00-07:00, but the registration actually reached main at 05:02:45 (historical-build-089) and the launch was 05:02:58; the field is a hand-written timestamp later than the launch. The real ordering (commit before launch, by 13 s) is fine; the registered_at field should not be quoted as the registration time.",
+  "Line 240 says MAX grows 'only on unbounded scenes'; it also grows on bonsai (indoor 360, 4.33M) and truck-full (3.12M). The +0.169 dB bonsai gain is the largest MAX-default delta. Wording, not a number change.",
+  "Line 240 'peak NVML up to 4.9 GB': the maximum is 4919 MiB (bicycle) = 4.80 GiB / 5.16 GB; '4.9' reads the MiB figure as thousands. Suggest '4.9k MiB (4.8 GiB)'.",
+  "Published 3DGS-MCMC per-scene values are mixed protocol and the flowers/treehill source is uncertain (standard-benchmark.md section 2); the verdict carries the 'not reproduced by us' label.",
+  "MAX - default is descriptive only (different fal runs, not same-runner paired); against r2 it is +0.038 dB / -0.011 LPIPS-VGG on 360-9, same 6/9 and 9/13 counts as batch 1."
+ ]
+}

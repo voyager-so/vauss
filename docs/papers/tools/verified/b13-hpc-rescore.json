@@ -1,0 +1,27 @@
+{
+ "kind": "render-audit",
+ "claim": "B13 HPC released-render rescore (descriptive, no claim group)",
+ "verified_by": "publications (independent numpy 8-bit PSNR over all 128 views)",
+ "verified_at": "2026-10-09T01:37-07:00",
+ "inputs": "$SPLAT_DATA/research/b13/hpc/cpu-audit/hpc-released-renders/extracted/dinov2_vits14_reg/*/renders/test_step0030000_model0/*_color_{pred,gt}.png; sharp GT $SPLAT_DATA/research/b13/hpc/dataverse/sharp-gt/onthego-dv-*-clean/eval_*.png",
+ "psnr_vs_hpc_gt": {
+  "mountain": 22.197,
+  "fountain": 23.398,
+  "corner": 25.72,
+  "patio": 22.672,
+  "patio_high": 23.356,
+  "spot": 25.828,
+  "mean": 23.862
+ },
+ "psnr_vs_sharp_gt": {
+  "mountain": 21.499,
+  "fountain": 22.275,
+  "corner": 24.902,
+  "patio": 21.85,
+  "patio_high": 22.565,
+  "spot": 24.947,
+  "mean": 23.006
+ },
+ "match": "exact vs B13 hpc-released-rescore.json (PSNR); SSIM/LPIPS not independently recomputed",
+ "caveat": "The -0.86 dB depends on B13's sharp-GT construction (full-res Lanczos4 undistort + Pillow-Lanczos downsample onto HPC's grid, ECC <=0.004 px). It shows HPC's published GT is smoothed relative to that construction; it is not a measured fact about 'true' quality. Descriptive only; the paired test is b13-ours-on-dataverse-v1."
+}

@@ -1,0 +1,11 @@
+[package]
+name = "splat-contracts"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+toml = { version = "1", default-features = false, features = ["std", "parse", "serde"] }

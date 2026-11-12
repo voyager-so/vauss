@@ -1,0 +1,583 @@
+{
+ "schema": "pubs-verify/qat66-webm/v1",
+ "claim_group": "qat1-native-qat66-webm-v1",
+ "generated_at": "2026-10-09T02:48:12-07:00",
+ "method": "Per (scene, seed, arm) the per-view rows of web, float-cropped, spz-default (raw) and float-rerender renders are parsed from logs/{A,B}-<kind>-import.log (complete splat-perf import rows). codec-web = mean over views of (web - float-cropped) per view; gate per scene on 3-seed means of [d(codec-web) + d(float)] with d(float) from the float re-render (same renderer/scorer as the web path; trainer-eval float delta also reported), plus raw export dPSNR >= 0 and dLPIPS <= 0.",
+ "scenes": {
+  "curtis": {
+   "d_float_rerender": {
+    "psnr_sum": 0.15087051466197227,
+    "lpips_sum": -0.006693263848622639
+   },
+   "d_float_trainer": {
+    "psnr_sum": 0.15086718323068027,
+    "lpips_sum": -0.006695312261581426
+   },
+   "d_codec_web_psnr": 0.04847942178190578,
+   "d_codec_web_lpips": -0.005760761102040609,
+   "d_float_psnr_rerender": 0.1023910928800665,
+   "d_float_lpips_rerender": -0.0009325027465820294,
+   "d_float_psnr_trainer": 0.10238776144877448,
+   "d_float_lpips_trainer": -0.0009345511595408168,
+   "raw_dpsnr": 0.6706001901290483,
+   "raw_dlpips": -0.014257802565892536,
+   "per_seed": {
+    "s42": {
+     "psnr_sum": 0.15892669793061992,
+     "lpips_sum": -0.006885167956352235,
+     "raw_dpsnr": 0.49410398855576076,
+     "raw_dlpips": -0.012637342512607577
+    },
+    "s43": {
+     "psnr_sum": 0.04561617625286658,
+     "lpips_sum": -0.004052725434303284,
+     "raw_dpsnr": 0.5480285079662721,
+     "raw_dlpips": -0.012837570905685422
+    },
+    "s44": {
+     "psnr_sum": 0.24806866980243036,
+     "lpips_sum": -0.009141898155212396,
+     "raw_dpsnr": 0.9696680738651118,
+     "raw_dlpips": -0.01729849427938461
+    }
+   },
+   "gate": {
+    "psnr_sum_ge_0": true,
+    "lpips_sum_le_0": true,
+    "raw_no_loss": true
+   },
+   "pass": true,
+   "lane": {
+    "psnr_sum": 0.151,
+    "lpips_sum": -0.0067
+   },
+   "lane_ok": true
+  },
+  "garden": {
+   "d_float_rerender": {
+    "psnr_sum": 0.12236792880747602,
+    "lpips_sum": -0.0020587844774126946
+   },
+   "d_float_trainer": {
+    "psnr_sum": 0.12256492713850586,
+    "lpips_sum": -0.0020595573716693455
+   },
+   "d_codec_web_psnr": 0.06011103719963103,
+   "d_codec_web_lpips": -0.0007886249158117506,
+   "d_float_psnr_rerender": 0.06225689160784498,
+   "d_float_lpips_rerender": -0.0012701595616009438,
+   "d_float_psnr_trainer": 0.06245388993887483,
+   "d_float_lpips_trainer": -0.0012709324558575947,
+   "raw_dpsnr": 0.12110670997264113,
+   "raw_dlpips": -0.0042056902829143705,
+   "per_seed": {
+    "s42": {
+     "psnr_sum": 0.1548745480646469,
+     "lpips_sum": -0.00233012686173123,
+     "raw_dpsnr": 0.16008176880080782,
+     "raw_dlpips": -0.004499220289289951
+    },
+    "s43": {
+     "psnr_sum": 0.10850212867885818,
+     "lpips_sum": -0.00225710930923619,
+     "raw_dpsnr": 0.11930850023333761,
+     "raw_dlpips": -0.004399812159438937
+    },
+    "s44": {
+     "psnr_sum": 0.10372710967892296,
+     "lpips_sum": -0.0015891172612706637,
+     "raw_dpsnr": 0.08392986088377796,
+     "raw_dlpips": -0.003718038400014223
+    }
+   },
+   "gate": {
+    "psnr_sum_ge_0": true,
+    "lpips_sum_le_0": true,
+    "raw_no_loss": true
+   },
+   "pass": true,
+   "lane": {
+    "psnr_sum": 0.123,
+    "lpips_sum": -0.0021
+   },
+   "lane_ok": true
+  }
+ },
+ "cells": {
+  "curtis/s42": {
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a12000-dd94-7e92-bc6c-4166ac993470",
+     "splat-gpu-rtxpro6000-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    "0"
+   ],
+   "cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "Intel(R) Xeon(R) 6962P",
+   "labels": {
+    "A": "main-historical-build-080",
+    "B": "qat-30862e89b303"
+   },
+   "B_bins_match_lane": true,
+   "registry_bbrush_digest_match": true,
+   "registry_script_digest_match_historical-build-059": true,
+   "crop_A": {
+    "kept": 603252,
+    "of": 1131686,
+    "package_n": 603252,
+    "splats_out": 603252,
+    "max_pos_err": 0.0011524678508365582,
+    "pos_tol": 0.09750578790537462,
+    "match": true
+   },
+   "crop_B": {
+    "kept": 612620,
+    "of": 1131823,
+    "package_n": 612620,
+    "splats_out": 612620,
+    "max_pos_err": 0.001144387684568926,
+    "pos_tol": 0.09535653579684694,
+    "match": true
+   },
+   "metrics": {
+    "psnr": {
+     "codec_web": {
+      "A": -0.13295835295332167,
+      "B": -0.06941532494218698
+     },
+     "d_codec_web": 0.06354302801113469,
+     "d_float_rerender": 0.09538366991948521,
+     "d_float_trainer": 0.09538646224305225,
+     "d_raw_export": 0.49410398855576076,
+     "arm_json_codec_web": {
+      "A": -0.13295835295332026,
+      "B": -0.06941532494218805
+     }
+    },
+    "lpips_vgg": {
+     "codec_web": {
+      "A": 0.018864136934280396,
+      "B": 0.012190282344818115
+     },
+     "d_codec_web": -0.006673854589462281,
+     "d_float_rerender": -0.0002113133668899536,
+     "d_float_trainer": -0.00021371692419053234,
+     "d_raw_export": -0.012637342512607577,
+     "arm_json_codec_web": {
+      "A": 0.018864136934280407,
+      "B": 0.012190282344818115
+     }
+    }
+   }
+  },
+  "curtis/s43": {
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a12007-15df-7840-a76e-afdf2b54e960",
+     "splat-gpu-rtxpro6000-r1-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    "0"
+   ],
+   "cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "AMD EPYC 9355 32-Core Processor",
+   "labels": {
+    "A": "main-historical-build-080",
+    "B": "qat-30862e89b303"
+   },
+   "B_bins_match_lane": true,
+   "registry_bbrush_digest_match": true,
+   "registry_script_digest_match_historical-build-059": true,
+   "crop_A": {
+    "kept": 623230,
+    "of": 1131421,
+    "package_n": 623230,
+    "splats_out": 623230,
+    "max_pos_err": 0.001178884399809732,
+    "pos_tol": 0.08853756867754665,
+    "match": true
+   },
+   "crop_B": {
+    "kept": 608436,
+    "of": 1131997,
+    "package_n": 608436,
+    "splats_out": 608436,
+    "max_pos_err": 0.0011562240219813447,
+    "pos_tol": 0.09305574673917681,
+    "match": true
+   },
+   "metrics": {
+    "psnr": {
+     "codec_web": {
+      "A": -0.09101106037945143,
+      "B": -0.07356235280549725
+     },
+     "d_codec_web": 0.017448707573954184,
+     "d_float_rerender": 0.0281674686789124,
+     "d_float_trainer": 0.028144492974863766,
+     "d_raw_export": 0.5480285079662721,
+     "arm_json_codec_web": {
+      "A": -0.09101106037945073,
+      "B": -0.07356235280549939
+     }
+    },
+    "lpips_vgg": {
+     "codec_web": {
+      "A": 0.01695760488510132,
+      "B": 0.012826544046401978
+     },
+     "d_codec_web": -0.0041310608386993415,
+     "d_float_rerender": 7.833540439605713e-05,
+     "d_float_trainer": 7.684230804443082e-05,
+     "d_raw_export": -0.012837570905685422,
+     "arm_json_codec_web": {
+      "A": 0.01695760488510134,
+      "B": 0.012826544046401989
+     }
+    }
+   }
+  },
+  "curtis/s44": {
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a12007-f0b1-7120-9f11-74eb1e9ee61f",
+     "splat-gpu-rtxpro6000-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    "0"
+   ],
+   "cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "AMD EPYC 9355 32-Core Processor",
+   "labels": {
+    "A": "main-historical-build-080",
+    "B": "qat-30862e89b303"
+   },
+   "B_bins_match_lane": true,
+   "registry_bbrush_digest_match": true,
+   "registry_script_digest_match_historical-build-059": true,
+   "crop_A": {
+    "kept": 600010,
+    "of": 1132940,
+    "package_n": 600010,
+    "splats_out": 600010,
+    "max_pos_err": 0.0012568523729044045,
+    "pos_tol": 0.11178079532517367,
+    "match": true
+   },
+   "crop_B": {
+    "kept": 610816,
+    "of": 1130988,
+    "package_n": 610816,
+    "splats_out": 610816,
+    "max_pos_err": 0.0011656274473494932,
+    "pos_tol": 0.100754244240541,
+    "match": true
+   },
+   "metrics": {
+    "psnr": {
+     "codec_web": {
+      "A": -0.14716358436691407,
+      "B": -0.0827170546062856
+     },
+     "d_codec_web": 0.06444652976062847,
+     "d_float_rerender": 0.18362214004180188,
+     "d_float_trainer": 0.18363232912840743,
+     "d_raw_export": 0.9696680738651118,
+     "arm_json_codec_web": {
+      "A": -0.1471635843669148,
+      "B": -0.08271705460628453
+     }
+    },
+    "lpips_vgg": {
+     "codec_web": {
+      "A": 0.02028079628944397,
+      "B": 0.013803428411483765
+     },
+     "d_codec_web": -0.006477367877960204,
+     "d_float_rerender": -0.0026645302772521917,
+     "d_float_trainer": -0.002666778862476349,
+     "d_raw_export": -0.01729849427938461,
+     "arm_json_codec_web": {
+      "A": 0.02028079628944396,
+      "B": 0.013803428411483798
+     }
+    }
+   }
+  },
+  "garden/s42": {
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a12000-dd8a-7a70-b8ed-a2a23aa4634e",
+     "splat-gpu-rtxpro6000-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    "0"
+   ],
+   "cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "AMD EPYC 9355 32-Core Processor",
+   "labels": {
+    "A": "main-historical-build-080",
+    "B": "qat-30862e89b303"
+   },
+   "B_bins_match_lane": true,
+   "registry_bbrush_digest_match": true,
+   "registry_script_digest_match_historical-build-059": true,
+   "crop_A": {
+    "kept": 877382,
+    "of": 1193495,
+    "package_n": 877382,
+    "splats_out": 877382,
+    "max_pos_err": 0.0004204274530135166,
+    "pos_tol": 0.0023031901282200913,
+    "match": true
+   },
+   "crop_B": {
+    "kept": 847061,
+    "of": 1194191,
+    "package_n": 847061,
+    "splats_out": 847061,
+    "max_pos_err": 0.000408230140058613,
+    "pos_tol": 0.002689579886111376,
+    "match": true
+   },
+   "metrics": {
+    "psnr": {
+     "codec_web": {
+      "A": -0.020935473621592465,
+      "B": 0.03911732124485057
+     },
+     "d_codec_web": 0.060052794866443035,
+     "d_float_rerender": 0.09482175319820385,
+     "d_float_trainer": 0.09486067995350211,
+     "d_raw_export": 0.16008176880080782,
+     "arm_json_codec_web": {
+      "A": -0.020935473621591427,
+      "B": 0.039117321244845016
+     }
+    },
+    "lpips_vgg": {
+     "codec_web": {
+      "A": 0.003664183740814527,
+      "B": 0.0028073949118455253
+     },
+     "d_codec_web": -0.0008567888289690018,
+     "d_float_rerender": -0.001473338032762228,
+     "d_float_trainer": -0.001475481316447258,
+     "d_raw_export": -0.004499220289289951,
+     "arm_json_codec_web": {
+      "A": 0.0036641837408145084,
+      "B": 0.0028073949118455066
+     }
+    }
+   }
+  },
+  "garden/s43": {
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a12001-126d-7492-8027-d2412715c558",
+     "splat-gpu-rtxpro6000-r1-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    "0"
+   ],
+   "cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "AMD EPYC 9355 32-Core Processor",
+   "labels": {
+    "A": "main-historical-build-080",
+    "B": "qat-30862e89b303"
+   },
+   "B_bins_match_lane": true,
+   "registry_bbrush_digest_match": true,
+   "registry_script_digest_match_historical-build-059": true,
+   "crop_A": {
+    "kept": 917345,
+    "of": 1200000,
+    "package_n": 917345,
+    "splats_out": 917345,
+    "max_pos_err": 0.00041985816548439914,
+    "pos_tol": 0.002975852201010803,
+    "match": true
+   },
+   "crop_B": {
+    "kept": 959946,
+    "of": 1197787,
+    "package_n": 959946,
+    "splats_out": 959946,
+    "max_pos_err": 0.00036732102792780275,
+    "pos_tol": 0.0037233423511057883,
+    "match": true
+   },
+   "metrics": {
+    "psnr": {
+     "codec_web": {
+      "A": -0.022402816663136777,
+      "B": 0.020099857763588913
+     },
+     "d_codec_web": 0.04250267442672569,
+     "d_float_rerender": 0.0659994542521325,
+     "d_float_trainer": 0.06639279742061177,
+     "d_raw_export": 0.11930850023333761,
+     "arm_json_codec_web": {
+      "A": -0.022402816663134928,
+      "B": 0.020099857763593576
+     }
+    },
+    "lpips_vgg": {
+     "codec_web": {
+      "A": 0.0037796987841526666,
+      "B": 0.003065648799141248
+     },
+     "d_codec_web": -0.0007140499850114184,
+     "d_float_rerender": -0.0015430593242247714,
+     "d_float_trainer": -0.0015444476157426834,
+     "d_raw_export": -0.004399812159438937,
+     "arm_json_codec_web": {
+      "A": 0.0037796987841526575,
+      "B": 0.0030656487991412573
+     }
+    }
+   }
+  },
+  "garden/s44": {
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a12007-a499-7891-84d2-7fce7799f9d9",
+     "splat-gpu-rtxpro6000-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    "0"
+   ],
+   "cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "AMD EPYC 9355 32-Core Processor",
+   "labels": {
+    "A": "main-historical-build-080",
+    "B": "qat-30862e89b303"
+   },
+   "B_bins_match_lane": true,
+   "registry_bbrush_digest_match": true,
+   "registry_script_digest_match_historical-build-059": true,
+   "crop_A": {
+    "kept": 938359,
+    "of": 1200000,
+    "package_n": 938359,
+    "splats_out": 938359,
+    "max_pos_err": 0.0004215874081244797,
+    "pos_tol": 0.0023575111630215395,
+    "match": true
+   },
+   "crop_B": {
+    "kept": 946993,
+    "of": 1200000,
+    "package_n": 946993,
+    "splats_out": 946993,
+    "max_pos_err": 0.0004012640498327613,
+    "pos_tol": 0.0020456623268634245,
+    "match": true
+   },
+   "metrics": {
+    "psnr": {
+     "codec_web": {
+      "A": -0.025811155125564866,
+      "B": 0.051966487180159504
+     },
+     "d_codec_web": 0.07777764230572437,
+     "d_float_rerender": 0.025949467373198587,
+     "d_float_trainer": 0.026108192442510614,
+     "d_raw_export": 0.08392986088377796,
+     "arm_json_codec_web": {
+      "A": -0.025811155125566643,
+      "B": 0.051966487180159504
+     }
+    },
+    "lpips_vgg": {
+     "codec_web": {
+      "A": 0.003780299797654152,
+      "B": 0.0029852638641993203
+     },
+     "d_codec_web": -0.0007950359334548316,
+     "d_float_rerender": -0.0007940813278158321,
+     "d_float_trainer": -0.000792868435382843,
+     "d_raw_export": -0.003718038400014223,
+     "arm_json_codec_web": {
+      "A": 0.003780299797654152,
+      "B": 0.0029852638641993112
+     }
+    }
+   }
+  }
+ },
+ "identity": {
+  "B_build": {
+   "bins": [
+    "brush-cli",
+    "splat"
+   ],
+   "branch": "perf-qat",
+   "build_secs": 75,
+   "built_at": "2026-10-09T02:30:13.334159460-07:00",
+   "head": "historical-build-040",
+   "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+   "tree": "30862e89b303b18f3f98d81dc3811566f38ee782",
+   "web": true,
+   "worktree": "$HOME/code/nf/splat-agent-worktrees/perf-qat"
+  },
+  "lane_bins_sha256": {
+   "brush-cli": "d45167da100426f82158594b1ac0bdd2400208ff13f0e8d32e120e4e17f2a6c1",
+   "splat": "ad1043502e0460554a77616f2ca85bca38e453076c1679932a19414483a00ed2"
+  },
+  "build_head_is_historical-build-040": true,
+  "harness": "historical-build-059 research/qat1web/eval.py sha256 e06fb6bd9bff84095d6bd8e80b5ddf90afc664767ee7f911b654b0783e8510ee; registry 'script' input digest reproduces from (eval.py, this sha) for every job, so the uploaded harness is byte-identical to historical-build-059. historical-build-059 is on origin/qat1-research, not on main."
+ },
+ "check_failures": [],
+ "verdict": {
+  "status": "PASS",
+  "per_scene": {
+   "curtis": true,
+   "garden": true
+  }
+ },
+ "notes_pubs": [
+  "crop_match carries no boolean; pubs treats it as matched when kept == decoded package n == splats_out and max_pos_err_src_units <= pos_tol (all 12 arm-cells pass, max errors well inside tolerance)",
+  "kept splat counts differ between arms (e.g. garden s43 917,345 vs 959,946): by design each arm's codec-web term is against its own cut, so the crop difference is removed from d(codec-web) but each arm's float model still differs; the gate adds the full float delta",
+  "lane garden +0.123 matches the trainer-eval float delta (+0.1226); with the float re-render delta (same renderer as the web path) it is +0.1224 - both pass",
+  "harness historical-build-059 is not on main (origin/qat1-research)",
+  "render_exit 0 for these web/float-cropped renders"
+ ]
+}

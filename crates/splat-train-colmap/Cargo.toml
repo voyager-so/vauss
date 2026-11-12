@@ -1,0 +1,27 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-colmap"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "colmap_reader"
+
+[dependencies]
+glam.workspace = true
+tokio = { version = "1", features = ["macros", "rt", "io-util"] }
+brush-async = { path = "../splat-train-async", package = "splat-train-async" }
+log.workspace = true
+
+# The workspace tokio is "full"; its net half (mio) can't build for wasm. Wasm gets only the
+# features listed above, native keeps exactly the workspace features it had.
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[lints]
+workspace = true

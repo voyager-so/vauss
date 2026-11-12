@@ -1,0 +1,1587 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "P9 claim group p9-native-v1-m360-3seed-6500k-historical-build-065 (HEADLINE): native P9-v1 historical-build-065 6.5M/30k, 9 M360 scenes x seeds 42/43/44, one-arm; per-view files are exactly the 27 artifacts listed in research/p9/seed-comparison.json",
+ "argv": [
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s42/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s42/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s42-recovered/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s42/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s42/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s42/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s42/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s42-recovered/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s42/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s43/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s44/per_view.jsonl",
+  "--arm",
+  "p9v1=$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s44/per_view.jsonl",
+  "--label",
+  "P9 claim group p9-native-v1-m360-3seed-6500k-historical-build-065 (HEADLINE): native P9-v1 historical-build-065 6.5M/30k, 9 M360 scenes x seeds 42/43/44, one-arm; per-view files are exactly the 27 artifacts listed in research/p9/seed-comparison.json",
+  "--json",
+  "verified/p9-native-v1-27cell.json"
+ ],
+ "cwd": "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools",
+ "generated_at": "2026-10-08T22:37:36-07:00",
+ "verifier_sha256": "3c70e4841f9909188590fe4a19827f4e4d9f12cc45b03719f7c9088e54930b7d",
+ "verifier_git_head": "historical-build-076",
+ "options": {
+  "common_views": false,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "p9v1": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s42-recovered/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s42-recovered/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s42/per_view.jsonl",
+     "sha256": "4664c6a3b9ba42b0e592685e7aefe46e6ce27fcab2a2c268c97da82ef40ab96e"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s43/per_view.jsonl",
+     "sha256": "b9b5550585603632cd94b05301ed6913e633c988fd81a1199e80418ffd6aa629"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s44/per_view.jsonl",
+     "sha256": "0003e18285a7ba6c3cd463e0e5bde20981af91ed98cbf2165ad122e1c4e3818f"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s42/per_view.jsonl",
+     "sha256": "1d7ecb5cf6d3e3d29c65f9e360e3bbf53b2213d13a7028c58670f1ef588ff704"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s43/per_view.jsonl",
+     "sha256": "cf79b0dd101249e36ef0efc906e9b0cfef877080e5bb5ddd366daaee1e21151b"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s44/per_view.jsonl",
+     "sha256": "97e9da51261cfa5939e5e39577ca0dc6744b1f7b27eb09354a12617ba41030fe"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s42-recovered/per_view.jsonl",
+     "sha256": "d6f711a496a6d417946cf85cc603c0ca0eb318ae4ae1e1388246aba63faa8543"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s43/per_view.jsonl",
+     "sha256": "3c6aefd5fb4f50e4ad80d19113ca3cbe321ced0599e0b523285a28ffbac18612"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s44/per_view.jsonl",
+     "sha256": "8adfb3b7569d17ebf5aa16a079ad95e6455086c1dfd2c847c18381cde7067ea6"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s42/per_view.jsonl",
+     "sha256": "23fae831100e830eccc3a311c589b9db4a661c2eef0c81074ffd166d59d31e38"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s43/per_view.jsonl",
+     "sha256": "203424dda5ccdd37188ffe956a4982e4496cfcab429bf32ee4403dba7cb9c023"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s44/per_view.jsonl",
+     "sha256": "0ee954853cdac823fcbf7e25fe23db0412b1417874503b0739e4463df7803a36"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s42/per_view.jsonl",
+     "sha256": "cfebb6807a89d7a659626f161817480f5894a07fbc00a91d69f5c3583988cf9b"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s43/per_view.jsonl",
+     "sha256": "e6d9a248f403ff30fd8ec4ad700714904ba3cad809eef4a507c5b0148dc76d5b"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s44/per_view.jsonl",
+     "sha256": "7747a14d3a163f7620a71194e2cd7c312e91677b3d48356cdce196c8979d1232"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s42/per_view.jsonl",
+     "sha256": "b503e94adb518c0878bb680f5b8b607faaa2aa256074e43c5d21ac8981780f88"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s43/per_view.jsonl",
+     "sha256": "d23635b0fe1d1da7147375a64495350eaca685c11f7ab5199d38318de6f0d894"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s44/per_view.jsonl",
+     "sha256": "0736b802111ce25295a1b7468740ee0ee9acc591a5609968c279972bbf13b161"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s42/per_view.jsonl",
+     "sha256": "be5bfd6a675f50b936c221761e1f6e77dc7ab73c150537cd7632310b8b2c511c"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s43/per_view.jsonl",
+     "sha256": "4796d3f58eb68d17649e4b0c6bd19697892d4a6da378df66049d0a3636ff61b2"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s44/per_view.jsonl",
+     "sha256": "e7ffb26c9cba87a881f7c3f0fc1b9a042a3003717737c71d89d1c321bc95f0dd"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s42-recovered/per_view.jsonl",
+     "sha256": "e864c5d983b44219ad7cdcb0d464b5ed06cbf13039a8fb8bb4d869592dd6f0fb"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s43/per_view.jsonl",
+     "sha256": "015a8fb2f99cbbdec962eee7e517d34356272c7ae0f62da90dcae204e406b5e8"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s44/per_view.jsonl",
+     "sha256": "5a1d359efc22ffadb153ad5c7a1fa25a0701ebefffbf201d1498b7a32e06b426"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s42/per_view.jsonl",
+     "sha256": "0e31def9f9ec7ec262aa03a2a71553e443ec31963bbfc4743d3dbea9ae7b27dd"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s43/per_view.jsonl",
+     "sha256": "167e552b92119f422945ba51ec296351ec363f6a74093e6b704f84c3e8a12460"
+    },
+    {
+     "path": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s44/per_view.jsonl",
+     "sha256": "a7a5251cb8eb92a2607e2803d0513cd4a08daf3f8717500d93cadb76e82fb597"
+    }
+   ]
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "bicycle": {
+   "n_expected": 25,
+   "n_common": 25,
+   "common_view_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC8679",
+    "_DSC8687",
+    "_DSC8695",
+    "_DSC8703",
+    "_DSC8711",
+    "_DSC8719",
+    "_DSC8727",
+    "_DSC8735",
+    "_DSC8744",
+    "_DSC8752",
+    "_DSC8760",
+    "_DSC8768",
+    "_DSC8776",
+    "_DSC8784",
+    "_DSC8792",
+    "_DSC8800",
+    "_DSC8808",
+    "_DSC8816",
+    "_DSC8824",
+    "_DSC8832",
+    "_DSC8840",
+    "_DSC8848",
+    "_DSC8856",
+    "_DSC8864",
+    "_DSC8872"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 25,
+       "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.543241869772068,
+        "ssim": 0.79113777417441,
+        "lpips_vgg": 0.185772887468338,
+        "lpips_alex": 0.12853954911231993
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 25,
+       "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.505805849298255,
+        "ssim": 0.7902600064753643,
+        "lpips_vgg": 0.1866305309534073,
+        "lpips_alex": 0.12856272727251053
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 25,
+       "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.48567226415102,
+        "ssim": 0.7889824195391065,
+        "lpips_vgg": 0.1875147956609726,
+        "lpips_alex": 0.1288036435842514
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 25.51157332774045,
+      "ssim": 0.7901267333962937,
+      "lpips_vgg": 0.1866394046942393,
+      "lpips_alex": 0.1286353066563606
+     }
+    }
+   }
+  },
+  "bonsai": {
+   "n_expected": 37,
+   "n_common": 37,
+   "common_view_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF5565",
+    "DSCF5573",
+    "DSCF5581",
+    "DSCF5589",
+    "DSCF5597",
+    "DSCF5605",
+    "DSCF5613",
+    "DSCF5621",
+    "DSCF5629",
+    "DSCF5637",
+    "DSCF5645",
+    "DSCF5653",
+    "DSCF5661",
+    "DSCF5669",
+    "DSCF5677",
+    "DSCF5685",
+    "DSCF5693",
+    "DSCF5701",
+    "DSCF5709",
+    "DSCF5717",
+    "DSCF5725",
+    "DSCF5733",
+    "DSCF5741",
+    "DSCF5749",
+    "DSCF5757",
+    "DSCF5765",
+    "DSCF5773",
+    "DSCF5781",
+    "DSCF5789",
+    "DSCF5797",
+    "DSCF5805",
+    "DSCF5813",
+    "DSCF5821",
+    "DSCF5829",
+    "DSCF5837",
+    "DSCF5845",
+    "DSCF5853"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 37,
+       "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+       "normalised_views_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.00535306930357,
+        "ssim": 0.9504001678866479,
+        "lpips_vgg": 0.21184011729987892,
+        "lpips_alex": 0.10223331725275195
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 37,
+       "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+       "normalised_views_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.86358584646371,
+        "ssim": 0.9502112921042333,
+        "lpips_vgg": 0.21259216964244843,
+        "lpips_alex": 0.10261723781759674
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 37,
+       "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+       "normalised_views_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.9249528578901,
+        "ssim": 0.949964400453242,
+        "lpips_vgg": 0.21247532299241503,
+        "lpips_alex": 0.1024742309708853
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.931297257885795,
+      "ssim": 0.9501919534813744,
+      "lpips_vgg": 0.21230253664491414,
+      "lpips_alex": 0.10244159534707799
+     }
+    }
+   }
+  },
+  "counter": {
+   "n_expected": 30,
+   "n_common": 30,
+   "common_view_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF5857",
+    "DSCF5865",
+    "DSCF5873",
+    "DSCF5881",
+    "DSCF5889",
+    "DSCF5897",
+    "DSCF5905",
+    "DSCF5913",
+    "DSCF5921",
+    "DSCF5929",
+    "DSCF5937",
+    "DSCF5945",
+    "DSCF5953",
+    "DSCF5961",
+    "DSCF5969",
+    "DSCF5977",
+    "DSCF5985",
+    "DSCF5993",
+    "DSCF6001",
+    "DSCF6009",
+    "DSCF6017",
+    "DSCF6025",
+    "DSCF6033",
+    "DSCF6041",
+    "DSCF6049",
+    "DSCF6057",
+    "DSCF6065",
+    "DSCF6073",
+    "DSCF6081",
+    "DSCF6089"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s42-recovered/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.252567964341775,
+        "ssim": 0.9176225668984316,
+        "lpips_vgg": 0.21487049261728922,
+        "lpips_alex": 0.1197126902639866
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.309479381907966,
+        "ssim": 0.9174201228538393,
+        "lpips_vgg": 0.2144973759849866,
+        "lpips_alex": 0.11947296286622683
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.320386957743604,
+        "ssim": 0.9172819432343168,
+        "lpips_vgg": 0.214873269200325,
+        "lpips_alex": 0.11989448765913645
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.294144767997782,
+      "ssim": 0.9174415443288626,
+      "lpips_vgg": 0.21474704593420027,
+      "lpips_alex": 0.11969338026311661
+     }
+    }
+   }
+  },
+  "flowers": {
+   "n_expected": 22,
+   "n_common": 22,
+   "common_view_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC9040",
+    "_DSC9048",
+    "_DSC9056",
+    "_DSC9064",
+    "_DSC9072",
+    "_DSC9080",
+    "_DSC9088",
+    "_DSC9096",
+    "_DSC9104",
+    "_DSC9112",
+    "_DSC9120",
+    "_DSC9128",
+    "_DSC9136",
+    "_DSC9144",
+    "_DSC9152",
+    "_DSC9160",
+    "_DSC9168",
+    "_DSC9176",
+    "_DSC9184",
+    "_DSC9192",
+    "_DSC9200",
+    "_DSC9208"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 22,
+       "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+       "normalised_views_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.281645220265347,
+        "ssim": 0.6302046867929232,
+        "lpips_vgg": 0.2815687371925874,
+        "lpips_alex": 0.20982864363627
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 22,
+       "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+       "normalised_views_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.24966446332919,
+        "ssim": 0.6277659104552336,
+        "lpips_vgg": 0.2819224033843387,
+        "lpips_alex": 0.2100894437594847
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 22,
+       "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+       "normalised_views_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.235011146185002,
+        "ssim": 0.6265697156588411,
+        "lpips_vgg": 0.28313333270224655,
+        "lpips_alex": 0.21019445901567285
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 21.25544027659318,
+      "ssim": 0.6281801043023326,
+      "lpips_vgg": 0.2822081577597242,
+      "lpips_alex": 0.21003751547047586
+     }
+    }
+   }
+  },
+  "garden": {
+   "n_expected": 24,
+   "n_common": 24,
+   "common_view_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSC07956",
+    "DSC07964",
+    "DSC07972",
+    "DSC07980",
+    "DSC07988",
+    "DSC07996",
+    "DSC08004",
+    "DSC08012",
+    "DSC08020",
+    "DSC08028",
+    "DSC08036",
+    "DSC08044",
+    "DSC08052",
+    "DSC08060",
+    "DSC08068",
+    "DSC08076",
+    "DSC08084",
+    "DSC08092",
+    "DSC08100",
+    "DSC08108",
+    "DSC08116",
+    "DSC08124",
+    "DSC08132",
+    "DSC08140"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 24,
+       "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.743268252291966,
+        "ssim": 0.874719300324592,
+        "lpips_vgg": 0.10415287222713232,
+        "lpips_alex": 0.06606017937883735
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 24,
+       "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.741010475470564,
+        "ssim": 0.8753314168164156,
+        "lpips_vgg": 0.10380183129260938,
+        "lpips_alex": 0.06550957184905808
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 24,
+       "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.753204297624507,
+        "ssim": 0.8751526375915493,
+        "lpips_vgg": 0.104135121529301,
+        "lpips_alex": 0.06580307645102342
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 27.74582767512901,
+      "ssim": 0.8750677849108524,
+      "lpips_vgg": 0.10402994168301423,
+      "lpips_alex": 0.06579094255963962
+     }
+    }
+   }
+  },
+  "kitchen": {
+   "n_expected": 35,
+   "n_common": 35,
+   "common_view_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF0656",
+    "DSCF0664",
+    "DSCF0672",
+    "DSCF0680",
+    "DSCF0688",
+    "DSCF0696",
+    "DSCF0704",
+    "DSCF0712",
+    "DSCF0720",
+    "DSCF0728",
+    "DSCF0736",
+    "DSCF0744",
+    "DSCF0752",
+    "DSCF0760",
+    "DSCF0768",
+    "DSCF0776",
+    "DSCF0784",
+    "DSCF0792",
+    "DSCF0800",
+    "DSCF0808",
+    "DSCF0816",
+    "DSCF0824",
+    "DSCF0832",
+    "DSCF0840",
+    "DSCF0848",
+    "DSCF0856",
+    "DSCF0864",
+    "DSCF0872",
+    "DSCF0880",
+    "DSCF0888",
+    "DSCF0896",
+    "DSCF0904",
+    "DSCF0912",
+    "DSCF0920",
+    "DSCF0928"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 31.707239416560682,
+        "ssim": 0.9351957179738384,
+        "lpips_vgg": 0.13549566715955735,
+        "lpips_alex": 0.08126454183033534
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 31.4038364347546,
+        "ssim": 0.9308849228031911,
+        "lpips_vgg": 0.1382832788995334,
+        "lpips_alex": 0.08497739072356905
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 31.81397362680698,
+        "ssim": 0.9338540640438637,
+        "lpips_vgg": 0.13762230085475105,
+        "lpips_alex": 0.08377759893025671
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 31.641683159374086,
+      "ssim": 0.933311568273631,
+      "lpips_vgg": 0.1371337489712806,
+      "lpips_alex": 0.0833398438280537
+     }
+    }
+   }
+  },
+  "room": {
+   "n_expected": 39,
+   "n_common": 39,
+   "common_view_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF4667",
+    "DSCF4675",
+    "DSCF4683",
+    "DSCF4691",
+    "DSCF4699",
+    "DSCF4707",
+    "DSCF4715",
+    "DSCF4723",
+    "DSCF4731",
+    "DSCF4739",
+    "DSCF4747",
+    "DSCF4755",
+    "DSCF4763",
+    "DSCF4771",
+    "DSCF4779",
+    "DSCF4787",
+    "DSCF4795",
+    "DSCF4803",
+    "DSCF4811",
+    "DSCF4819",
+    "DSCF4827",
+    "DSCF4835",
+    "DSCF4843",
+    "DSCF4851",
+    "DSCF4859",
+    "DSCF4867",
+    "DSCF4875",
+    "DSCF4883",
+    "DSCF4891",
+    "DSCF4899",
+    "DSCF4907",
+    "DSCF4915",
+    "DSCF4923",
+    "DSCF4931",
+    "DSCF4939",
+    "DSCF4947",
+    "DSCF4955",
+    "DSCF4963",
+    "DSCF4971"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.47505664906997,
+        "ssim": 0.9307914990238424,
+        "lpips_vgg": 0.24492856974785143,
+        "lpips_alex": 0.1328011141755642
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.48318182517087,
+        "ssim": 0.9302824732295073,
+        "lpips_vgg": 0.2451896369457245,
+        "lpips_alex": 0.13351924870258722
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.331986793983056,
+        "ssim": 0.9310346627254017,
+        "lpips_vgg": 0.24416631995103297,
+        "lpips_alex": 0.13197037415244642
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.43007508940796,
+      "ssim": 0.9307028783262504,
+      "lpips_vgg": 0.24476150888153628,
+      "lpips_alex": 0.13276357901019928
+     }
+    }
+   }
+  },
+  "stump": {
+   "n_expected": 16,
+   "n_common": 16,
+   "common_view_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC9213",
+    "_DSC9221",
+    "_DSC9229",
+    "_DSC9237",
+    "_DSC9245",
+    "_DSC9253",
+    "_DSC9261",
+    "_DSC9269",
+    "_DSC9277",
+    "_DSC9285",
+    "_DSC9293",
+    "_DSC9301",
+    "_DSC9309",
+    "_DSC9318",
+    "_DSC9326",
+    "_DSC9334"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s42-recovered/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 16,
+       "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+       "normalised_views_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.030988291304432,
+        "ssim": 0.8009338986305954,
+        "lpips_vgg": 0.19781183544546366,
+        "lpips_alex": 0.11611199751496315
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 16,
+       "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+       "normalised_views_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 26.94736210144427,
+        "ssim": 0.7992264965195619,
+        "lpips_vgg": 0.19932458642870188,
+        "lpips_alex": 0.11816801689565182
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 16,
+       "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+       "normalised_views_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 26.987859742001824,
+        "ssim": 0.79965173521094,
+        "lpips_vgg": 0.1984446020796895,
+        "lpips_alex": 0.11717061325907707
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 26.98873671158351,
+      "ssim": 0.7999373767870325,
+      "lpips_vgg": 0.19852700798461834,
+      "lpips_alex": 0.11715020922323068
+     }
+    }
+   }
+  },
+  "treehill": {
+   "n_expected": 18,
+   "n_common": 18,
+   "common_view_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC8874",
+    "_DSC8882",
+    "_DSC8890",
+    "_DSC8898",
+    "_DSC8906",
+    "_DSC8914",
+    "_DSC8922",
+    "_DSC8930",
+    "_DSC8938",
+    "_DSC8946",
+    "_DSC8954",
+    "_DSC8962",
+    "_DSC8970",
+    "_DSC8978",
+    "_DSC8986",
+    "_DSC8994",
+    "_DSC9002",
+    "_DSC9010"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "p9v1": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 18,
+       "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+       "normalised_views_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.62992456638235,
+        "ssim": 0.6491968128884124,
+        "lpips_vgg": 0.29207487735483384,
+        "lpips_alex": 0.22145334631204605
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 18,
+       "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+       "normalised_views_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.60191341759482,
+        "ssim": 0.6496704443560021,
+        "lpips_vgg": 0.2911391514870856,
+        "lpips_alex": 0.22249734981192482
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 18,
+       "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+       "normalised_views_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.69511058491151,
+        "ssim": 0.650326820938083,
+        "lpips_vgg": 0.2881528337796529,
+        "lpips_alex": 0.21765272981590694
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.642316189629565,
+      "ssim": 0.6497313593941658,
+      "lpips_vgg": 0.2904556208738574,
+      "lpips_alex": 0.2205344753132926
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "p9v1": {
+   "psnr": {
+    "mean_over_scenes": 27.8267882728157,
+    "per_scene": {
+     "bicycle": 25.51157332774045,
+     "bonsai": 32.931297257885795,
+     "counter": 29.294144767997782,
+     "flowers": 21.25544027659318,
+     "garden": 27.74582767512901,
+     "kitchen": 31.641683159374086,
+     "room": 32.43007508940796,
+     "stump": 26.98873671158351,
+     "treehill": 22.642316189629565
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8305212559111995,
+    "per_scene": {
+     "bicycle": 0.7901267333962937,
+     "bonsai": 0.9501919534813744,
+     "counter": 0.9174415443288626,
+     "flowers": 0.6281801043023326,
+     "garden": 0.8750677849108524,
+     "kitchen": 0.933311568273631,
+     "room": 0.9307028783262504,
+     "stump": 0.7999373767870325,
+     "treehill": 0.6497313593941658
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.2078672192697094,
+    "per_scene": {
+     "bicycle": 0.1866394046942393,
+     "bonsai": 0.21230253664491414,
+     "counter": 0.21474704593420027,
+     "flowers": 0.2822081577597242,
+     "garden": 0.10402994168301423,
+     "kitchen": 0.1371337489712806,
+     "room": 0.24476150888153628,
+     "stump": 0.19852700798461834,
+     "treehill": 0.2904556208738574
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.13115409418571633,
+    "per_scene": {
+     "bicycle": 0.1286353066563606,
+     "bonsai": 0.10244159534707799,
+     "counter": 0.11969338026311661,
+     "flowers": 0.21003751547047586,
+     "garden": 0.06579094255963962,
+     "kitchen": 0.0833398438280537,
+     "room": 0.13276357901019928,
+     "stump": 0.11715020922323068,
+     "treehill": 0.2205344753132926
+    }
+   }
+  }
+ },
+ "comparisons": {},
+ "seed_means": {
+  "42": {
+   "psnr": 27.852142811032465,
+   "ssim": 0.8311336027326326,
+   "lpips_vgg": 0.20761289516810358,
+   "lpips_alex": 0.13088948660856384
+  },
+  "43": {
+   "psnr": 27.78953775504825,
+   "ssim": 0.8301170095125943,
+   "lpips_vgg": 0.20815344055764842,
+   "lpips_alex": 0.13171266107762333
+  },
+  "44": {
+   "psnr": 27.838684252366402,
+   "ssim": 0.8303131554883715,
+   "lpips_vgg": 0.2078353220833763,
+   "lpips_alex": 0.13086013487096185
+  }
+ },
+ "three_seed_mean": {
+  "psnr": 27.826788272815705,
+  "ssim": 0.8305212559111994,
+  "lpips_vgg": 0.20786721926970944,
+  "lpips_alex": 0.13115409418571633
+ },
+ "three_seed_sample_sd_across_seed_means": {
+  "psnr": 0.03295427143481684,
+  "ssim": 0.000539300271873526,
+  "lpips_vgg": 0.00027168069937248945,
+  "lpips_alex": 0.00048395569081894626
+ },
+ "coverage_check": {
+  "ok": true,
+  "per_scene": {
+   "bicycle": {
+    "n_expected": 25,
+    "runs": {
+     "42": {
+      "n_scored": 25,
+      "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s42/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 25,
+      "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 25,
+      "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bicycle-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127"
+   },
+   "bonsai": {
+    "n_expected": 37,
+    "runs": {
+     "42": {
+      "n_scored": 37,
+      "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s42/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 37,
+      "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 37,
+      "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-bonsai-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288"
+   },
+   "counter": {
+    "n_expected": 30,
+    "runs": {
+     "42": {
+      "n_scored": 30,
+      "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s42-recovered/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 30,
+      "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 30,
+      "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-counter-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269"
+   },
+   "flowers": {
+    "n_expected": 22,
+    "runs": {
+     "42": {
+      "n_scored": 22,
+      "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s42/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 22,
+      "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 22,
+      "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-flowers-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1"
+   },
+   "garden": {
+    "n_expected": 24,
+    "runs": {
+     "42": {
+      "n_scored": 24,
+      "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s42/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 24,
+      "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 24,
+      "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-garden-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635"
+   },
+   "kitchen": {
+    "n_expected": 35,
+    "runs": {
+     "42": {
+      "n_scored": 35,
+      "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s42/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 35,
+      "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 35,
+      "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-kitchen-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d"
+   },
+   "room": {
+    "n_expected": 39,
+    "runs": {
+     "42": {
+      "n_scored": 39,
+      "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s42/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 39,
+      "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 39,
+      "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-room-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d"
+   },
+   "stump": {
+    "n_expected": 16,
+    "runs": {
+     "42": {
+      "n_scored": 16,
+      "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s42-recovered/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 16,
+      "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 16,
+      "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-stump-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0"
+   },
+   "treehill": {
+    "n_expected": 18,
+    "runs": {
+     "42": {
+      "n_scored": 18,
+      "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s42/per_view.jsonl"
+     },
+     "43": {
+      "n_scored": 18,
+      "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s43/per_view.jsonl"
+     },
+     "44": {
+      "n_scored": 18,
+      "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+      "source": "$SPLAT_DATA/research/p9/p9-v1-6500k-historical-build-065-treehill-s44/per_view.jsonl"
+     }
+    },
+    "all_n_scored_eq_expected": true,
+    "raw_views_hash_identical_across_seeds": true,
+    "normalised_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e"
+   }
+  }
+ },
+ "lane_check": [
+  {
+   "what": "3-seed psnr",
+   "lane": 27.8267882728,
+   "recomputed": 27.826788272815705,
+   "diff": 1.5706547173977015e-11,
+   "ok": true
+  },
+  {
+   "what": "3-seed ssim",
+   "lane": 0.8305212559,
+   "recomputed": 0.8305212559111994,
+   "diff": 1.1199374760906267e-11,
+   "ok": true
+  },
+  {
+   "what": "3-seed lpips_vgg",
+   "lane": 0.2078672193,
+   "recomputed": 0.20786721926970944,
+   "diff": -3.0290547847755533e-11,
+   "ok": true
+  },
+  {
+   "what": "3-seed lpips_alex",
+   "lane": 0.1311540942,
+   "recomputed": 0.13115409418571633,
+   "diff": -1.4283657590041798e-11,
+   "ok": true
+  },
+  {
+   "what": "seed 42 psnr (lane 3dp)",
+   "lane": 27.852,
+   "recomputed": 27.852142811032465,
+   "diff": 0.00014281103246460702,
+   "ok": true
+  },
+  {
+   "what": "seed 43 psnr (lane 3dp)",
+   "lane": 27.79,
+   "recomputed": 27.78953775504825,
+   "diff": -0.00046224495174840285,
+   "ok": true
+  },
+  {
+   "what": "seed 44 psnr (lane 3dp)",
+   "lane": 27.839,
+   "recomputed": 27.838684252366402,
+   "diff": -0.00031574763359643043,
+   "ok": true
+  }
+ ],
+ "inputs_note": "27 per_view.jsonl files = exactly the runs[].summary siblings in research/p9/view-evidence.json (main historical-build-010) and the cohorts in seed-comparison.json; seed-42 counter/stump use the -recovered dirs. diagnostic-view-evidence.json (EXPLORATORY) not used. Six H100 post-score-abort rows (bicycle-s43, flowers-s43, flowers-s44, room-s44, stump-s44, treehill-s44) are the original scores, accepted by pubs after the eval-only replay (archived study registry (not distributed) amendment historical-build-060).",
+ "verdict": {
+  "claim_group": "p9-native-v1-m360-3seed-6500k-historical-build-065",
+  "class": "HEADLINE (seed 42 cells retroactive per amendment historical-build-041; seeds 43/44 pre-registered)",
+  "status": "PASS",
+  "reason": "27/27 cells n_scored == n_expected, raw views_hash identical across seeds 42/43/44 in every scene, per-seed and 3-seed means reproduce the lane within tolerance"
+ }
+}

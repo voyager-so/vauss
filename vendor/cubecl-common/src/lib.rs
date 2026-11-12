@@ -1,0 +1,70 @@
+#![no_std]
+#![warn(missing_docs)]
+
+//! # `CubeCL` Common Library
+//!
+//! This library contains common types used by other crates that must be shared.
+//!
+//! Environment shims (sync primitives, futures, streams, config, persistence)
+//! live in the `cubecl-environment` crate.
+
+#[cfg(feature = "std")]
+extern crate std;
+
+#[macro_use]
+extern crate derive_new;
+
+mod obfuscation;
+
+/// A circular, allocation-free arena for reusable memory blocks.
+#[cfg(feature = "std")]
+pub mod arena;
+
+/// Device module.
+pub mod device;
+
+/// Device handle module.
+pub mod device_handle {
+    pub use super::device::handle::{CallError, CallResultExt, DeviceHandle};
+}
+
+/// Utilities module to manipulate bytes.
+///
+/// Re-exported from `cubecl-environment`, which owns the type: this crate
+/// depends on it, so the lower layers could not otherwise use `Bytes`.
+pub use cubecl_environment::bytes;
+
+/// Module for benchmark timings
+pub mod benchmark;
+
+/// The work a benchmark or a kernel performs, for scoring against measured peaks.
+pub mod work;
+
+/// Module for profiling any executable part
+pub mod profile;
+
+/// A dynamically-growing pool that leases exclusive, reusable single-cell items.
+pub mod pool;
+
+/// Quantization primitives required outside of `cubecl-quant`
+pub mod quant;
+
+/// Format utilities.
+pub mod format;
+
+/// Various utilities to create ID's.
+extern crate alloc;
+
+/// Hashing helper for stable, collision resistant hashes
+#[cfg(feature = "hash")]
+pub mod hash;
+
+/// Custom float implementations
+mod float;
+
+pub use float::*;
+
+/// An exact ratio of two integers.
+mod ratio;
+
+pub use ratio::*;

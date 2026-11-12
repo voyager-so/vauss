@@ -1,0 +1,30 @@
+{
+ "claim": "b13-hpcmask-nohard-v1",
+ "verdict": "FAIL (no-harm guards fail); spot gate PASS",
+ "class": "HEADLINE (negative, as registered: mask must not become the product default as is)",
+ "verified_by": "publications",
+ "verified_at": "2026-10-09T06:58:00-07:00",
+ "source": "$SPLAT_DATA/research/b13/nohard-results.jsonl (24 rows, paired by pair_id, seed echoed 42/43/44 in args, n_scored == views_expected)",
+ "recompute": {
+  "spot30k_dpsnr": [
+   4.257,
+   3.929,
+   3.186
+  ],
+  "spot30k_mean": 3.79,
+  "spot7k_mean": 0.614,
+  "garden_dpsnr": [
+   -0.199,
+   -0.38,
+   -0.175
+  ],
+  "garden_mean": -0.251,
+  "room_dpsnr": [
+   -0.556,
+   -0.665,
+   -0.691
+  ],
+  "room_mean": -0.637
+ },
+ "note": "The mask arm is 'hpcmask-norobust' (mask replaces the robust loss); binary c9aaf4a0 on both arms. Wall +35% to +146% (logged only). Interpretation (lane): the global colour GMM always flags its top cluster, masking real detail on clean scenes."
+}

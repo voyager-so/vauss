@@ -1,0 +1,1718 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "parity-casual --auto-masks gate v3 = PR #26 head (brush-cli-gate-v3 29cd5793, built on main historical-build-005): default vs auto, 30k, seeds 42/43/44, same runner per scene; 4 static scenes with false person masks + fountain + spot",
+ "argv": [
+  "--arm",
+  "default=$SPLAT_DATA/research/parity-casual/exec/s8-*/default-s4?.json",
+  "--arm",
+  "auto=$SPLAT_DATA/research/parity-casual/exec/s8-*/mask-auto2-s4?.json",
+  "--metric",
+  "psnr",
+  "--metric",
+  "lpips_alex",
+  "--metric",
+  "lpips_vgg",
+  "--metric",
+  "ssim",
+  "--label",
+  "parity-casual --auto-masks gate v3 = PR #26 head (brush-cli-gate-v3 29cd5793, built on main historical-build-005): default vs auto, 30k, seeds 42/43/44, same runner per scene; 4 static scenes with false person masks + fountain + spot",
+  "--json",
+  "$HOME/fast/splat/oss/parity-casual/verified/pc-auto-masks-gate-v3.json"
+ ],
+ "cwd": "$HOME/fast/worktrees/splat/main/docs/papers/tools",
+ "generated_at": "2026-10-24T02:53:21-07:00",
+ "verifier_sha256": "f62670c4129df45c64c04fc58d04aa163c29ea61df798f67568d3ed4c10d89b7",
+ "verifier_git_head": "historical-build-005",
+ "options": {
+  "common_views": false,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "default": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/parity-casual/exec/s8-*/default-s4?.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/default-s42.json",
+     "sha256": "65ffb02dacd98548b3c1050ee783e834f9deea33d28458f4f1e06d27c6dd2209"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/default-s43.json",
+     "sha256": "94288e438279b90ab99b4c1989e808f407a201323cda9388c05bc477b067d30c"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/default-s44.json",
+     "sha256": "6978d63f200168c9a3b861623160784e6dd66166d3c02829ac3fbc594c34bbf4"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/default-s42.json",
+     "sha256": "567995f7adcc10f0d2ed929fdb8c776f3abc5f168d324796e61301c6ee4ccfcf"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/default-s43.json",
+     "sha256": "91fc52a924fb324bfe7be5320047a78240395e1047198728d56ec93dac65afc2"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/default-s44.json",
+     "sha256": "cd7c563f8a38bf72c34aa2fb7c04b296c2cce84c0654993cb94d1d947efc2afe"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/default-s42.json",
+     "sha256": "64199e59306154d2fced761239b5377f3e2df6931deabbaeb9514a7a7dfdd8b0"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/default-s43.json",
+     "sha256": "10bce70ea8c5cd93b7080763f3a7374f15eaef9622d1634af06fddab553b88ad"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/default-s44.json",
+     "sha256": "1ba92e48bf6d5668ccc1569e08f38b961d693a5e15a0a749695c0e7aedc07041"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/default-s42.json",
+     "sha256": "e506c322c8c7edac38797f09d29a3fc574eb284f41d2bba9f98cbfe937ae520d"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/default-s43.json",
+     "sha256": "3cc5414d50d180a15a7fc90b4acd8fd553e1798d473473125da63b027e5e4393"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/default-s44.json",
+     "sha256": "1cc906b66143b8b6f25cce6bdfdcbbbaaf789f7d3f01e6fbf58df6f3e1ef9c24"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-room/default-s42.json",
+     "sha256": "ad5dee965c3e612d24193f8ebeaa46e6f426c623a0f2253e332b12c5160b5d8c"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-room/default-s43.json",
+     "sha256": "fcb01a176fb4ed0c6b8757da01309e018addcc1a9cfb3b29ed7398ebf43e9d6f"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-room/default-s44.json",
+     "sha256": "17ad18a388e0294883476bf996de1021e38cdc60c4f2af97d54a4dc496978fb7"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-train/default-s42.json",
+     "sha256": "fc131696662f1957d0c2b35daa7b2b436c7f824aab011d529c3b9bb444cbe4b8"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-train/default-s43.json",
+     "sha256": "6d8bf4765edce2a9de9de44af032161833af899fd91a57a2cd9c98804af229c4"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-train/default-s44.json",
+     "sha256": "409bcac975b418807a7cfde9316c4e07da1ebfcd47fd999d0d145db37df06a6a"
+    }
+   ],
+   "engine_sha256": [
+    "29cd5793804d8a6721bb8a7fae95b4d298b49dd37965880ca2ed1b62d39555b1"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  },
+  "auto": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/parity-casual/exec/s8-*/mask-auto2-s4?.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/mask-auto2-s42.json",
+     "sha256": "284b4cd844af2d471369ecfee056f266293fe1d050409edd66d2d186c9e9ca32"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/mask-auto2-s43.json",
+     "sha256": "bfa6fa659de717aec8390b09bb1a42ed7415c22da0c38b6d22e4df10c677b06d"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/mask-auto2-s44.json",
+     "sha256": "210b00ce816a6730b9172612871e767ac9f1a26355ea07d378769db6b6f57a59"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/mask-auto2-s42.json",
+     "sha256": "1ccfdcb00e5cb16d6dd321efd9aeb018611ba7348b78773285c225e9a7945435"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/mask-auto2-s43.json",
+     "sha256": "d4ec2759ac6a7bf7eeb1a27530ebed03ee023618aaae0e5f6526a23277abd7a6"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/mask-auto2-s44.json",
+     "sha256": "07ce34d22e5a9d0ee03743c4574c681c175c47edaffab3f1dd2db8a0930a511f"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/mask-auto2-s42.json",
+     "sha256": "82ca753e4b1600dfa81f42d5289ecd8584dad3a56f42da13b8b28fc2665e1f14"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/mask-auto2-s43.json",
+     "sha256": "0fc2932921d78073ab15225faf25e0b7e43750c86895c3ea103d143f3d5ef943"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/mask-auto2-s44.json",
+     "sha256": "82f80cf28a29cc96b38d25c7f266393954cd216e7f8553faeb208a8ccd7c8520"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/mask-auto2-s42.json",
+     "sha256": "015257ca4ac2ff9a583219c5a5d10efa362b54954a2fb3b4747a08beb5cc1438"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/mask-auto2-s43.json",
+     "sha256": "f33904deaed36da17c6fe39065b9fbdea3851abbd4caa206876d632d9f9ba25b"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/mask-auto2-s44.json",
+     "sha256": "0105092832b40e7253813e6d1c2fef540c153199c16308e3c757fd93748dbd32"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-room/mask-auto2-s42.json",
+     "sha256": "96aa4027f39b10f7b5b4ee2e4f1fe8e377db2da586cd515f7fbf067e7acc1864"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-room/mask-auto2-s43.json",
+     "sha256": "76425edbefff2fc1f707c5e565cec9fe883dc09e22ae2c7a2de321b8e96b16d2"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-room/mask-auto2-s44.json",
+     "sha256": "f95777a0edd91649cb68da00b6366eeb83b5f30f0d3b791131a65b87cc42c575"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-train/mask-auto2-s42.json",
+     "sha256": "b02063ebcd2db64f0369ee0432b20a609b59ed1387a93ac1391b79689d5ff6e5"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-train/mask-auto2-s43.json",
+     "sha256": "cf17c2305f3d8b05712803763678fcb2eecc963933e23b02af017b00f4184839"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s8-train/mask-auto2-s44.json",
+     "sha256": "2a212d8acf43531053e488eb238d487c31e51f65ed2c7b5743a82a60c0ec7182"
+    }
+   ],
+   "engine_sha256": [
+    "29cd5793804d8a6721bb8a7fae95b4d298b49dd37965880ca2ed1b62d39555b1"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "counter": {
+   "n_expected": 30,
+   "n_common": 30,
+   "common_view_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF5857",
+    "DSCF5865",
+    "DSCF5873",
+    "DSCF5881",
+    "DSCF5889",
+    "DSCF5897",
+    "DSCF5905",
+    "DSCF5913",
+    "DSCF5921",
+    "DSCF5929",
+    "DSCF5937",
+    "DSCF5945",
+    "DSCF5953",
+    "DSCF5961",
+    "DSCF5969",
+    "DSCF5977",
+    "DSCF5985",
+    "DSCF5993",
+    "DSCF6001",
+    "DSCF6009",
+    "DSCF6017",
+    "DSCF6025",
+    "DSCF6033",
+    "DSCF6041",
+    "DSCF6049",
+    "DSCF6057",
+    "DSCF6065",
+    "DSCF6073",
+    "DSCF6081",
+    "DSCF6089"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "default": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/default-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.875342380561623,
+        "lpips_alex": 0.12669982289274534,
+        "lpips_vgg": 0.22322867612044017,
+        "ssim": 0.9210267449350537
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/default-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.896332526769335,
+        "lpips_alex": 0.12652593354384103,
+        "lpips_vgg": 0.2231462314724922,
+        "ssim": 0.921041293362158
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/default-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.86447283958653,
+        "lpips_alex": 0.12626809005935988,
+        "lpips_vgg": 0.22295824537674586,
+        "ssim": 0.9209931623283031
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.878715915639162,
+      "lpips_alex": 0.1264979488319821,
+      "lpips_vgg": 0.22311105098989273,
+      "ssim": 0.921020400208505
+     }
+    },
+    "auto": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/mask-auto2-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.898550277863347,
+        "lpips_alex": 0.1264867442349593,
+        "lpips_vgg": 0.22296220511198045,
+        "ssim": 0.9210395888573515
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/mask-auto2-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.832300181697,
+        "lpips_alex": 0.12649984334905942,
+        "lpips_vgg": 0.22327997336785,
+        "ssim": 0.9208119199660048
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-counter/mask-auto2-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.851875803381287,
+        "lpips_alex": 0.12681052883466085,
+        "lpips_vgg": 0.2233079493045807,
+        "ssim": 0.9210825976000021
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.86090875431388,
+      "lpips_alex": 0.1265990388062265,
+      "lpips_vgg": 0.22318337592813706,
+      "ssim": 0.9209780354744529
+     }
+    }
+   }
+  },
+  "garden": {
+   "n_expected": 24,
+   "n_common": 24,
+   "common_view_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSC07956",
+    "DSC07964",
+    "DSC07972",
+    "DSC07980",
+    "DSC07988",
+    "DSC07996",
+    "DSC08004",
+    "DSC08012",
+    "DSC08020",
+    "DSC08028",
+    "DSC08036",
+    "DSC08044",
+    "DSC08052",
+    "DSC08060",
+    "DSC08068",
+    "DSC08076",
+    "DSC08084",
+    "DSC08092",
+    "DSC08100",
+    "DSC08108",
+    "DSC08116",
+    "DSC08124",
+    "DSC08132",
+    "DSC08140"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "default": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/default-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.845311235122413,
+        "lpips_alex": 0.07243290869519114,
+        "lpips_vgg": 0.11518658635516961,
+        "ssim": 0.8748475007456359
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/default-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.906804530746413,
+        "lpips_alex": 0.0720510371029377,
+        "lpips_vgg": 0.11498056445270777,
+        "ssim": 0.8751831938229145
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/default-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.951676502050976,
+        "lpips_alex": 0.07192060677334666,
+        "lpips_vgg": 0.11484225497891505,
+        "ssim": 0.8755201548250695
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 27.901264089306597,
+      "lpips_alex": 0.0721348508571585,
+      "lpips_vgg": 0.11500313526226413,
+      "ssim": 0.87518361646454
+     }
+    },
+    "auto": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/mask-auto2-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.861226761976287,
+        "lpips_alex": 0.07212645219018061,
+        "lpips_vgg": 0.1148508448774616,
+        "ssim": 0.8751907425654727
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/mask-auto2-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.92666384988905,
+        "lpips_alex": 0.0718932431191206,
+        "lpips_vgg": 0.11506888177245855,
+        "ssim": 0.8754635188025753
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-garden/mask-auto2-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.95038604875226,
+        "lpips_alex": 0.07209964313854773,
+        "lpips_vgg": 0.11525188044955333,
+        "ssim": 0.875188633968688
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 27.912758886872535,
+      "lpips_alex": 0.0720397794826163,
+      "lpips_vgg": 0.11505720236649115,
+      "ssim": 0.8752809651122453
+     }
+    }
+   }
+  },
+  "onthego-fountain-clean": {
+   "n_expected": 16,
+   "n_common": 16,
+   "common_view_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra000",
+    "1extra001",
+    "1extra002",
+    "1extra003",
+    "1extra004",
+    "1extra005",
+    "1extra006",
+    "1extra007",
+    "1extra175",
+    "1extra176",
+    "1extra177",
+    "1extra178",
+    "1extra179",
+    "1extra180",
+    "1extra181",
+    "1extra183"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "default": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/default-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.580155373245123,
+        "lpips_alex": 0.1749473491217941,
+        "lpips_vgg": 0.22169110225513577,
+        "ssim": 0.6990173603903618
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/default-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.638074166432034,
+        "lpips_alex": 0.17398108798079193,
+        "lpips_vgg": 0.22153565241023898,
+        "ssim": 0.7005282938235394
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/default-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.424788397399592,
+        "lpips_alex": 0.17901835846714675,
+        "lpips_vgg": 0.2248911182396114,
+        "ssim": 0.6970064295470921
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 20.54767264569225,
+      "lpips_alex": 0.17598226518991092,
+      "lpips_vgg": 0.22270595763499537,
+      "ssim": 0.6988506945869978
+     }
+    },
+    "auto": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/mask-auto2-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.995841773262015,
+        "lpips_alex": 0.167615084676072,
+        "lpips_vgg": 0.21690492238849401,
+        "ssim": 0.7055245018985904
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/mask-auto2-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.935609327050674,
+        "lpips_alex": 0.16991156083531678,
+        "lpips_vgg": 0.2180364984087646,
+        "ssim": 0.7043709187936551
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-fountain-clean/mask-auto2-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.029156960737065,
+        "lpips_alex": 0.16652034875005484,
+        "lpips_vgg": 0.21648408472537994,
+        "ssim": 0.7057562684655725
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 20.98686935368325,
+      "lpips_alex": 0.16801566475381455,
+      "lpips_vgg": 0.21714183517421284,
+      "ssim": 0.7052172297192727
+     }
+    }
+   }
+  },
+  "onthego-spot-clean": {
+   "n_expected": 10,
+   "n_common": 10,
+   "common_view_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra168",
+    "1extra169",
+    "1extra170",
+    "1extra171",
+    "1extra172",
+    "1extra173",
+    "1extra174",
+    "1extra175",
+    "1extra176",
+    "1extra177"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "default": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/default-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.17075418950698,
+        "lpips_alex": 0.2877762258052826,
+        "lpips_vgg": 0.28148036599159243,
+        "ssim": 0.7983086002118734
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/default-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 19.797467872024107,
+        "lpips_alex": 0.3081678420305252,
+        "lpips_vgg": 0.2937012240290642,
+        "ssim": 0.7834781362281742
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/default-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 19.05839834383674,
+        "lpips_alex": 0.29991441667079927,
+        "lpips_vgg": 0.2924005717039108,
+        "ssim": 0.787749287447627
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 19.675540135122606,
+      "lpips_alex": 0.2986194948355357,
+      "lpips_vgg": 0.28919405390818914,
+      "ssim": 0.7898453412958916
+     }
+    },
+    "auto": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/mask-auto2-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 24.57306181421257,
+        "lpips_alex": 0.08028895258903504,
+        "lpips_vgg": 0.12807495519518852,
+        "ssim": 0.9009042513724745
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/mask-auto2-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 24.136576175214067,
+        "lpips_alex": 0.09277940839529038,
+        "lpips_vgg": 0.13524722456932067,
+        "ssim": 0.8975552432847037
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-onthego-spot-clean/mask-auto2-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 24.769319235582177,
+        "lpips_alex": 0.08157334960997105,
+        "lpips_vgg": 0.12997383177280425,
+        "ssim": 0.900667521261709
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 24.492985741669603,
+      "lpips_alex": 0.08488057019809882,
+      "lpips_vgg": 0.13109867051243781,
+      "ssim": 0.8997090053062958
+     }
+    }
+   }
+  },
+  "room": {
+   "n_expected": 39,
+   "n_common": 39,
+   "common_view_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF4667",
+    "DSCF4675",
+    "DSCF4683",
+    "DSCF4691",
+    "DSCF4699",
+    "DSCF4707",
+    "DSCF4715",
+    "DSCF4723",
+    "DSCF4731",
+    "DSCF4739",
+    "DSCF4747",
+    "DSCF4755",
+    "DSCF4763",
+    "DSCF4771",
+    "DSCF4779",
+    "DSCF4787",
+    "DSCF4795",
+    "DSCF4803",
+    "DSCF4811",
+    "DSCF4819",
+    "DSCF4827",
+    "DSCF4835",
+    "DSCF4843",
+    "DSCF4851",
+    "DSCF4859",
+    "DSCF4867",
+    "DSCF4875",
+    "DSCF4883",
+    "DSCF4891",
+    "DSCF4899",
+    "DSCF4907",
+    "DSCF4915",
+    "DSCF4923",
+    "DSCF4931",
+    "DSCF4939",
+    "DSCF4947",
+    "DSCF4955",
+    "DSCF4963",
+    "DSCF4971"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "default": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-room/default-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 39,
+       "views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.86227519336194,
+        "lpips_alex": 0.13595934269519952,
+        "lpips_vgg": 0.24835985937179664,
+        "ssim": 0.9329136522003413
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-room/default-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 39,
+       "views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.95201548398734,
+        "lpips_alex": 0.13621403764073664,
+        "lpips_vgg": 0.24866033746646002,
+        "ssim": 0.9330837481577843
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-room/default-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 39,
+       "views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.90777158597013,
+        "lpips_alex": 0.13634951995351377,
+        "lpips_vgg": 0.24877179242097414,
+        "ssim": 0.9330331373039454
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.907354087773136,
+      "lpips_alex": 0.13617430009648332,
+      "lpips_vgg": 0.24859732975307694,
+      "ssim": 0.9330101792206903
+     }
+    },
+    "auto": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-room/mask-auto2-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 39,
+       "views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.999675552002124,
+        "lpips_alex": 0.13588881549926904,
+        "lpips_vgg": 0.248335504761109,
+        "ssim": 0.9334560804129334
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-room/mask-auto2-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 39,
+       "views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.913877402523575,
+        "lpips_alex": 0.13640891970732275,
+        "lpips_vgg": 0.24873349643670595,
+        "ssim": 0.9330392626443166
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-room/mask-auto2-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 39,
+       "views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.89335574172136,
+        "lpips_alex": 0.13648812759381074,
+        "lpips_vgg": 0.2490486529393074,
+        "ssim": 0.9331921954806651
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.93563623208235,
+      "lpips_alex": 0.13626195426680085,
+      "lpips_vgg": 0.24870588471237412,
+      "ssim": 0.9332291795126384
+     }
+    }
+   }
+  },
+  "train": {
+   "n_expected": 38,
+   "n_common": 38,
+   "common_view_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+   "identical_view_sets": true,
+   "common_views": [
+    "00001",
+    "00009",
+    "00017",
+    "00025",
+    "00033",
+    "00041",
+    "00049",
+    "00057",
+    "00065",
+    "00073",
+    "00081",
+    "00089",
+    "00097",
+    "00105",
+    "00113",
+    "00121",
+    "00129",
+    "00137",
+    "00145",
+    "00153",
+    "00161",
+    "00169",
+    "00177",
+    "00185",
+    "00193",
+    "00201",
+    "00209",
+    "00217",
+    "00225",
+    "00233",
+    "00241",
+    "00249",
+    "00257",
+    "00265",
+    "00273",
+    "00281",
+    "00289",
+    "00297"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "default": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-train/default-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.708031220575805,
+        "lpips_alex": 0.11653049133325878,
+        "lpips_vgg": 0.1914976301946138,
+        "ssim": 0.8454347083230391
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-train/default-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.446303365911536,
+        "lpips_alex": 0.11697566430819661,
+        "lpips_vgg": 0.19176589187822843,
+        "ssim": 0.8427929455658171
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-train/default-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.65509189581262,
+        "lpips_alex": 0.11574827899274073,
+        "lpips_vgg": 0.19119438646655335,
+        "ssim": 0.8451345554436349
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.60314216076665,
+      "lpips_alex": 0.11641814487806539,
+      "lpips_vgg": 0.19148596951313182,
+      "ssim": 0.844454069777497
+     }
+    },
+    "auto": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-train/mask-auto2-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.42709664369691,
+        "lpips_alex": 0.1164811565295646,
+        "lpips_vgg": 0.19139063397520467,
+        "ssim": 0.8434907442022673
+       }
+      },
+      {
+       "run": 43,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-train/mask-auto2-s43.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.540033238818438,
+        "lpips_alex": 0.11533023789525032,
+        "lpips_vgg": 0.19063077474895276,
+        "ssim": 0.8458121166610153
+       }
+      },
+      {
+       "run": 44,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s8-train/mask-auto2-s44.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.492741337114946,
+        "lpips_alex": 0.1148540597212942,
+        "lpips_vgg": 0.19054348766803741,
+        "ssim": 0.8451509906464078
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.486623739876766,
+      "lpips_alex": 0.11555515138203637,
+      "lpips_vgg": 0.19085496546406497,
+      "ssim": 0.8448179505032302
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "default": {
+   "psnr": {
+    "mean_over_scenes": 25.585614839050066,
+    "per_scene": {
+     "counter": 29.878715915639162,
+     "garden": 27.901264089306597,
+     "onthego-fountain-clean": 20.54767264569225,
+     "onthego-spot-clean": 19.675540135122606,
+     "room": 32.907354087773136,
+     "train": 22.60314216076665
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.15430450078152266,
+    "per_scene": {
+     "counter": 0.1264979488319821,
+     "garden": 0.0721348508571585,
+     "onthego-fountain-clean": 0.17598226518991092,
+     "onthego-spot-clean": 0.2986194948355357,
+     "room": 0.13617430009648332,
+     "train": 0.11641814487806539
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.21501624951025836,
+    "per_scene": {
+     "counter": 0.22311105098989273,
+     "garden": 0.11500313526226413,
+     "onthego-fountain-clean": 0.22270595763499537,
+     "onthego-spot-clean": 0.28919405390818914,
+     "room": 0.24859732975307694,
+     "train": 0.19148596951313182
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8437273835923538,
+    "per_scene": {
+     "counter": 0.921020400208505,
+     "garden": 0.87518361646454,
+     "onthego-fountain-clean": 0.6988506945869978,
+     "onthego-spot-clean": 0.7898453412958916,
+     "room": 0.9330101792206903,
+     "train": 0.844454069777497
+    }
+   }
+  },
+  "auto": {
+   "psnr": {
+    "mean_over_scenes": 26.445963784749733,
+    "per_scene": {
+     "counter": 29.86090875431388,
+     "garden": 27.912758886872535,
+     "onthego-fountain-clean": 20.98686935368325,
+     "onthego-spot-clean": 24.492985741669603,
+     "room": 32.93563623208235,
+     "train": 22.486623739876766
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.11722535981493225,
+    "per_scene": {
+     "counter": 0.1265990388062265,
+     "garden": 0.0720397794826163,
+     "onthego-fountain-clean": 0.16801566475381455,
+     "onthego-spot-clean": 0.08488057019809882,
+     "room": 0.13626195426680085,
+     "train": 0.11555515138203637
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.187673655692953,
+    "per_scene": {
+     "counter": 0.22318337592813706,
+     "garden": 0.11505720236649115,
+     "onthego-fountain-clean": 0.21714183517421284,
+     "onthego-spot-clean": 0.13109867051243781,
+     "room": 0.24870588471237412,
+     "train": 0.19085496546406497
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8632053942713559,
+    "per_scene": {
+     "counter": 0.9209780354744529,
+     "garden": 0.8752809651122453,
+     "onthego-fountain-clean": 0.7052172297192727,
+     "onthego-spot-clean": 0.8997090053062958,
+     "room": 0.9332291795126384,
+     "train": 0.8448179505032302
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "auto": {
+   "a": "default",
+   "b": "auto",
+   "metrics": {
+    "psnr": {
+     "mean_delta": 0.8603489456996639,
+     "ci95": [
+      -0.03814570375919738,
+      2.4808701939787743
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 4,
+      "L": 0
+     },
+     "n_scenes": 6,
+     "positive_scenes": 4,
+     "scenes": [
+      {
+       "scene": "counter",
+       "delta": -0.01780716132528326,
+       "a": 29.878715915639162,
+       "b": 29.86090875431388,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.02320789730172379,
+        "43": -0.06403234507233435,
+        "44": -0.012597036205242773
+       },
+       "seed_sd": 0.04385286792441253
+      },
+      {
+       "scene": "garden",
+       "delta": 0.011494797565937631,
+       "a": 27.901264089306597,
+       "b": 27.912758886872535,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 24,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.015915526853873985,
+        "43": 0.019859319142636167,
+        "44": -0.001290453298715022
+       },
+       "seed_sd": 0.011246570773270737
+      },
+      {
+       "scene": "onthego-fountain-clean",
+       "delta": 0.43919670799100174,
+       "a": 20.54767264569225,
+       "b": 20.98686935368325,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.4156864000168916,
+        "43": 0.29753516061864005,
+        "44": 0.6043685633374736
+       },
+       "seed_sd": 0.15476186607747594
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": 4.817445606546997,
+       "a": 19.675540135122606,
+       "b": 24.492985741669603,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 4.402307624705589,
+        "43": 4.33910830318996,
+        "44": 5.710920891745438
+       },
+       "seed_sd": 0.7744172664044479
+      },
+      {
+       "scene": "room",
+       "delta": 0.02828214430921605,
+       "a": 32.907354087773136,
+       "b": 32.93563623208235,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 39,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.13740035864018552,
+        "43": -0.03813808146376374,
+        "44": -0.014415844248773624
+       },
+       "seed_sd": 0.09524061454393083
+      },
+      {
+       "scene": "train",
+       "delta": -0.11651842088988573,
+       "a": 22.60314216076665,
+       "b": 22.486623739876766,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 38,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.2809345768788951,
+        "43": 0.09372987290690205,
+        "44": -0.16235055869767478
+       },
+       "seed_sd": 0.19149099489361743
+      }
+     ]
+    },
+    "lpips_alex": {
+     "mean_delta": -0.03707914096659042,
+     "ci95": [
+      -0.10819846525877193,
+      -9.676276357455567e-05
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 4,
+      "L": 0
+     },
+     "n_scenes": 6,
+     "positive_scenes": 4,
+     "scenes": [
+      {
+       "scene": "counter",
+       "delta": 0.00010108997424440602,
+       "a": 0.1264979488319821,
+       "b": 0.1265990388062265,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.00021307865778605328,
+        "43": -2.6090194781613896e-05,
+        "44": 0.0005424387753009685
+       },
+       "seed_sd": 0.00039348792163130137
+      },
+      {
+       "scene": "garden",
+       "delta": -9.507137454219106e-05,
+       "a": 0.0721348508571585,
+       "b": 0.0720397794826163,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 24,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.00030645650501053,
+        "43": -0.00015779398381710052,
+        "44": 0.00017903636520107125
+       },
+       "seed_sd": 0.00024874972571294393
+      },
+      {
+       "scene": "onthego-fountain-clean",
+       "delta": -0.007966600436096372,
+       "a": 0.17598226518991092,
+       "b": 0.16801566475381455,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.007332264445722103,
+        "43": -0.004069527145475149,
+        "44": -0.012498009717091918
+       },
+       "seed_sd": 0.0042498960253781505
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": -0.21373892463743688,
+       "a": 0.2986194948355357,
+       "b": 0.08488057019809882,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.20748727321624758,
+        "43": -0.21538843363523485,
+        "44": -0.21834106706082823
+       },
+       "seed_sd": 0.005611761769313321
+      },
+      {
+       "scene": "room",
+       "delta": 8.765417031753042e-05,
+       "a": 0.13617430009648332,
+       "b": 0.13626195426680085,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 39,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -7.052719593048096e-05,
+        "43": 0.00019488206658610507,
+        "44": 0.00013860764029696715
+       },
+       "seed_sd": 0.00013984888714111578
+      },
+      {
+       "scene": "train",
+       "delta": -0.0008629934960290159,
+       "a": 0.11641814487806539,
+       "b": 0.11555515138203637,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 38,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -4.933480369417875e-05,
+        "43": -0.0016454264129462937,
+        "44": -0.0008942192714465336
+       },
+       "seed_sd": 0.0007985038466213365
+      }
+     ]
+    },
+    "lpips_vgg": {
+     "mean_delta": -0.02734259381730536,
+     "ci95": [
+      -0.08006212028963437,
+      -3.58628582928025e-05
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 4,
+      "L": 0
+     },
+     "n_scenes": 6,
+     "positive_scenes": 3,
+     "scenes": [
+      {
+       "scene": "counter",
+       "delta": 7.232493824432806e-05,
+       "a": 0.22311105098989273,
+       "b": 0.22318337592813706,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.00026647100845972327,
+        "43": 0.0001337418953577807,
+        "44": 0.0003497039278348435
+       },
+       "seed_sd": 0.00031264503833455066
+      },
+      {
+       "scene": "garden",
+       "delta": 5.406710422702077e-05,
+       "a": 0.11500313526226413,
+       "b": 0.11505720236649115,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 24,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.00033574147770801255,
+        "43": 8.831731975078583e-05,
+        "44": 0.00040962547063827515
+       },
+       "seed_sd": 0.000373861979705523
+      },
+      {
+       "scene": "onthego-fountain-clean",
+       "delta": -0.005564122460782528,
+       "a": 0.22270595763499537,
+       "b": 0.21714183517421284,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.00478617986664176,
+        "43": -0.0034991540014743805,
+        "44": -0.008407033514231443
+       },
+       "seed_sd": 0.002544742882447847
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": -0.15809538339575133,
+       "a": 0.28919405390818914,
+       "b": 0.13109867051243781,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.1534054107964039,
+        "43": -0.1584539994597435,
+        "44": -0.16242673993110657
+       },
+       "seed_sd": 0.004521343710687531
+      },
+      {
+       "scene": "room",
+       "delta": 0.00010855495929718018,
+       "a": 0.24859732975307694,
+       "b": 0.24870588471237412,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 39,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -2.4354610687643552e-05,
+        "43": 7.315897024592899e-05,
+        "44": 0.0002768605183332551
+       },
+       "seed_sd": 0.00015369546355848104
+      },
+      {
+       "scene": "train",
+       "delta": -0.0006310040490668523,
+       "a": 0.19148596951313182,
+       "b": 0.19085496546406497,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 38,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.00010699621940912785,
+        "43": -0.0011351171292756645,
+        "44": -0.0006508987985159309
+       },
+       "seed_sd": 0.0005143491052951569
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": 0.01947801067900227,
+     "ci95": [
+      0.00011547480749794319,
+      0.056025370743149706
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 4,
+      "L": 0
+     },
+     "n_scenes": 6,
+     "positive_scenes": 5,
+     "scenes": [
+      {
+       "scene": "counter",
+       "delta": -4.236473405205832e-05,
+       "a": 0.921020400208505,
+       "b": 0.9209780354744529,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 1.284392229783382e-05,
+        "43": -0.00022937339615325403,
+        "44": 8.943527169902321e-05
+       },
+       "seed_sd": 0.0001664203667716557
+      },
+      {
+       "scene": "garden",
+       "delta": 9.73486477052754e-05,
+       "a": 0.87518361646454,
+       "b": 0.8752809651122453,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 24,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.0003432418198368037,
+        "43": 0.0002803249796607954,
+        "44": -0.0003315208563815508
+       },
+       "seed_sd": 0.0003727417616074716
+      },
+      {
+       "scene": "onthego-fountain-clean",
+       "delta": 0.00636653513227492,
+       "a": 0.6988506945869978,
+       "b": 0.7052172297192727,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.00650714150822862,
+        "43": 0.003842624970115671,
+        "44": 0.008749838918480357
+       },
+       "seed_sd": 0.0024566267112598457
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": 0.10986366401040426,
+       "a": 0.7898453412958916,
+       "b": 0.8997090053062958,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.1025956511606011,
+        "43": 0.11407710705652951,
+        "44": 0.11291823381408206
+       },
+       "seed_sd": 0.00632089826580785
+      },
+      {
+       "scene": "room",
+       "delta": 0.00021900029194810156,
+       "a": 0.9330101792206903,
+       "b": 0.9332291795126384,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 39,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.0005424282125920943,
+        "43": -4.44855134676958e-05,
+        "44": 0.00015905817671968414
+       },
+       "seed_sd": 0.00029801295834725475
+      },
+      {
+       "scene": "train",
+       "delta": 0.00036388072573312336,
+       "a": 0.844454069777497,
+       "b": 0.8448179505032302,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 38,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.0019439641207718017,
+        "43": 0.0030191710951982254,
+        "44": 1.643520277283539e-05
+       },
+       "seed_sd": 0.0024997433041353072
+      }
+     ]
+    }
+   }
+  }
+ }
+}

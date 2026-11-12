@@ -1,0 +1,424 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "parity-casual 3f: spot-clean 30k, native main historical-build-006 default (3 seeds) vs Spirula v2026.10.6 30k (E11, 3 runs), common views",
+ "argv": [
+  "--arm",
+  "spirula=$SPLAT_DATA/runs/perf/results.jsonl::engine.label=spirula-v2026.10.6-30k,steps=30000,scene=onthego-spot-clean",
+  "--arm",
+  "native=$SPLAT_DATA/research/parity-casual/s1-results.jsonl::steps=30000,scene=onthego-spot-clean",
+  "--common-views",
+  "--metric",
+  "psnr",
+  "--metric",
+  "lpips_vgg",
+  "--metric",
+  "lpips_alex",
+  "--metric",
+  "ssim",
+  "--label",
+  "parity-casual 3f: spot-clean 30k, native main historical-build-006 default (3 seeds) vs Spirula v2026.10.6 30k (E11, 3 runs), common views",
+  "--json",
+  "$HOME/fast/splat/oss/parity-casual/verified/pc-3f-spot30k-historical-build-006.json"
+ ],
+ "cwd": "$HOME/fast/worktrees/splat/main/docs/papers/tools",
+ "generated_at": "2026-10-23T22:56:13-07:00",
+ "verifier_sha256": "f62670c4129df45c64c04fc58d04aa163c29ea61df798f67568d3ed4c10d89b7",
+ "verifier_git_head": "historical-build-006",
+ "options": {
+  "common_views": true,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "spirula": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "filters": [
+      "engine.label=spirula-v2026.10.6-30k",
+      "steps=30000",
+      "scene=onthego-spot-clean"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "sha256": "9de3886709e40bc0afd537bf68b4ad3128167c0645dcfae3679b2d37c5c4aef7"
+    }
+   ],
+   "engine_sha256": [
+    "d68620c134b1b65d5456f6f7728de5ca531012f8af2b2fd7ce3fa0d502d9420a"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  },
+  "native": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl",
+     "filters": [
+      "steps=30000",
+      "scene=onthego-spot-clean"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl",
+     "sha256": "f981e963f2b9a15ca3c1c74d0a99de75060de5bd942ecf90b1dcaada41c2bafc"
+    }
+   ],
+   "engine_sha256": [
+    "e74762a26ba69c369a3fcf05649360064ed594cb9610f0febdf4f748881e96d3"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "onthego-spot-clean": {
+   "n_expected": 10,
+   "n_common": 7,
+   "common_view_hash": "a39bf3c2df28ad20bfac0a01bf610bb212b25ed98af732d327e6031d7fb79624",
+   "identical_view_sets": false,
+   "common_views": [
+    "1extra168",
+    "1extra171",
+    "1extra172",
+    "1extra173",
+    "1extra175",
+    "1extra176",
+    "1extra177"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-180132-2d9c7306",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1845",
+       "format": "splat-perf Row per_image",
+       "n_scored": 9,
+       "views_hash": "49bac32ea0c86ac6eaeccaa0fda0d4e9982acaf6b2e81df5d6188a591bafdd81",
+       "normalised_views_hash": "5c08a24736b49c3708e6ce564d6f3c0cdf36e01286c6a434518fe9a78b954b98",
+       "dropped_for_common": [
+        "1extra170",
+        "1extra174"
+       ],
+       "mean": {
+        "psnr": 22.61751910746332,
+        "lpips_vgg": 0.21398599020072392,
+        "lpips_alex": 0.18479321471282414,
+        "ssim": 0.8313472815632823
+       }
+      },
+      {
+       "run": "pair-20261008-180138-dda773bd",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1854",
+       "format": "splat-perf Row per_image",
+       "n_scored": 9,
+       "views_hash": "ea2b5d03cd7f1ea302197e35d36f6440e0f4dcbbaeb97c2ad0a564815efe368d",
+       "normalised_views_hash": "1d2cb436065fa14747e6fff7b7dfe6fd1de6b6d5059beae00241126b7c656170",
+       "dropped_for_common": [
+        "1extra169",
+        "1extra170"
+       ],
+       "mean": {
+        "psnr": 22.633416147424803,
+        "lpips_vgg": 0.20787291441644942,
+        "lpips_alex": 0.17728816185678756,
+        "ssim": 0.8364935454563606
+       }
+      },
+      {
+       "run": "pair-20261008-180140-2239085a",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1849",
+       "format": "splat-perf Row per_image",
+       "n_scored": 8,
+       "views_hash": "ce3383ce951da97ffcaab04cc9d0c61a157b10a15bd75ec9b51f12574dc76246",
+       "normalised_views_hash": "432b99747478c3c81049959bcf3ee58c45086fd70739f87960d50089acc7e657",
+       "dropped_for_common": [
+        "1extra174"
+       ],
+       "mean": {
+        "psnr": 23.17031151932693,
+        "lpips_vgg": 0.20669844959463393,
+        "lpips_alex": 0.1757194229534694,
+        "ssim": 0.8377012676266309
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.807082258071684,
+      "lpips_vgg": 0.20951911807060242,
+      "lpips_alex": 0.17926693317436038,
+      "ssim": 0.8351806982154247
+     }
+    },
+    "native": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "20261024T054220-136-3b7512d6-onthego-spot-clean-30000-pc-main-historical-build-006-20261024-053956",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:5",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [
+        "1extra169",
+        "1extra170",
+        "1extra174"
+       ],
+       "mean": {
+        "psnr": 19.33886796017192,
+        "lpips_vgg": 0.3056326849120004,
+        "lpips_alex": 0.32127057015895844,
+        "ssim": 0.7753597016469058
+       }
+      },
+      {
+       "run": "20261024T054320-135-2ae103c5-onthego-spot-clean-30000-pc-main-historical-build-006-20261024-054058",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:7",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [
+        "1extra169",
+        "1extra170",
+        "1extra174"
+       ],
+       "mean": {
+        "psnr": 20.20463903878951,
+        "lpips_vgg": 0.2860082004751478,
+        "lpips_alex": 0.2950990455491202,
+        "ssim": 0.7946076022547455
+       }
+      },
+      {
+       "run": "20261024T054837-135-32f20cad-onthego-spot-clean-30000-pc-main-historical-build-006-20261024-054617",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:13",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [
+        "1extra169",
+        "1extra170",
+        "1extra174"
+       ],
+       "mean": {
+        "psnr": 19.691378676271086,
+        "lpips_vgg": 0.29037538383688244,
+        "lpips_alex": 0.3033730132239206,
+        "ssim": 0.7909076907515733
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 19.744961891744172,
+      "lpips_vgg": 0.29400542307467686,
+      "lpips_alex": 0.3065808763106664,
+      "ssim": 0.7869583315510749
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "spirula": {
+   "psnr": {
+    "mean_over_scenes": 22.807082258071684,
+    "per_scene": {
+     "onthego-spot-clean": 22.807082258071684
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.20951911807060242,
+    "per_scene": {
+     "onthego-spot-clean": 0.20951911807060242
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.17926693317436038,
+    "per_scene": {
+     "onthego-spot-clean": 0.17926693317436038
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8351806982154247,
+    "per_scene": {
+     "onthego-spot-clean": 0.8351806982154247
+    }
+   }
+  },
+  "native": {
+   "psnr": {
+    "mean_over_scenes": 19.744961891744172,
+    "per_scene": {
+     "onthego-spot-clean": 19.744961891744172
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.29400542307467686,
+    "per_scene": {
+     "onthego-spot-clean": 0.29400542307467686
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.3065808763106664,
+    "per_scene": {
+     "onthego-spot-clean": 0.3065808763106664
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.7869583315510749,
+    "per_scene": {
+     "onthego-spot-clean": 0.7869583315510749
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "native": {
+   "a": "spirula",
+   "b": "native",
+   "metrics": {
+    "psnr": {
+     "mean_delta": -3.0621203663275125,
+     "ci95": [
+      -3.534974863154577,
+      -2.589265869500448
+     ],
+     "ci_unit": "single scene: unpaired run bootstrap (resample each arm's runs)",
+     "tally": {
+      "W": 0,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 1,
+     "positive_scenes": 0,
+     "scenes": [
+      {
+       "scene": "onthego-spot-clean",
+       "delta": -3.0621203663275125,
+       "a": 22.807082258071684,
+       "b": 19.744961891744172,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "lpips_vgg": {
+     "mean_delta": 0.08448630500407445,
+     "ci95": [
+      0.07551562998976027,
+      0.09572207856745948
+     ],
+     "ci_unit": "single scene: unpaired run bootstrap (resample each arm's runs)",
+     "tally": {
+      "W": 0,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 1,
+     "positive_scenes": 0,
+     "scenes": [
+      {
+       "scene": "onthego-spot-clean",
+       "delta": 0.08448630500407445,
+       "a": 0.20951911807060242,
+       "b": 0.29400542307467686,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "lpips_alex": {
+     "mean_delta": 0.127313943136306,
+     "ci95": [
+      0.11556550434657506,
+      0.14148072401682535
+     ],
+     "ci_unit": "single scene: unpaired run bootstrap (resample each arm's runs)",
+     "tally": {
+      "W": 0,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 1,
+     "positive_scenes": 0,
+     "scenes": [
+      {
+       "scene": "onthego-spot-clean",
+       "delta": 0.127313943136306,
+       "a": 0.17926693317436038,
+       "b": 0.3065808763106664,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": -0.04822236666434987,
+     "ci95": [
+      -0.05941842251176199,
+      -0.03968840444062027
+     ],
+     "ci_unit": "single scene: unpaired run bootstrap (resample each arm's runs)",
+     "tally": {
+      "W": 0,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 1,
+     "positive_scenes": 0,
+     "scenes": [
+      {
+       "scene": "onthego-spot-clean",
+       "delta": -0.04822236666434987,
+       "a": 0.8351806982154247,
+       "b": 0.7869583315510749,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    }
+   }
+  }
+ }
+}

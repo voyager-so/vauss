@@ -1,0 +1,68 @@
+{
+ "kind": "fps",
+ "claim": "parity6f-render-fps-e17-headline",
+ "verified_by": "publications (recompute from run-{a,b}/out/summary.json)",
+ "verified_at": "2026-10-09T00:08-07:00",
+ "inputs": "$SPLAT_DATA/research/o1-fps/headline/run-{a,b}/out/summary.json (+ per-process fps.json)",
+ "gates": [
+  "both runners Xeon 6962P + RTX PRO 6000 driver 610.43.02, both arms same runner per replicate",
+  "same splat binary sha 7682fa29 on both",
+  "3 timed passes after full warm-up pass"
+ ],
+ "headline_rows_warm_vs_warm": {
+  "flowers": {
+   "A": [
+    349.5,
+    143.7,
+    2.43
+   ],
+   "B": [
+    362.5,
+    141.8,
+    2.56
+   ]
+  },
+  "treehill": {
+   "A": [
+    427.8,
+    129.5,
+    3.3
+   ],
+   "B": [
+    401.9,
+    127.5,
+    3.15
+   ]
+  }
+ },
+ "robustness": "min ratio over all ours float cache configs (p1-p4) vs either gsplat config is 2.43 (flowers A) \u2014 the chosen warm/warm rows are the most conservative of ours' configs",
+ "cold_first_pass": {
+  "ours_all_cold": [
+   25.3,
+   25.2,
+   27.6,
+   23.8
+  ],
+  "gsplat_fresh": [
+   30.7,
+   25.5,
+   25.7,
+   21.2
+  ],
+  "ours_shader_cache_warm": "101-164",
+  "note": "cold first pass is at parity with gsplat (~21-31 FPS each); ~500 ms of our first frame is driver shader compilation"
+ },
+ "splat_counts": {
+  "ours": [
+   1173291,
+   1160125
+  ],
+  "gsplat": [
+   5147472,
+   5564917
+  ]
+ },
+ "verdict": "AHEAD on both scenes, both runners (rule: median ratio > 1.05 on both scenes). HEADLINE.",
+ "required_wording": "ours renders 2.4-2.6x (flowers) / 3.2-3.3x (treehill) faster than gsplat default (median of 3 passes, two runners), at 1.2M vs 5.1-5.6M splats, with equal-or-better LPIPS (flowers PSNR 0.32 dB lower). Cold first frame is at parity (~25 FPS both). Not a per-splat renderer claim.",
+ "supersedes": "PROVISIONAL 2.86x/3.68x single-pass/mixed-runner figures"
+}

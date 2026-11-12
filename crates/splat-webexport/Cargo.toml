@@ -1,0 +1,33 @@
+[package]
+name = "splat-webexport"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+# Deps (licenses): glam MIT/Apache-2.0, flate2 MIT/Apache-2.0, rayon MIT/Apache-2.0.
+# spark-lib MIT (World Labs, github.com/sparkjsdev/spark v2.2.0): RAD LoD encoder, same release as the viewer.
+# SPZ writer implemented from Niantic's MIT-licensed format description (github.com/nianticlabs/spz).
+[dependencies]
+splat-shots.workspace = true
+# image MIT/Apache-2.0: export-game colours its voxels from the capture frames.
+image.workspace = true
+serde_json.workspace = true
+# base64 MIT/Apache-2.0: the standalone viewer's data/*.js parts (viewer.rs).
+base64.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+glam.workspace = true
+# Preserve the SPZ gzip stream while using the faster Rust zlib implementation.
+flate2 = { workspace = true, features = ["zlib-rs"] }
+rayon.workspace = true
+zstd = "0.13"
+tempfile.workspace = true
+spark-lib = { git = "https://github.com/sparkjsdev/spark", rev = "4eb719afdb5b3655fe0bc290588e4728d9772405", default-features = false, features = ["ply", "rad", "gsplat", "bhatt_lod"] }
+
+# CPU collision export: meshopt MIT; Parry V-HACD implementation Apache-2.0.
+# Exact versions keep collision output reproducible across release builds.
+splat-mesh.workspace = true
+hashbrown.workspace = true
+meshopt = "=0.6.2"
+parry3d = { package = "parry3d-f64", version = "=0.25.3", default-features = false, features = ["required-features", "std", "alloc"] }
+sha2.workspace = true

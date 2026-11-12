@@ -1,0 +1,31 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-loss"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "brush_loss"
+
+[dependencies]
+brush-cube = { path = "../splat-train-cube", package = "splat-train-cube" }
+
+burn = { workspace = true, features = ["autodiff"] }
+burn-cubecl.workspace = true
+glam.workspace = true
+
+[dev-dependencies]
+brush-cube = { path = "../splat-train-cube", package = "splat-train-cube" }
+tokio = { workspace = true, features = ["macros", "rt"] }
+wasm-bindgen-test = "0.3"
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+[lints]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["getrandom"]

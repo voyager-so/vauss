@@ -1,0 +1,16 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-serde-macros"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "brush_serde_macros"
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+proc-macro2 = "1.0"

@@ -1,0 +1,3 @@
+[net]
+# Users commonly rewrite https://github.com/ to ssh aliases; libgit2 cannot follow those.
+git-fetch-with-cli = true

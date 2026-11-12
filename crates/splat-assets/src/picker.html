@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>splat viewer</title>
+<style>
+  :root { --bg: #f7f7f9; --fg: #16171d; --muted: #6b6f7b; --card: #fff; --line: #e3e4ea; --accent: #3d63dd; --accent-fg: #fff; --err: #c0392b; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0e0f13; --fg: #e9eaf0; --muted: #9094a1; --card: #171920; --line: #272a33; --accent: #7c9cff; --accent-fg: #0b0c10; --err: #ff7b6b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: 0; }
+  .row .info { flex: 1; min-width: 0; }
+  .name { font-weight: 600; }
+  .path { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  button, .btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 8px; padding: 6px 14px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  button.primary, .btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  .open { display: flex; gap: 8px; padding: 14px; flex-wrap: wrap; }
+  .open input[type=text] { flex: 1; min-width: 200px; font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+  .empty { padding: 14px; color: var(--muted); }
+  #status { min-height: 1.4em; margin-top: 10px; color: var(--muted); }
+  #status.err { color: var(--err); }
+  @media (max-width: 560px) { .meta { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>splat viewer</h1><button id="quit" title="Stop the local server">Quit</button></header>
+
+  <section id="given" hidden><h2>Opened</h2><div class="card" id="given-list"></div></section>
+
+  <h2>Open a file or folder</h2>
+  <div class="card">
+    <form class="open" id="open-form">
+      <input type="text" id="path" placeholder="Path to a .ply, .spz, scene folder or run folder" autocomplete="off" spellcheck="false">
+      <button class="primary" type="submit">Open</button>
+    </form>
+    <div class="open" style="border-top:1px solid var(--line)">
+      <input type="file" id="file" accept=".ply,.spz">
+    </div>
+  </div>
+  <div id="status"></div>
+
+  <h2>Recent</h2>
+  <div class="card" id="recent"><div class="empty">Looking for scenes…</div></div>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const status = (msg, bad) => { $("status").textContent = msg || ""; $("status").className = bad ? "err" : ""; };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const size = (n) => !n ? "" : n > 1e9 ? (n / 1e9).toFixed(1) + " GB" : n > 1e6 ? (n / 1e6).toFixed(0) + " MB" : (n / 1e3).toFixed(0) + " KB";
+  const when = (s) => s ? new Date(s * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "";
+
+  async function go(res) {
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || "HTTP " + res.status);
+    location.href = j.url;
+  }
+  async function openPath(path) {
+    if (!path) return;
+    status("Opening " + path + "…");
+    try { await go(await fetch("api/open", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ path }) })); }
+    catch (e) { status(e.message, true); }
+  }
+
+  $("open-form").addEventListener("submit", (e) => { e.preventDefault(); openPath($("path").value.trim()); });
+  $("file").addEventListener("change", async () => {
+    const f = $("file").files[0];
+    if (!f) return;
+    status("Uploading " + f.name + " (" + size(f.size) + ")…");
+    try { await go(await fetch("api/open/upload?name=" + encodeURIComponent(f.name), { method: "POST", headers: { "content-type": "application/octet-stream" }, body: f })); }
+    catch (e) { status(e.message, true); }
+  });
+  $("quit").addEventListener("click", async () => {
+    $("quit").disabled = true;
+    try { await fetch("api/quit", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {}
+    document.querySelector("main").innerHTML = "<h1>splat viewer stopped</h1><p>You can close this tab.</p>";
+  });
+
+  fetch("api/scenes").then((r) => r.json()).then(({ scenes, recent }) => {
+    if (scenes.length) {
+      $("given").hidden = false;
+      $("given-list").innerHTML = scenes.map((s) =>
+        `<div class="row"><div class="info"><div class="name">${esc(s.id)}</div><div class="path">${esc(s.path)}</div></div>` +
+        `<a class="btn primary" href="${esc(s.url)}">Open</a></div>`).join("");
+    }
+    $("recent").innerHTML = recent.length ? recent.map((s, i) =>
+      `<div class="row"><div class="info"><div class="name">${esc(s.name)}</div><div class="path">${esc(s.path)}</div></div>` +
+      `<div class="meta">${esc(size(s.size))}</div><div class="meta">${esc(when(s.modified))}</div>` +
+      `<button data-i="${i}">Open</button></div>`).join("") : `<div class="empty">No scenes found here. Open a file or folder above.</div>`;
+    $("recent").addEventListener("click", (e) => { const i = e.target.dataset && e.target.dataset.i; if (i !== undefined) openPath(recent[i].path); });
+  }).catch((e) => { $("recent").innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+</script>
+</body>
+</html>

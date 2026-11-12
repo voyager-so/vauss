@@ -1,0 +1,608 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "A1-X5N registered NEGATIVE a1-x5n-native-kitchen-3seed: native SH (brush-cli historical-build-023, a1-sh) vs compact neural appearance (01e99f29, a1-neural), kitchen 30k, same-runner L40S pairs (one fal request per pair), seeds 1/2/3 from engine.args --seed, historical-record; delta = neural - sh",
+ "argv": [
+  "--arm",
+  "sh=$SPLAT_DATA/runs/perf/results.jsonl::engine.label=a1-sh,scene=kitchen,steps=30000,pair_id=pair-20261008-221257-*",
+  "--arm",
+  "neural=$SPLAT_DATA/runs/perf/results.jsonl::engine.label=a1-neural,scene=kitchen,steps=30000,pair_id=pair-20261008-221257-*",
+  "--label",
+  "A1-X5N registered NEGATIVE a1-x5n-native-kitchen-3seed: native SH (brush-cli historical-build-023, a1-sh) vs compact neural appearance (01e99f29, a1-neural), kitchen 30k, same-runner L40S pairs (one fal request per pair), seeds 1/2/3 from engine.args --seed, historical-record; delta = neural - sh",
+  "--json",
+  "verified/a1-x5n-negative.json"
+ ],
+ "cwd": "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools",
+ "generated_at": "2026-10-08T23:06:50-07:00",
+ "verifier_sha256": "3c70e4841f9909188590fe4a19827f4e4d9f12cc45b03719f7c9088e54930b7d",
+ "verifier_git_head": "historical-build-055",
+ "options": {
+  "common_views": false,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "sh": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "filters": [
+      "engine.label=a1-sh",
+      "scene=kitchen",
+      "steps=30000",
+      "pair_id=pair-20261008-221257-*"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "sha256": "10ff54bcc9b9c849ce7b297b3a2030ecb864b0d47b65464e3bad3fa0160781da"
+    }
+   ]
+  },
+  "neural": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "filters": [
+      "engine.label=a1-neural",
+      "scene=kitchen",
+      "steps=30000",
+      "pair_id=pair-20261008-221257-*"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "sha256": "10ff54bcc9b9c849ce7b297b3a2030ecb864b0d47b65464e3bad3fa0160781da"
+    }
+   ]
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "kitchen": {
+   "n_expected": 35,
+   "n_common": 35,
+   "common_view_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF0656",
+    "DSCF0664",
+    "DSCF0672",
+    "DSCF0680",
+    "DSCF0688",
+    "DSCF0696",
+    "DSCF0704",
+    "DSCF0712",
+    "DSCF0720",
+    "DSCF0728",
+    "DSCF0736",
+    "DSCF0744",
+    "DSCF0752",
+    "DSCF0760",
+    "DSCF0768",
+    "DSCF0776",
+    "DSCF0784",
+    "DSCF0792",
+    "DSCF0800",
+    "DSCF0808",
+    "DSCF0816",
+    "DSCF0824",
+    "DSCF0832",
+    "DSCF0840",
+    "DSCF0848",
+    "DSCF0856",
+    "DSCF0864",
+    "DSCF0872",
+    "DSCF0880",
+    "DSCF0888",
+    "DSCF0896",
+    "DSCF0904",
+    "DSCF0912",
+    "DSCF0920",
+    "DSCF0928"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg",
+    "lpips_alex"
+   ],
+   "arms": {
+    "sh": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:3250",
+       "format": "splat-perf Row per_image",
+       "n_scored": 35,
+       "views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 31.944941531285952,
+        "ssim": 0.9325327740770314,
+        "lpips_vgg": 0.1441619873046875,
+        "lpips_alex": 0.08784420926656042
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:3258",
+       "format": "splat-perf Row per_image",
+       "n_scored": 35,
+       "views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 31.97056252255385,
+        "ssim": 0.9325033532972018,
+        "lpips_vgg": 0.14423887708357402,
+        "lpips_alex": 0.08841834792069027
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:3232",
+       "format": "splat-perf Row per_image",
+       "n_scored": 35,
+       "views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 31.97873168380543,
+        "ssim": 0.9323813667314255,
+        "lpips_vgg": 0.14412329069205693,
+        "lpips_alex": 0.08819761606199401
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 31.964745245881744,
+      "ssim": 0.9324724980352196,
+      "lpips_vgg": 0.14417471836010615,
+      "lpips_alex": 0.08815339108308157
+     }
+    },
+    "neural": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:3251",
+       "format": "splat-perf Row per_image",
+       "n_scored": 35,
+       "views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.263279107106136,
+        "ssim": 0.9303087810164966,
+        "lpips_vgg": 0.1489571151988847,
+        "lpips_alex": 0.09041208177804946
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:3259",
+       "format": "splat-perf Row per_image",
+       "n_scored": 35,
+       "views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.090963100846764,
+        "ssim": 0.9302032981308395,
+        "lpips_vgg": 0.14897192312138421,
+        "lpips_alex": 0.09053727441600391
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:3233",
+       "format": "splat-perf Row per_image",
+       "n_scored": 35,
+       "views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.033547403150784,
+        "ssim": 0.9300256754888632,
+        "lpips_vgg": 0.14869146176746914,
+        "lpips_alex": 0.0902325460953372
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.12926320370122,
+      "ssim": 0.9301792515453998,
+      "lpips_vgg": 0.14887350002924601,
+      "lpips_alex": 0.09039396742979687
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "sh": {
+   "psnr": {
+    "mean_over_scenes": 31.964745245881744,
+    "per_scene": {
+     "kitchen": 31.964745245881744
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.9324724980352196,
+    "per_scene": {
+     "kitchen": 0.9324724980352196
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.14417471836010615,
+    "per_scene": {
+     "kitchen": 0.14417471836010615
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.08815339108308157,
+    "per_scene": {
+     "kitchen": 0.08815339108308157
+    }
+   }
+  },
+  "neural": {
+   "psnr": {
+    "mean_over_scenes": 32.12926320370122,
+    "per_scene": {
+     "kitchen": 32.12926320370122
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.9301792515453998,
+    "per_scene": {
+     "kitchen": 0.9301792515453998
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.14887350002924601,
+    "per_scene": {
+     "kitchen": 0.14887350002924601
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.09039396742979687,
+    "per_scene": {
+     "kitchen": 0.09039396742979687
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "neural": {
+   "a": "sh",
+   "b": "neural",
+   "metrics": {
+    "psnr": {
+     "mean_delta": 0.1645179578194771,
+     "ci95": [
+      0.054815719345352676,
+      0.31833757582018407
+     ],
+     "ci_unit": "single scene: paired seed bootstrap (resample seeds)",
+     "tally": {
+      "W": 1,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 1,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "kitchen",
+       "delta": 0.1645179578194771,
+       "a": 31.964745245881744,
+       "b": 32.12926320370122,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 35,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": 0.31833757582018407,
+        "2": 0.12040057829291584,
+        "3": 0.054815719345352676
+       },
+       "seed_sd": 0.13718855488780346
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": -0.002293246489819767,
+     "ci95": [
+      -0.0023556912425622967,
+      -0.002223993060534779
+     ],
+     "ci_unit": "single scene: paired seed bootstrap (resample seeds)",
+     "tally": {
+      "W": 0,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 1,
+     "positive_scenes": 0,
+     "scenes": [
+      {
+       "scene": "kitchen",
+       "delta": -0.002293246489819767,
+       "a": 0.9324724980352196,
+       "b": 0.9301792515453998,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 35,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": -0.002223993060534779,
+        "2": -0.002300055166362336,
+        "3": -0.0023556912425622967
+       },
+       "seed_sd": 6.611256570829715e-05
+      }
+     ]
+    },
+    "lpips_vgg": {
+     "mean_delta": 0.004698781669139868,
+     "ci95": [
+      0.004568171075412214,
+      0.004795127894197199
+     ],
+     "ci_unit": "single scene: paired seed bootstrap (resample seeds)",
+     "tally": {
+      "W": 0,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 1,
+     "positive_scenes": 0,
+     "scenes": [
+      {
+       "scene": "kitchen",
+       "delta": 0.004698781669139868,
+       "a": 0.14417471836010615,
+       "b": 0.14887350002924601,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 35,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": 0.004795127894197199,
+        "2": 0.00473304603781019,
+        "3": 0.004568171075412214
+       },
+       "seed_sd": 0.00011729400930368067
+      }
+     ]
+    },
+    "lpips_alex": {
+     "mean_delta": 0.0022405763467153034,
+     "ci95": [
+      0.0020349300333431797,
+      0.0025678725114890444
+     ],
+     "ci_unit": "single scene: paired seed bootstrap (resample seeds)",
+     "tally": {
+      "W": 0,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 1,
+     "positive_scenes": 0,
+     "scenes": [
+      {
+       "scene": "kitchen",
+       "delta": 0.0022405763467153034,
+       "a": 0.08815339108308157,
+       "b": 0.09039396742979687,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 35,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": 0.0025678725114890444,
+        "2": 0.0021189264953136444,
+        "3": 0.0020349300333431797
+       },
+       "seed_sd": 0.0002865413338640616
+      }
+     ]
+    }
+   }
+  }
+ },
+ "coverage_check": {
+  "ok": true,
+  "n_expected": 35,
+  "n_scored": {
+   "sh": {
+    "1": 35,
+    "2": 35,
+    "3": 35
+   },
+   "neural": {
+    "1": 35,
+    "2": 35,
+    "3": 35
+   }
+  },
+  "raw_views_hash": {
+   "sh": {
+    "1": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+    "2": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+    "3": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d"
+   },
+   "neural": {
+    "1": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+    "2": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+    "3": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d"
+   }
+  },
+  "views_hash_identical_across_arms_and_seeds": true
+ },
+ "pairing_check": {
+  "ok": true,
+  "pairs": {
+   "pair-20261008-221257-9d2a8745": {
+    "a1-sh": {
+     "line": 3232,
+     "seed": "3",
+     "request": "01a11f14-2900-75d3-a11c-3477f243d783",
+     "splats": 1182194,
+     "binary": "eb5529ff2b3186a5cee3bedbc3507e7408c276ba6315f6f06f5e6e0005d4672b",
+     "psnr": 31.978731683805428,
+     "lpips_vgg": 0.14412329069205693,
+     "wall_s": 288.54
+    },
+    "a1-neural": {
+     "line": 3233,
+     "seed": "3",
+     "request": "01a11f14-2900-75d3-a11c-3477f243d783",
+     "splats": 1180642,
+     "binary": "c1980f5ea2ce3e7afb795511c4bab7327c070c26412529834d417d2707aef9f3",
+     "psnr": 32.033547403150784,
+     "lpips_vgg": 0.14869146176746914,
+     "wall_s": 528.24
+    }
+   },
+   "pair-20261008-221257-76f30c6c": {
+    "a1-sh": {
+     "line": 3250,
+     "seed": "1",
+     "request": "01a11f14-2901-7872-a6bc-fbef7d34078b",
+     "splats": 1184854,
+     "binary": "eb5529ff2b3186a5cee3bedbc3507e7408c276ba6315f6f06f5e6e0005d4672b",
+     "psnr": 31.94494153128596,
+     "lpips_vgg": 0.1441619873046875,
+     "wall_s": 272.53
+    },
+    "a1-neural": {
+     "line": 3251,
+     "seed": "1",
+     "request": "01a11f14-2901-7872-a6bc-fbef7d34078b",
+     "splats": 1181782,
+     "binary": "c1980f5ea2ce3e7afb795511c4bab7327c070c26412529834d417d2707aef9f3",
+     "psnr": 32.26327910710613,
+     "lpips_vgg": 0.1489571151988847,
+     "wall_s": 444.78
+    }
+   },
+   "pair-20261008-221257-b186e62f": {
+    "a1-sh": {
+     "line": 3258,
+     "seed": "2",
+     "request": "01a11f14-2902-7191-8491-5a58124ba939",
+     "splats": 1181363,
+     "binary": "eb5529ff2b3186a5cee3bedbc3507e7408c276ba6315f6f06f5e6e0005d4672b",
+     "psnr": 31.97056252255385,
+     "lpips_vgg": 0.14423887708357402,
+     "wall_s": 270.92
+    },
+    "a1-neural": {
+     "line": 3259,
+     "seed": "2",
+     "request": "01a11f14-2902-7191-8491-5a58124ba939",
+     "splats": 1182957,
+     "binary": "c1980f5ea2ce3e7afb795511c4bab7327c070c26412529834d417d2707aef9f3",
+     "psnr": 32.09096310084676,
+     "lpips_vgg": 0.14897192312138421,
+     "wall_s": 446.59
+    }
+   }
+  },
+  "binaries_by_arm": {
+   "a1-sh": [
+    "eb5529ff2b3186a5cee3bedbc3507e7408c276ba6315f6f06f5e6e0005d4672b"
+   ],
+   "a1-neural": [
+    "c1980f5ea2ce3e7afb795511c4bab7327c070c26412529834d417d2707aef9f3"
+   ]
+  },
+  "max_relative_splat_cap_gap": 0.0025927245044537134
+ },
+ "lane_check": {
+  "per_seed": [
+   {
+    "seed_from_engine_args": "3",
+    "sh_psnr": 31.978731683805428,
+    "neural_psnr": 32.033547403150784,
+    "recomputed_delta": 0.054815719345352676,
+    "lane_delta": 0.055,
+    "diff": -0.0001842806546473244,
+    "ok": true
+   },
+   {
+    "seed_from_engine_args": "1",
+    "sh_psnr": 31.94494153128596,
+    "neural_psnr": 32.26327910710613,
+    "recomputed_delta": 0.31833757582018407,
+    "lane_delta": 0.318,
+    "diff": 0.0003375758201840662,
+    "ok": true
+   },
+   {
+    "seed_from_engine_args": "2",
+    "sh_psnr": 31.97056252255385,
+    "neural_psnr": 32.09096310084676,
+    "recomputed_delta": 0.12040057829291584,
+    "lane_delta": 0.12,
+    "diff": 0.000400578292915843,
+    "ok": true
+   }
+  ],
+  "mean_delta_psnr": {
+   "lane": 0.164,
+   "recomputed": 0.1645179578194771,
+   "ok": true,
+   "note": "Lane +0.164 is the mean of its 3-dp per-seed values ((.055+.318+.120)/3 = .1643); the unrounded mean is +0.16452 (rounds to +0.165). The difference is rounding, so tolerance here is 1e-3."
+  },
+  "lpips_vgg_per_seed_3dp": {
+   "sh": [
+    0.144,
+    0.144,
+    0.144
+   ],
+   "neural": [
+    0.149,
+    0.149,
+    0.149
+   ]
+  },
+  "lpips_vgg_ok": true
+ },
+ "seed_label_note": "The write-up's seed column follows completion order, not the --seed argument: the +0.055 pair ran --seed 3, +0.318 ran --seed 1, +0.120 ran --seed 2. Deltas and mean are unaffected; relabel the table in docs/research/15-x5b-port-design.md.",
+ "decision_rule_outcome": {
+  "rule": "mean delta >= +0.5 dB with LPIPS not worse",
+  "mean_delta_psnr": 0.1645179578194771,
+  "ci95": [
+   0.054815719345352676,
+   0.31833757582018407
+  ],
+  "lpips_vgg_delta": 0.004698781669139868,
+  "result": "NEGATIVE (rule not met: +0.165 dB < +0.5 and LPIPS-VGG worse in all 3 seeds)"
+ },
+ "verdict": {
+  "claim_group": "a1-x5n-native-kitchen-3seed",
+  "class": "registered NEGATIVE",
+  "status": "PASS",
+  "reason": "35/35 views every run, views_hash identical across arms and seeds, pairs share one fal request and seed, per-seed deltas (<=4e-4 vs 3-dp lane) and LPIPS reproduce the lane; mean is +0.1645 (lane +0.164 from rounded inputs); negative outcome confirmed; write-up seed labels permuted (see seed_label_note)"
+ }
+}

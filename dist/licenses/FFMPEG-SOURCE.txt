@@ -1,0 +1,16 @@
+FFmpeg 8.0.3 in this folder (ffmpeg, ffprobe) is splat's own static LGPL-2.1-or-later build,
+redistributed as separate executables. It contains no GPL or nonfree components (no libx264/libx265).
+Statically linked: zlib 1.3.2, FreeType 2.14.3, HarfBuzz 14.5.0, libopus 1.5.2, libvpx 1.15.2,
+dav1d 1.5.4; the Khronos Vulkan headers 1.4.321.0 on Linux; the mingw-w64 runtime on Windows.
+Licence texts: LICENSES/ and THIRD-PARTY.txt. Portions of this software are copyright © The FreeType
+Project (www.freetype.org). All rights reserved.
+
+Complete corresponding source, published with the binaries:
+  https://github.com/voyager-so/vauss/releases/tag/ffmpeg-public-v3
+  - every source tarball the binaries were built from (SHA-256 pinned), FFmpeg's signature and key;
+  - the build kit (build.sh, sources.txt, per-target configure flags), also in the splat
+    repository under dist/ffmpeg/;
+  - each target's configure line, config.log and toolchain versions.
+
+Rebuild: unpack the build kit, then ./build.sh TARGET OUT (see its README.md). SOURCE.txt beside
+the binaries lists this target's components with their URLs and SHA-256s.

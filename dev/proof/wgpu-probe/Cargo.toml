@@ -1,0 +1,13 @@
+# Standalone (not a workspace member): reports which wgpu adapter the splat binary's
+# AutoGraphicsApi default device would land on, using the wgpu fork rev the workspace pins.
+[package]
+name = "wgpu-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+wgpu = { git = "https://github.com/ArthurBrussee/wgpu", rev = "de4d137a5303486913156e094ccf68491fe745af" }
+pollster = "0.4"

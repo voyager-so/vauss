@@ -1,0 +1,6 @@
+# macOS arm64, macOS 11 or later. VideoToolbox (h264_videotoolbox/hevc_videotoolbox encode, hardware
+# decode) is the OS framework, linked dynamically.
+--enable-pthreads
+--enable-videotoolbox
+--extra-cflags=-mmacosx-version-min=11.0
+--extra-ldflags=-mmacosx-version-min=11.0

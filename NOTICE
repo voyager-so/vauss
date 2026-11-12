@@ -1,0 +1,71 @@
+Vauss
+Copyright 2026 Nullframe and the Vauss contributors
+
+Original Vauss code is source-available under the Vauss Preview
+License (see LICENSE). It is free to use during the research preview, including
+commercial work, but is not open source. Separately licensed components below
+retain their upstream licenses and are excluded from the Preview License.
+In particular, all crates/splat-train* remain Apache-2.0, splat-sfm-learned
+remains Apache-2.0 AND IJG, and splat-eval/src/color.rs remains Apache-2.0.
+
+This product includes software derived from Brush
+(https://github.com/ArthurBrussee/brush), commit
+1388f74c6fe0236f68ee4915564bf00e9d2e3747,
+Copyright (c) Arthur Brussee and the Brush contributors,
+licensed under the Apache License, Version 2.0.
+The derived crates are crates/splat-train*; see crates/splat-train/NOTICE for
+the crate mapping and the changes made.
+
+This product includes patched copies of the cubecl-common and cubecl-wgpu
+crates from CubeCL (https://github.com/tracel-ai/cubecl), commit
+467522442c7b68f02c7ff0c84b2e249e36d8da91 (version 0.11.0-pre.4),
+Copyright (c) 2022 Nathaniel Simard & CubeCL Framework Contributors,
+dual-licensed MIT OR Apache-2.0, in vendor/cubecl-common and
+vendor/cubecl-wgpu. Their upstream licences and NOTICE.md are kept in those
+directories; the patches are described in each directory's PATCH.md.
+
+This product includes a Rust/Burn port of the camera-pose path of
+Depth Anything 3 (https://github.com/ByteDance-Seed/Depth-Anything-3, commit
+3d835ec1), Copyright (c) 2025 ByteDance Ltd. and/or its affiliates, and of
+DINOv2 code therein, Copyright (c) Meta Platforms, Inc. and affiliates, both
+licensed under the Apache License, Version 2.0 (upstream LICENSE: Copyright 2025
+The Depth Anything 3 Team); and a JPEG decoder following libjpeg-turbo's
+algorithms (jidctint.c, jdsample.c, jdcolor.c; Copyright (C) 1991-1998 Thomas G.
+Lane, D. R. Commander and others, IJG licence). This software is based in part on
+the work of the Independent JPEG Group. See crates/splat-sfm-learned/NOTICE and
+crates/splat-sfm-learned/LICENSE-IJG.txt.
+
+This product includes a reimplementation of the colour-correction and camera
+utilities of camp_zipnerf (https://github.com/jonbarron/camp_zipnerf),
+Copyright 2023 The Google Research Authors, licensed under the Apache License,
+Version 2.0 (crates/splat-eval/src/color.rs, crates/splat-train-dataset/src/lib.rs).
+
+Release archives bundle third-party tools under their own licences
+(FFmpeg LGPL build, COLMAP, gltfpack, ONNX Runtime and others). Their
+licence texts and download notices ship beside each tool under tools/ in
+the archive (FFmpeg and gltfpack texts come from dist/licenses/). Rust crate
+licences are in the generated THIRD_PARTY_LICENSES.txt inside each archive. Spirula (GPL-3.0) is never
+bundled or linked; it is downloaded only on explicit request and run as a
+separate process.
+
+This product includes software derived from "Compact Neural Appearance
+Models" (arXiv 2609.05255), released as nerficg-project/efficient-gaussian-appearance
+(https://github.com/nerficg-project/efficient-gaussian-appearance), commit 4efbe67,
+Copyright 2026 The Efficient Gaussian Appearance Authors, licensed under the
+Apache License, Version 2.0. Code and per-scene training
+configurations derived from it are marked with a header comment naming the
+upstream file.
+
+`splat fill` (crates/splat-fill) drives external fixer models; none are bundled.
+Its default, NVIDIA Fixer (https://github.com/nv-tlabs/Fixer, code Apache-2.0;
+weights https://huggingface.co/nvidia/Fixer under the NVIDIA Open Model
+License), is Built on NVIDIA Cosmos. The optional Difix3D+ weights
+(nvidia/difix_ref) are licensed for non-commercial use only. The fixer setup
+(crates/splat-fill/fixer/setup_fixer.sh) applies a small patch to the Fixer
+source at a pinned commit and installs stand-in modules for Transformer
+Engine and Megatron Core written for this project (crates/splat-fill/fixer/shims).
+
+Burn (https://github.com/tracel-ai/burn), CubeCL, and the wgpu fork
+(https://github.com/ArthurBrussee/wgpu) retain their MIT OR Apache-2.0 terms.
+They are not relicensed by the Preview License. Their selected license texts
+are included in the generated THIRD_PARTY_LICENSES.txt in release archives.

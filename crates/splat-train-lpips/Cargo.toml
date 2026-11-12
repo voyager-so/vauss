@@ -1,0 +1,30 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-lpips"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "lpips"
+
+[dependencies]
+burn.workspace = true
+image.workspace = true
+
+[dev-dependencies]
+brush-cube = { path = "../splat-train-cube", package = "splat-train-cube" }
+tokio = { workspace = true, features = ["macros", "rt"] }
+wasm-bindgen-test = "0.3"
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+# ahash (pulled in transitively) uses getrandom 0.3; enable wasm_js for it too.
+getrandom_03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
+
+[lints]
+workspace = true
+
+[package.metadata.cargo-shear] # or [workspace.metadata.cargo-shear]
+ignored = ["getrandom"]

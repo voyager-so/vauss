@@ -1,0 +1,35 @@
+splat-sfm-learned
+=================
+
+This crate remains Apache-2.0 AND IJG and is excluded from the Vauss
+Preview License. The Apache text is in LICENSE-APACHE; JPEG terms are in LICENSE-IJG.txt.
+
+src/model.rs, src/preprocess.rs and the pose conversion in src/lib.rs are a Rust/Burn port of
+the camera-pose path of Depth Anything 3 (https://github.com/ByteDance-Seed/Depth-Anything-3,
+commit 3d835ec1): the DINOv2 ViT-B backbone with alternating local/global attention, QK-norm,
+2D RoPE, reference-view selection and camera tokens, the camera decoder, the pose-encoding
+decode, and the input preprocessing.
+
+  Copyright (c) 2025 ByteDance Ltd. and/or its affiliates
+  Copyright 2025 The Depth Anything 3 Team (upstream LICENSE)
+  Licensed under the Apache License, Version 2.0
+
+The DINOv2 parts of that code are
+  Copyright (c) Meta Platforms, Inc. and affiliates
+  Licensed under the Apache License, Version 2.0
+
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+The DA3-BASE weights (https://huggingface.co/depth-anything/DA3-BASE, revision f4a6c9b3,
+Apache-2.0 per its model card, checked 2026-10-10) are not included; they are read at runtime from the file named by SPLAT_DA3_WEIGHTS, normally
+da3-base-cam-f16.safetensors: the backbone and camera-decoder tensors of the upstream
+model.safetensors, cast to fp16. Use only Apache-2.0 variants: DA3-LARGE and DA3-GIANT are
+CC-BY-NC-4.0 (non-commercial) and must not be substituted.
+
+Changes: only the camera-pose path is ported (no depth/ray/GS heads, no camera encoder); the
+model is reimplemented in Burn and the OpenCV/PIL preprocessing is reimplemented in Rust.
+
+src/jpeg.rs follows the algorithms of libjpeg-turbo's jidctint.c, jdsample.c and jdcolor.c
+(Independent JPEG Group license; this software is based in part on the work of the Independent
+JPEG Group) so that frames decode exactly as PIL decodes them. The upstream copyright notices,
+the changes made and the IJG README (copyright and no-warranty notice) are in LICENSE-IJG.txt.

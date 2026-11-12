@@ -1,0 +1,1987 @@
+{
+ "claim": "parity:12-table3-filterfix",
+ "verifier": "independent pubs verifier; recomputed from per-view rows (ours: train.log EVAL_SCALE_VIEW lines; gsplat-aa: gs/<scene>-s4x/metrics.json scales.*.views). No GPU jobs run.",
+ "verified_at": "2026-10-09",
+ "verdict_summary": "REPRODUCES. Primary M-fixed vs kept gsplat-aa: x1 PARITY, x2 PARITY, x4 AHEAD, x8 AHEAD -> ROW PARITY (labelled 'gsplat-aa not same-batch'). Drift check passes at all scales (|drift| <= 0.007 dB), so no scale is demoted to descriptive. All lane numbers reproduce to <=0.001 dB; no category differs. x1 and x2 are PARITY only because one scene breaks the -0.05 dB floor (stump x1 -0.088; room x2 -0.982); the 9-scene means are positive by >8 SD at both.",
+ "registration": {
+  "entries": [
+   "archived study registry (not distributed):677 (11:10 pre-launch design + rules)",
+   "713 (11:39 binary binding: M-fixed 8389cc4c..., M-rerun eb90dee2...; filter-state logging requirement)",
+   "parent parity:12-table3 432/436/450/464/509/636/665 (rule, protocol, kept arms, BEHIND verdict)"
+  ],
+  "no_later_amendments": "no filterfix entries after line 713 at verification time",
+  "decision_rule": "Same as parity:12-table3 (432): per scale s, per seed index i (ours 1/2/3 <-> gsplat 42/43/44), d_i = 9-scene mean PSNR(M-fixed) - PSNR(gsplat-aa). AHEAD iff mean(d) > 2*SD(d) (ddof=1, n=3) AND no scene's 3-seed mean delta < -0.05 dB; BEHIND iff mean(d) < -2*SD; else PARITY. Row: AHEAD iff AHEAD at all 4 scales; BEHIND iff BEHIND at any scale; else PARITY. Drift: |mean(M-rerun - kept M)| > 0.10 dB at a scale makes that scale's primary descriptive. Secondary M-fixed vs M-rerun is same-batch (clean) and cannot change the primary.",
+  "class_max": "verdict per parity:12-table3 rule, labelled 'not same-batch for gsplat-aa'"
+ },
+ "data": {
+  "M_fixed": "$SPLAT_DATA/runs/o2/t3/ff/mip-fixed/<scene>-s{1,2,3}",
+  "M_rerun": "$SPLAT_DATA/runs/o2/t3/ff/mip-rerun/<scene>-s{1,2,3}",
+  "kept_M": "$SPLAT_DATA/runs/o2/t3/ours/mip/<scene>-s{1,2,3}",
+  "kept_gsplat_aa": "$SPLAT_DATA/runs/o2/t3/gs/<scene>-s{42,43,44}/metrics.json (driver 85410b2d, gs-bad/ excluded)",
+  "diagnostic_ob": "$SPLAT_DATA/runs/o2/t3/ff/mip-fixedob/<scene>-s1",
+  "script": "scratchpad ff_verify.py (independent; not the lane's t3verdict.py)"
+ },
+ "checks": {
+  "jobs_valid": "54/54 present, exit_code 0, all 4 scales x all held-out views at iter 30000; per-view mean == EVAL_SCALE summary (<=0.002 dB) and n matches in every job (incl. kept M).",
+  "filter_state": "CHECKED EVERY LOG: M-fixed 27/27 'Mip 3D filter on' (100751-271512 px per training image, threshold 300000); M-rerun 27/27 'off' (6.46M-17.4M px); kept M 27/27 'off'; ob 9/9 'on'. No fixed-arm job logged 'off' -> none invalid.",
+  "binaries": "Local sha256: runs/o2/bin/brush-cli-multires3-historical-build-068 = 8389cc4ce1c6ac9b... (matches 713); brush-cli-multires2-historical-build-072 = eb90dee2ae71354b... (matches 713/464). exp.db staged-input hashes per job: M-fixed bin 8606156f... = sha256(json [[name, 8389cc4c...]]) on all 27; M-rerun bin 40aa51ac... = same staged blob as kept M (eb90dee2...) on all 27 + kept 27. Recomputed both input hashes from the registered binary sha256s -> exact match.",
+  "wrapper": "All 54 jobs staged ours_t3.sh input hash 650148ef... = sha256(json [[ours_t3.sh, b226445e1b74334f...]]) = the registered wrapper (historical-build-082) and the one used by kept M. The on-disk runs/o2/t3/ours_t3.sh was later edited (12:09, sha 146ada7c..., adds an EXTRA arg) for the ob diagnostic only (ob jobs input hash 38e31b2f... = that file).",
+  "code_diff_fixed_vs_rerun": "git diff historical-build-072..historical-build-068 -- crates/: only load_image.rs (new output_dimensions) and train_stream.rs (gate/focal/pixel-budget use post-cap size). Eval/scoring hook unchanged -> the in-binary scorer is identical in M-fixed, M-rerun and kept M.",
+  "scene_identity": "Every job's argv tar blob sha == research/o2-corpus-native/report.json for its label; max-res == dims.json images_8 width; seed and --render-mode mip as labelled. gsplat-aa metrics.json scene/tar/seed match for all 27 kept rows. Our wrapper wipes /tmp/t3o per job; no wrong-scene/runner-reuse issue.",
+  "views_and_frames": "Held-out view names identical across M-fixed, M-rerun, kept M and gsplat-aa for every scene/seed/scale (0 mismatches); ob identical too. Eval sizes identical across the three of our arms. 4 scenes (bicycle, counter, kitchen, flowers) remain 1 px shorter on our side vs gsplat (carried disclosure from parity:12-table3).",
+  "scorer_pin": "Our 3 arms: same in-binary EVAL_SCALE scorer (8-bit render vs native box-resized GT). gsplat-aa: its own driver's scorer with the same GT construction, as in parity:12-table3 (x1 GT resampler differs per arm - carried disclosure). Cross-engine scorer is not byte-identical; this is unchanged from the verified parent.",
+  "lpips": "No LPIPS in any of our arms (none logged); LPIPS is not part of the verdict. gsplat LPIPS-VGG descriptive only (as registered). LPIPS scale therefore N/A.",
+  "hardware": "All 54 on 'RTX PRO 6000 96GB' (rtxpro6000). Drivers mixed per arm (M-fixed 580:2/590:8/610:17; M-rerun 580:5/590:6/610:16); quality only, no timing claim.",
+  "same_batch": "M-fixed and M-rerun interleaved in one launch (launch_ff.sh 11:39) -> same-batch. gsplat-aa and kept M are from the 09:15 batch -> primary is NOT same-batch (as registered)."
+ },
+ "recomputed": {
+  "primary_Mfix_vs_G": {
+   "x1": {
+    "verdict": "PARITY",
+    "mean": 0.1663,
+    "sd": 0.0173,
+    "per_seed": [
+     0.1749,
+     0.1776,
+     0.1464
+    ],
+    "two_sd": 0.0346,
+    "worst": [
+     "stump",
+     -0.088
+    ],
+    "per_scene": {
+     "bicycle": 0.304,
+     "bonsai": 0.077,
+     "counter": 0.009,
+     "garden": 0.305,
+     "kitchen": 0.166,
+     "room": 0.211,
+     "stump": -0.088,
+     "flowers": -0.037,
+     "treehill": 0.55
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.248,
+      0.286,
+      0.377
+     ],
+     "bonsai": [
+      0.11,
+      0.016,
+      0.104
+     ],
+     "counter": [
+      -0.168,
+      0.324,
+      -0.129
+     ],
+     "garden": [
+      0.307,
+      0.3,
+      0.308
+     ],
+     "kitchen": [
+      0.155,
+      0.242,
+      0.102
+     ],
+     "room": [
+      0.337,
+      0.112,
+      0.186
+     ],
+     "stump": [
+      -0.052,
+      -0.05,
+      -0.161
+     ],
+     "flowers": [
+      0.028,
+      -0.08,
+      -0.059
+     ],
+     "treehill": [
+      0.61,
+      0.449,
+      0.591
+     ]
+    },
+    "dssim": 0.0011
+   },
+   "x2": {
+    "verdict": "PARITY",
+    "mean": 0.1468,
+    "sd": 0.0117,
+    "per_seed": [
+     0.1371,
+     0.1599,
+     0.1435
+    ],
+    "two_sd": 0.0235,
+    "worst": [
+     "room",
+     -0.982
+    ],
+    "per_scene": {
+     "bicycle": 0.403,
+     "bonsai": 1.697,
+     "counter": -0.381,
+     "garden": -0.676,
+     "kitchen": -0.372,
+     "room": -0.982,
+     "stump": 0.241,
+     "flowers": 0.019,
+     "treehill": 1.371
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.382,
+      0.395,
+      0.433
+     ],
+     "bonsai": [
+      1.728,
+      1.678,
+      1.685
+     ],
+     "counter": [
+      -0.533,
+      -0.108,
+      -0.502
+     ],
+     "garden": [
+      -0.686,
+      -0.685,
+      -0.656
+     ],
+     "kitchen": [
+      -0.479,
+      -0.333,
+      -0.303
+     ],
+     "room": [
+      -0.94,
+      -1.051,
+      -0.954
+     ],
+     "stump": [
+      0.272,
+      0.264,
+      0.189
+     ],
+     "flowers": [
+      0.063,
+      -0.012,
+      0.007
+     ],
+     "treehill": [
+      1.428,
+      1.291,
+      1.394
+     ]
+    },
+    "dssim": -0.0247
+   },
+   "x4": {
+    "verdict": "AHEAD",
+    "mean": 1.6751,
+    "sd": 0.0067,
+    "per_seed": [
+     1.6687,
+     1.682,
+     1.6748
+    ],
+    "two_sd": 0.0133,
+    "worst": [
+     "room",
+     0.43
+    ],
+    "per_scene": {
+     "bicycle": 1.649,
+     "bonsai": 3.748,
+     "counter": 1.134,
+     "garden": 1.083,
+     "kitchen": 2.13,
+     "room": 0.43,
+     "stump": 1.752,
+     "flowers": 0.941,
+     "treehill": 2.21
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      1.636,
+      1.638,
+      1.673
+     ],
+     "bonsai": [
+      3.776,
+      3.738,
+      3.728
+     ],
+     "counter": [
+      0.999,
+      1.378,
+      1.024
+     ],
+     "garden": [
+      1.07,
+      1.08,
+      1.099
+     ],
+     "kitchen": [
+      2.054,
+      2.13,
+      2.207
+     ],
+     "room": [
+      0.453,
+      0.356,
+      0.481
+     ],
+     "stump": [
+      1.793,
+      1.765,
+      1.697
+     ],
+     "flowers": [
+      0.973,
+      0.917,
+      0.935
+     ],
+     "treehill": [
+      2.265,
+      2.136,
+      2.23
+     ]
+    },
+    "dssim": 0.0447
+   },
+   "x8": {
+    "verdict": "AHEAD",
+    "mean": 2.429,
+    "sd": 0.0038,
+    "per_seed": [
+     2.426,
+     2.4332,
+     2.4276
+    ],
+    "two_sd": 0.0076,
+    "worst": [
+     "room",
+     1.033
+    ],
+    "per_scene": {
+     "bicycle": 2.393,
+     "bonsai": 4.742,
+     "counter": 1.865,
+     "garden": 1.931,
+     "kitchen": 3.162,
+     "room": 1.033,
+     "stump": 2.573,
+     "flowers": 1.435,
+     "treehill": 2.727
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      2.38,
+      2.383,
+      2.415
+     ],
+     "bonsai": [
+      4.771,
+      4.739,
+      4.716
+     ],
+     "counter": [
+      1.743,
+      2.091,
+      1.76
+     ],
+     "garden": [
+      1.916,
+      1.932,
+      1.945
+     ],
+     "kitchen": [
+      3.103,
+      3.153,
+      3.231
+     ],
+     "room": [
+      1.056,
+      0.958,
+      1.086
+     ],
+     "stump": [
+      2.62,
+      2.585,
+      2.514
+     ],
+     "flowers": [
+      1.462,
+      1.411,
+      1.431
+     ],
+     "treehill": [
+      2.783,
+      2.647,
+      2.75
+     ]
+    },
+    "dssim": 0.109
+   },
+   "row": "PARITY"
+  },
+  "drift_Mrerun_vs_keptM": {
+   "x1": {
+    "verdict": "PARITY",
+    "mean": -0.0072,
+    "sd": 0.0338,
+    "per_seed": [
+     0.0294,
+     -0.0371,
+     -0.0141
+    ],
+    "two_sd": 0.0676,
+    "worst": [
+     "bonsai",
+     -0.096
+    ],
+    "per_scene": {
+     "bicycle": 0.041,
+     "bonsai": -0.096,
+     "counter": -0.014,
+     "garden": -0.008,
+     "kitchen": -0.062,
+     "room": 0.075,
+     "stump": 0.018,
+     "flowers": -0.002,
+     "treehill": -0.017
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.085,
+      0.05,
+      -0.012
+     ],
+     "bonsai": [
+      0.067,
+      -0.237,
+      -0.118
+     ],
+     "counter": [
+      -0.045,
+      0.059,
+      -0.056
+     ],
+     "garden": [
+      -0.038,
+      -0.047,
+      0.062
+     ],
+     "kitchen": [
+      -0.098,
+      -0.044,
+      -0.045
+     ],
+     "room": [
+      0.159,
+      -0.022,
+      0.087
+     ],
+     "stump": [
+      0.081,
+      -0.065,
+      0.036
+     ],
+     "flowers": [
+      0.0,
+      -0.005,
+      -0.0
+     ],
+     "treehill": [
+      0.053,
+      -0.023,
+      -0.08
+     ]
+    },
+    "dssim": 0.0001
+   },
+   "x2": {
+    "verdict": "PARITY",
+    "mean": 0.0009,
+    "sd": 0.0157,
+    "per_seed": [
+     0.0177,
+     -0.0136,
+     -0.0014
+    ],
+    "two_sd": 0.0315,
+    "worst": [
+     "bonsai",
+     -0.063
+    ],
+    "per_scene": {
+     "bicycle": 0.028,
+     "bonsai": -0.063,
+     "counter": -0.007,
+     "garden": 0.001,
+     "kitchen": -0.015,
+     "room": 0.064,
+     "stump": 0.007,
+     "flowers": -0.004,
+     "treehill": -0.002
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.047,
+      0.028,
+      0.008
+     ],
+     "bonsai": [
+      0.049,
+      -0.174,
+      -0.063
+     ],
+     "counter": [
+      -0.028,
+      0.011,
+      -0.005
+     ],
+     "garden": [
+      -0.005,
+      -0.02,
+      0.026
+     ],
+     "kitchen": [
+      -0.022,
+      0.004,
+      -0.028
+     ],
+     "room": [
+      0.068,
+      0.051,
+      0.072
+     ],
+     "stump": [
+      0.033,
+      -0.029,
+      0.016
+     ],
+     "flowers": [
+      -0.002,
+      -0.005,
+      -0.004
+     ],
+     "treehill": [
+      0.018,
+      0.011,
+      -0.034
+     ]
+    },
+    "dssim": 0.0001
+   },
+   "x4": {
+    "verdict": "PARITY",
+    "mean": 0.0021,
+    "sd": 0.0131,
+    "per_seed": [
+     0.0161,
+     -0.0097,
+     -0.0002
+    ],
+    "two_sd": 0.0261,
+    "worst": [
+     "bonsai",
+     -0.047
+    ],
+    "per_scene": {
+     "bicycle": 0.023,
+     "bonsai": -0.047,
+     "counter": -0.004,
+     "garden": -0.0,
+     "kitchen": -0.01,
+     "room": 0.058,
+     "stump": 0.005,
+     "flowers": -0.002,
+     "treehill": -0.003
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.038,
+      0.022,
+      0.007
+     ],
+     "bonsai": [
+      0.053,
+      -0.145,
+      -0.05
+     ],
+     "counter": [
+      -0.024,
+      0.014,
+      -0.003
+     ],
+     "garden": [
+      -0.004,
+      -0.017,
+      0.02
+     ],
+     "kitchen": [
+      -0.015,
+      0.005,
+      -0.019
+     ],
+     "room": [
+      0.057,
+      0.054,
+      0.062
+     ],
+     "stump": [
+      0.028,
+      -0.029,
+      0.016
+     ],
+     "flowers": [
+      -0.001,
+      -0.003,
+      -0.004
+     ],
+     "treehill": [
+      0.012,
+      0.011,
+      -0.031
+     ]
+    },
+    "dssim": 0.0001
+   },
+   "x8": {
+    "verdict": "PARITY",
+    "mean": 0.0021,
+    "sd": 0.0109,
+    "per_seed": [
+     0.0135,
+     -0.0082,
+     0.0008
+    ],
+    "two_sd": 0.0218,
+    "worst": [
+     "bonsai",
+     -0.042
+    ],
+    "per_scene": {
+     "bicycle": 0.02,
+     "bonsai": -0.042,
+     "counter": -0.004,
+     "garden": -0.003,
+     "kitchen": -0.006,
+     "room": 0.055,
+     "stump": 0.004,
+     "flowers": -0.002,
+     "treehill": -0.003
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.036,
+      0.019,
+      0.005
+     ],
+     "bonsai": [
+      0.041,
+      -0.128,
+      -0.04
+     ],
+     "counter": [
+      -0.022,
+      0.012,
+      -0.001
+     ],
+     "garden": [
+      -0.005,
+      -0.016,
+      0.011
+     ],
+     "kitchen": [
+      -0.014,
+      0.007,
+      -0.012
+     ],
+     "room": [
+      0.051,
+      0.055,
+      0.059
+     ],
+     "stump": [
+      0.027,
+      -0.032,
+      0.017
+     ],
+     "flowers": [
+      -0.001,
+      -0.002,
+      -0.004
+     ],
+     "treehill": [
+      0.009,
+      0.012,
+      -0.029
+     ]
+    },
+    "dssim": 0.0001
+   },
+   "row": "PARITY"
+  },
+  "secondary_Mfix_vs_Mrerun": {
+   "x1": {
+    "verdict": "BEHIND",
+    "mean": -0.29,
+    "sd": 0.0061,
+    "per_seed": [
+     -0.2867,
+     -0.2971,
+     -0.2863
+    ],
+    "two_sd": 0.0123,
+    "worst": [
+     "bonsai",
+     -1.07
+    ],
+    "per_scene": {
+     "bicycle": -0.097,
+     "bonsai": -1.07,
+     "counter": -0.462,
+     "garden": -0.101,
+     "kitchen": -0.603,
+     "room": -0.307,
+     "stump": -0.086,
+     "flowers": -0.083,
+     "treehill": 0.2
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      -0.168,
+      -0.089,
+      -0.035
+     ],
+     "bonsai": [
+      -1.137,
+      -1.072,
+      -1.002
+     ],
+     "counter": [
+      -0.474,
+      -0.487,
+      -0.426
+     ],
+     "garden": [
+      -0.121,
+      -0.047,
+      -0.135
+     ],
+     "kitchen": [
+      -0.38,
+      -0.829,
+      -0.599
+     ],
+     "room": [
+      -0.396,
+      -0.227,
+      -0.299
+     ],
+     "stump": [
+      -0.037,
+      -0.008,
+      -0.213
+     ],
+     "flowers": [
+      -0.087,
+      -0.072,
+      -0.089
+     ],
+     "treehill": [
+      0.221,
+      0.158,
+      0.222
+     ]
+    },
+    "dssim": -0.003
+   },
+   "x2": {
+    "verdict": "PARITY",
+    "mean": 0.2855,
+    "sd": 0.0043,
+    "per_seed": [
+     0.2888,
+     0.2807,
+     0.287
+    ],
+    "two_sd": 0.0086,
+    "worst": [
+     "bonsai",
+     -0.357
+    ],
+    "per_scene": {
+     "bicycle": 0.388,
+     "bonsai": -0.357,
+     "counter": 0.296,
+     "garden": 0.419,
+     "kitchen": 0.5,
+     "room": 0.239,
+     "stump": 0.379,
+     "flowers": 0.27,
+     "treehill": 0.437
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.352,
+      0.395,
+      0.419
+     ],
+     "bonsai": [
+      -0.395,
+      -0.343,
+      -0.334
+     ],
+     "counter": [
+      0.291,
+      0.296,
+      0.3
+     ],
+     "garden": [
+      0.407,
+      0.435,
+      0.414
+     ],
+     "kitchen": [
+      0.569,
+      0.407,
+      0.523
+     ],
+     "room": [
+      0.215,
+      0.261,
+      0.243
+     ],
+     "stump": [
+      0.417,
+      0.411,
+      0.309
+     ],
+     "flowers": [
+      0.272,
+      0.272,
+      0.265
+     ],
+     "treehill": [
+      0.473,
+      0.393,
+      0.445
+     ]
+    },
+    "dssim": 0.0162
+   },
+   "x4": {
+    "verdict": "AHEAD",
+    "mean": 0.5874,
+    "sd": 0.0031,
+    "per_seed": [
+     0.5897,
+     0.5838,
+     0.5886
+    ],
+    "two_sd": 0.0062,
+    "worst": [
+     "bonsai",
+     0.286
+    ],
+    "per_scene": {
+     "bicycle": 0.657,
+     "bonsai": 0.286,
+     "counter": 0.57,
+     "garden": 0.694,
+     "kitchen": 0.805,
+     "room": 0.421,
+     "stump": 0.703,
+     "flowers": 0.479,
+     "treehill": 0.672
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.627,
+      0.663,
+      0.681
+     ],
+     "bonsai": [
+      0.246,
+      0.307,
+      0.305
+     ],
+     "counter": [
+      0.569,
+      0.564,
+      0.576
+     ],
+     "garden": [
+      0.684,
+      0.708,
+      0.692
+     ],
+     "kitchen": [
+      0.857,
+      0.732,
+      0.826
+     ],
+     "room": [
+      0.4,
+      0.438,
+      0.423
+     ],
+     "stump": [
+      0.74,
+      0.731,
+      0.638
+     ],
+     "flowers": [
+      0.482,
+      0.479,
+      0.477
+     ],
+     "treehill": [
+      0.704,
+      0.632,
+      0.679
+     ]
+    },
+    "dssim": 0.0386
+   },
+   "x8": {
+    "verdict": "AHEAD",
+    "mean": 0.8433,
+    "sd": 0.0033,
+    "per_seed": [
+     0.8466,
+     0.8401,
+     0.8432
+    ],
+    "two_sd": 0.0065,
+    "worst": [
+     "room",
+     0.568
+    ],
+    "per_scene": {
+     "bicycle": 0.887,
+     "bonsai": 0.842,
+     "counter": 0.79,
+     "garden": 0.956,
+     "kitchen": 1.078,
+     "room": 0.568,
+     "stump": 0.965,
+     "flowers": 0.623,
+     "treehill": 0.881
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.859,
+      0.893,
+      0.908
+     ],
+     "bonsai": [
+      0.81,
+      0.861,
+      0.854
+     ],
+     "counter": [
+      0.79,
+      0.785,
+      0.795
+     ],
+     "garden": [
+      0.946,
+      0.969,
+      0.953
+     ],
+     "kitchen": [
+      1.124,
+      1.013,
+      1.096
+     ],
+     "room": [
+      0.551,
+      0.584,
+      0.57
+     ],
+     "stump": [
+      1.002,
+      0.992,
+      0.902
+     ],
+     "flowers": [
+      0.626,
+      0.622,
+      0.62
+     ],
+     "treehill": [
+      0.911,
+      0.841,
+      0.891
+     ]
+    },
+    "dssim": 0.0669
+   },
+   "row": "BEHIND"
+  },
+  "context_keptM_vs_G (parent primary, re-derived)": {
+   "x1": {
+    "verdict": "AHEAD",
+    "mean": 0.4636,
+    "sd": 0.0424,
+    "per_seed": [
+     0.4321,
+     0.5118,
+     0.4467
+    ],
+    "two_sd": 0.0848,
+    "worst": [
+     "stump",
+     -0.019
+    ],
+    "per_scene": {
+     "bicycle": 0.36,
+     "bonsai": 1.243,
+     "counter": 0.485,
+     "garden": 0.414,
+     "kitchen": 0.831,
+     "room": 0.444,
+     "stump": -0.019,
+     "flowers": 0.047,
+     "treehill": 0.366
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.33,
+      0.326,
+      0.424
+     ],
+     "bonsai": [
+      1.179,
+      1.326,
+      1.224
+     ],
+     "counter": [
+      0.351,
+      0.751,
+      0.353
+     ],
+     "garden": [
+      0.467,
+      0.394,
+      0.381
+     ],
+     "kitchen": [
+      0.633,
+      1.115,
+      0.746
+     ],
+     "room": [
+      0.574,
+      0.361,
+      0.398
+     ],
+     "stump": [
+      -0.096,
+      0.022,
+      0.016
+     ],
+     "flowers": [
+      0.115,
+      -0.003,
+      0.031
+     ],
+     "treehill": [
+      0.336,
+      0.314,
+      0.449
+     ]
+    },
+    "dssim": 0.004
+   },
+   "x2": {
+    "verdict": "BEHIND",
+    "mean": -0.1396,
+    "sd": 0.0311,
+    "per_seed": [
+     -0.1694,
+     -0.1072,
+     -0.1422
+    ],
+    "two_sd": 0.0623,
+    "worst": [
+     "room",
+     -1.285
+    ],
+    "per_scene": {
+     "bicycle": -0.013,
+     "bonsai": 2.117,
+     "counter": -0.669,
+     "garden": -1.095,
+     "kitchen": -0.856,
+     "room": -1.285,
+     "stump": -0.144,
+     "flowers": -0.247,
+     "treehill": 0.935
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      -0.017,
+      -0.028,
+      0.006
+     ],
+     "bonsai": [
+      2.074,
+      2.195,
+      2.082
+     ],
+     "counter": [
+      -0.796,
+      -0.415,
+      -0.797
+     ],
+     "garden": [
+      -1.088,
+      -1.1,
+      -1.097
+     ],
+     "kitchen": [
+      -1.026,
+      -0.745,
+      -0.798
+     ],
+     "room": [
+      -1.223,
+      -1.362,
+      -1.269
+     ],
+     "stump": [
+      -0.178,
+      -0.118,
+      -0.136
+     ],
+     "flowers": [
+      -0.207,
+      -0.279,
+      -0.254
+     ],
+     "treehill": [
+      0.936,
+      0.886,
+      0.984
+     ]
+    },
+    "dssim": -0.041
+   },
+   "x4": {
+    "verdict": "AHEAD",
+    "mean": 1.0857,
+    "sd": 0.0225,
+    "per_seed": [
+     1.0629,
+     1.1078,
+     1.0865
+    ],
+    "two_sd": 0.045,
+    "worst": [
+     "room",
+     -0.049
+    ],
+    "per_scene": {
+     "bicycle": 0.97,
+     "bonsai": 3.509,
+     "counter": 0.568,
+     "garden": 0.388,
+     "kitchen": 1.335,
+     "room": -0.049,
+     "stump": 1.044,
+     "flowers": 0.465,
+     "treehill": 1.541
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.971,
+      0.953,
+      0.985
+     ],
+     "bonsai": [
+      3.477,
+      3.576,
+      3.473
+     ],
+     "counter": [
+      0.454,
+      0.8,
+      0.451
+     ],
+     "garden": [
+      0.39,
+      0.389,
+      0.387
+     ],
+     "kitchen": [
+      1.212,
+      1.393,
+      1.4
+     ],
+     "room": [
+      -0.005,
+      -0.136,
+      -0.005
+     ],
+     "stump": [
+      1.025,
+      1.063,
+      1.043
+     ],
+     "flowers": [
+      0.492,
+      0.44,
+      0.462
+     ],
+     "treehill": [
+      1.549,
+      1.493,
+      1.581
+     ]
+    },
+    "dssim": 0.0061
+   },
+   "x8": {
+    "verdict": "AHEAD",
+    "mean": 1.5836,
+    "sd": 0.0177,
+    "per_seed": [
+     1.5659,
+     1.6013,
+     1.5836
+    ],
+    "two_sd": 0.0354,
+    "worst": [
+     "room",
+     0.41
+    ],
+    "per_scene": {
+     "bicycle": 1.486,
+     "bonsai": 3.943,
+     "counter": 1.078,
+     "garden": 0.978,
+     "kitchen": 2.091,
+     "room": 0.41,
+     "stump": 1.603,
+     "flowers": 0.814,
+     "treehill": 1.848
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      1.486,
+      1.471,
+      1.501
+     ],
+     "bonsai": [
+      3.92,
+      4.006,
+      3.902
+     ],
+     "counter": [
+      0.975,
+      1.294,
+      0.966
+     ],
+     "garden": [
+      0.975,
+      0.979,
+      0.98
+     ],
+     "kitchen": [
+      1.993,
+      2.133,
+      2.147
+     ],
+     "room": [
+      0.454,
+      0.319,
+      0.457
+     ],
+     "stump": [
+      1.591,
+      1.624,
+      1.595
+     ],
+     "flowers": [
+      0.837,
+      0.791,
+      0.816
+     ],
+     "treehill": [
+      1.862,
+      1.794,
+      1.888
+     ]
+    },
+    "dssim": 0.042
+   },
+   "row": "BEHIND"
+  },
+  "context_Mrerun_vs_G": {
+   "x1": {
+    "verdict": "AHEAD",
+    "mean": 0.4563,
+    "sd": 0.0215,
+    "per_seed": [
+     0.4616,
+     0.4747,
+     0.4327
+    ],
+    "two_sd": 0.043,
+    "worst": [
+     "stump",
+     -0.002
+    ],
+    "per_scene": {
+     "bicycle": 0.401,
+     "bonsai": 1.147,
+     "counter": 0.471,
+     "garden": 0.406,
+     "kitchen": 0.769,
+     "room": 0.519,
+     "stump": -0.002,
+     "flowers": 0.046,
+     "treehill": 0.349
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.415,
+      0.376,
+      0.412
+     ],
+     "bonsai": [
+      1.246,
+      1.089,
+      1.105
+     ],
+     "counter": [
+      0.306,
+      0.81,
+      0.297
+     ],
+     "garden": [
+      0.429,
+      0.348,
+      0.443
+     ],
+     "kitchen": [
+      0.535,
+      1.071,
+      0.701
+     ],
+     "room": [
+      0.733,
+      0.339,
+      0.484
+     ],
+     "stump": [
+      -0.015,
+      -0.042,
+      0.052
+     ],
+     "flowers": [
+      0.115,
+      -0.008,
+      0.03
+     ],
+     "treehill": [
+      0.389,
+      0.29,
+      0.369
+     ]
+    },
+    "dssim": 0.0041
+   },
+   "x2": {
+    "verdict": "BEHIND",
+    "mean": -0.1387,
+    "sd": 0.016,
+    "per_seed": [
+     -0.1517,
+     -0.1208,
+     -0.1435
+    ],
+    "two_sd": 0.032,
+    "worst": [
+     "room",
+     -1.221
+    ],
+    "per_scene": {
+     "bicycle": 0.015,
+     "bonsai": 2.054,
+     "counter": -0.677,
+     "garden": -1.094,
+     "kitchen": -0.872,
+     "room": -1.221,
+     "stump": -0.137,
+     "flowers": -0.25,
+     "treehill": 0.934
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      0.03,
+      0.001,
+      0.014
+     ],
+     "bonsai": [
+      2.123,
+      2.021,
+      2.019
+     ],
+     "counter": [
+      -0.824,
+      -0.404,
+      -0.802
+     ],
+     "garden": [
+      -1.093,
+      -1.119,
+      -1.07
+     ],
+     "kitchen": [
+      -1.048,
+      -0.741,
+      -0.826
+     ],
+     "room": [
+      -1.155,
+      -1.312,
+      -1.197
+     ],
+     "stump": [
+      -0.145,
+      -0.147,
+      -0.12
+     ],
+     "flowers": [
+      -0.209,
+      -0.284,
+      -0.258
+     ],
+     "treehill": [
+      0.955,
+      0.897,
+      0.949
+     ]
+    },
+    "dssim": -0.0409
+   },
+   "x4": {
+    "verdict": "AHEAD",
+    "mean": 1.0878,
+    "sd": 0.0097,
+    "per_seed": [
+     1.079,
+     1.0981,
+     1.0863
+    ],
+    "two_sd": 0.0193,
+    "worst": [
+     "room",
+     0.009
+    ],
+    "per_scene": {
+     "bicycle": 0.992,
+     "bonsai": 3.461,
+     "counter": 0.564,
+     "garden": 0.388,
+     "kitchen": 1.326,
+     "room": 0.009,
+     "stump": 1.049,
+     "flowers": 0.462,
+     "treehill": 1.538
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      1.009,
+      0.975,
+      0.992
+     ],
+     "bonsai": [
+      3.531,
+      3.431,
+      3.423
+     ],
+     "counter": [
+      0.43,
+      0.814,
+      0.448
+     ],
+     "garden": [
+      0.386,
+      0.372,
+      0.407
+     ],
+     "kitchen": [
+      1.198,
+      1.398,
+      1.381
+     ],
+     "room": [
+      0.052,
+      -0.083,
+      0.057
+     ],
+     "stump": [
+      1.053,
+      1.034,
+      1.059
+     ],
+     "flowers": [
+      0.491,
+      0.438,
+      0.458
+     ],
+     "treehill": [
+      1.561,
+      1.504,
+      1.551
+     ]
+    },
+    "dssim": 0.0061
+   },
+   "x8": {
+    "verdict": "AHEAD",
+    "mean": 1.5857,
+    "sd": 0.0069,
+    "per_seed": [
+     1.5794,
+     1.5931,
+     1.5844
+    ],
+    "two_sd": 0.0139,
+    "worst": [
+     "room",
+     0.465
+    ],
+    "per_scene": {
+     "bicycle": 1.506,
+     "bonsai": 3.9,
+     "counter": 1.075,
+     "garden": 0.975,
+     "kitchen": 2.085,
+     "room": 0.465,
+     "stump": 1.607,
+     "flowers": 0.812,
+     "treehill": 1.846
+    },
+    "per_scene_seeds": {
+     "bicycle": [
+      1.522,
+      1.49,
+      1.507
+     ],
+     "bonsai": [
+      3.961,
+      3.878,
+      3.862
+     ],
+     "counter": [
+      0.953,
+      1.306,
+      0.966
+     ],
+     "garden": [
+      0.969,
+      0.963,
+      0.992
+     ],
+     "kitchen": [
+      1.979,
+      2.14,
+      2.135
+     ],
+     "room": [
+      0.505,
+      0.374,
+      0.516
+     ],
+     "stump": [
+      1.617,
+      1.592,
+      1.612
+     ],
+     "flowers": [
+      0.836,
+      0.789,
+      0.811
+     ],
+     "treehill": [
+      1.872,
+      1.806,
+      1.859
+     ]
+    },
+    "dssim": 0.0421
+   },
+   "row": "BEHIND"
+  }
+ },
+ "abs_psnr_3seed_mean_x1_x2_x4_x8": {
+  "bicycle": {
+   "Mfix": [
+    27.28,
+    24.099,
+    23.232,
+    22.95
+   ],
+   "Mre": [
+    27.378,
+    23.71,
+    22.575,
+    22.064
+   ],
+   "Mkept": [
+    27.337,
+    23.683,
+    22.552,
+    22.044
+   ],
+   "G": [
+    26.977,
+    23.696,
+    21.583,
+    20.558
+   ]
+  },
+  "bonsai": {
+   "Mfix": [
+    33.935,
+    30.989,
+    30.155,
+    29.838
+   ],
+   "Mre": [
+    35.006,
+    31.347,
+    29.869,
+    28.996
+   ],
+   "Mkept": [
+    35.102,
+    31.409,
+    29.917,
+    29.038
+   ],
+   "G": [
+    33.859,
+    29.292,
+    26.408,
+    25.096
+   ]
+  },
+  "counter": {
+   "Mfix": [
+    30.588,
+    27.143,
+    26.555,
+    26.35
+   ],
+   "Mre": [
+    31.05,
+    26.848,
+    25.985,
+    25.561
+   ],
+   "Mkept": [
+    31.064,
+    26.855,
+    25.99,
+    25.564
+   ],
+   "G": [
+    30.579,
+    27.524,
+    25.421,
+    24.486
+   ]
+  },
+  "garden": {
+   "Mfix": [
+    29.972,
+    24.382,
+    23.459,
+    23.158
+   ],
+   "Mre": [
+    30.073,
+    23.964,
+    22.765,
+    22.202
+   ],
+   "Mkept": [
+    30.08,
+    23.963,
+    22.765,
+    22.205
+   ],
+   "G": [
+    29.667,
+    25.058,
+    22.376,
+    21.227
+   ]
+  },
+  "kitchen": {
+   "Mfix": [
+    33.714,
+    26.874,
+    26.028,
+    25.761
+   ],
+   "Mre": [
+    34.317,
+    26.374,
+    25.223,
+    24.683
+   ],
+   "Mkept": [
+    34.379,
+    26.389,
+    25.232,
+    24.69
+   ],
+   "G": [
+    33.548,
+    27.245,
+    23.897,
+    22.599
+   ]
+  },
+  "room": {
+   "Mfix": [
+    33.617,
+    29.105,
+    28.461,
+    28.214
+   ],
+   "Mre": [
+    33.924,
+    28.865,
+    28.04,
+    27.645
+   ],
+   "Mkept": [
+    33.85,
+    28.802,
+    27.982,
+    27.59
+   ],
+   "G": [
+    33.405,
+    30.087,
+    28.031,
+    27.18
+   ]
+  },
+  "stump": {
+   "Mfix": [
+    27.415,
+    25.109,
+    24.68,
+    24.542
+   ],
+   "Mre": [
+    27.501,
+    24.73,
+    23.977,
+    23.577
+   ],
+   "Mkept": [
+    27.483,
+    24.723,
+    23.972,
+    23.573
+   ],
+   "G": [
+    27.503,
+    24.868,
+    22.928,
+    21.97
+   ]
+  },
+  "flowers": {
+   "Mfix": [
+    23.769,
+    21.079,
+    20.381,
+    20.149
+   ],
+   "Mre": [
+    23.851,
+    20.809,
+    19.902,
+    19.527
+   ],
+   "Mkept": [
+    23.853,
+    20.813,
+    19.905,
+    19.529
+   ],
+   "G": [
+    23.805,
+    21.059,
+    19.44,
+    18.715
+   ]
+  },
+  "treehill": {
+   "Mfix": [
+    24.607,
+    23.135,
+    22.465,
+    22.23
+   ],
+   "Mre": [
+    24.406,
+    22.698,
+    21.793,
+    21.349
+   ],
+   "Mkept": [
+    24.423,
+    22.699,
+    21.796,
+    21.352
+   ],
+   "G": [
+    24.057,
+    21.764,
+    20.255,
+    19.503
+   ]
+  }
+ },
+ "lane_vs_recomputed": {
+  "primary": {
+   "x1": {
+    "lane": 0.166,
+    "recomputed": 0.1663,
+    "diff": 0.0003
+   },
+   "x2": {
+    "lane": 0.147,
+    "recomputed": 0.1468,
+    "diff": -0.0002
+   },
+   "x4": {
+    "lane": 1.675,
+    "recomputed": 1.6751,
+    "diff": 0.0001
+   },
+   "x8": {
+    "lane": 2.429,
+    "recomputed": 2.429,
+    "diff": 0.0
+   }
+  },
+  "drift": {
+   "x1": {
+    "lane": 0.007,
+    "recomputed": -0.0072,
+    "diff": -0.0142
+   },
+   "x2": {
+    "lane": -0.001,
+    "recomputed": 0.0009,
+    "diff": 0.0019
+   },
+   "x4": {
+    "lane": -0.002,
+    "recomputed": 0.0021,
+    "diff": 0.0041
+   },
+   "x8": {
+    "lane": -0.002,
+    "recomputed": 0.0021,
+    "diff": 0.0041
+   }
+  },
+  "secondary": {
+   "x1": {
+    "lane": -0.29,
+    "recomputed": -0.29,
+    "diff": 0.0
+   },
+   "x2": {
+    "lane": 0.286,
+    "recomputed": 0.2855,
+    "diff": -0.0005
+   },
+   "x4": {
+    "lane": 0.587,
+    "recomputed": 0.5874,
+    "diff": 0.0004
+   },
+   "x8": {
+    "lane": 0.843,
+    "recomputed": 0.8433,
+    "diff": 0.0003
+   }
+  }
+ },
+ "categories": {
+  "primary": {
+   "x1": "PARITY (mean +0.166 > 2SD 0.035, but stump -0.088 < -0.05 floor)",
+   "x2": "PARITY (mean +0.147 > 2SD 0.023, but room -0.982 < floor)",
+   "x4": "AHEAD (+1.675, SD 0.007, worst room +0.430)",
+   "x8": "AHEAD (+2.429, SD 0.004, worst room +1.033)",
+   "row": "PARITY (no scale BEHIND; not AHEAD at all 4)"
+  },
+  "drift": "PASS at all scales (M-rerun - kept M: x1 -0.007, x2 +0.001, x4 +0.002, x8 +0.002; all far under 0.10) -> every primary scale is citable, not descriptive. Lane reported the opposite sign (kept - rerun) at all four scales; magnitudes identical.",
+  "secondary_same_batch": "Applying the parent gate (not registered as a gated verdict for the secondary; descriptive): x1 BEHIND -0.290 (SD .006), x2 PARITY +0.286 (bonsai -0.357 breaks floor), x4 AHEAD +0.587, x8 AHEAD +0.843. The fix trades ~0.29 dB at x1 for +0.29..+0.84 dB at x2-x8; bonsai loses at x1 (-1.07) and x2."
+ },
+ "room_x2_outlier": {
+  "finding": "NOT a broken run. Room x2 M-fixed = 29.114/29.087/29.114 over seeds (spread 0.03 dB), gsplat-aa 30.05/30.14/30.07; 79% of room x2 views below gsplat (median view -1.30 dB). Correct scene (tar sha, view names), filter on, exit 0, 30k iters. It is the same systematic x2 shortfall seen in the parent (kept M room x2 -1.285), reduced by ~0.30 dB by the fix. Shape: M-fixed room drops 4.5 dB x1->x2 then 0.6/0.25; gsplat drops 3.3/2.1/0.85.",
+  "psnr_x2_by_seed": {
+   "Mfix": [
+    29.114,
+    29.087,
+    29.114
+   ],
+   "Mre": [
+    28.899,
+    28.826,
+    28.871
+   ],
+   "Mkept": [
+    28.831,
+    28.775,
+    28.799
+   ],
+   "G": [
+    30.054,
+    30.138,
+    30.068
+   ]
+  },
+  "frac_views_Mfix_below_G": 0.786,
+  "median_view_delta": -1.302,
+  "room_abs_x1_x2_x4_x8": {
+   "Mfix": [
+    33.617,
+    29.105,
+    28.461,
+    28.214
+   ],
+   "Mre": [
+    33.924,
+    28.865,
+    28.04,
+    27.645
+   ],
+   "Mkept": [
+    33.85,
+    28.802,
+    27.982,
+    27.59
+   ],
+   "G": [
+    33.405,
+    30.087,
+    28.031,
+    27.18
+   ]
+  },
+  "Mfix_splat_budget_room": [
+   913475
+  ]
+ },
+ "unregistered_diagnostic_mip_fixedob": {
+  "what": "M-fixed binary with --max-splats pinned to the OLD budgets (2M; 1.2M for counter/kitchen/room), seed 1 only, 9 scenes, 3D filter on in 9/9, edited wrapper (sha 146ada7c). Unregistered -> descriptive only; n=1 seed, cannot carry any verdict.",
+  "result": {
+   "x1": {
+    "ob_minus_Mfix_s1_mean": 0.042,
+    "per_scene": {
+     "bicycle": 0.08,
+     "bonsai": 0.186,
+     "counter": 0.042,
+     "garden": -0.157,
+     "kitchen": -0.002,
+     "room": 0.139,
+     "stump": -0.003,
+     "flowers": 0.056,
+     "treehill": 0.034
+    },
+    "ob_minus_G_s1_mean": 0.217
+   },
+   "x2": {
+    "ob_minus_Mfix_s1_mean": 0.01,
+    "per_scene": {
+     "bicycle": 0.032,
+     "bonsai": 0.135,
+     "counter": 0.005,
+     "garden": -0.086,
+     "kitchen": -0.022,
+     "room": 0.062,
+     "stump": -0.047,
+     "flowers": 0.017,
+     "treehill": -0.008
+    },
+    "ob_minus_G_s1_mean": 0.147
+   },
+   "x4": {
+    "ob_minus_Mfix_s1_mean": 0.008,
+    "per_scene": {
+     "bicycle": 0.024,
+     "bonsai": 0.129,
+     "counter": 0.002,
+     "garden": -0.066,
+     "kitchen": -0.019,
+     "room": 0.061,
+     "stump": -0.055,
+     "flowers": 0.013,
+     "treehill": -0.015
+    },
+    "ob_minus_G_s1_mean": 1.677
+   },
+   "x8": {
+    "ob_minus_Mfix_s1_mean": 0.008,
+    "per_scene": {
+     "bicycle": 0.021,
+     "bonsai": 0.127,
+     "counter": 0.003,
+     "garden": -0.057,
+     "kitchen": -0.015,
+     "room": 0.058,
+     "stump": -0.059,
+     "flowers": 0.011,
+     "treehill": -0.015
+    },
+    "ob_minus_G_s1_mean": 2.434
+   }
+  },
+  "reading": "Restoring the old budget changes M-fixed by only +0.04 dB at x1 and ~+0.01 dB at x2-x8 (seed 1, mixed per scene). So the secondary's x1 loss is driven by the 3D filter itself, not by the smaller splat budget the fix also induces."
+ },
+ "discrepancies": [
+  "None > 0.005 dB vs lane numbers; no category change at any scale or row.",
+  "Sign convention only: the lane's drift numbers (+0.007/-0.001/-0.002/-0.002) are kept M minus M-rerun; registered direction 'M-rerun vs kept M' gives -0.007/+0.001/+0.002/+0.002. All four magnitudes match to <=0.0005 dB; immaterial to the |drift| > 0.10 rule. (lane_vs_recomputed.drift 'diff' fields reflect the flipped sign, not a numeric disagreement.)",
+  "Registration 677 says fix historical-build-001 is 'on main'; git: historical-build-001 is on perf-train-mipgate / origin/perf-train-mipgate and is NOT an ancestor of main or historical source archive. Consistent with the lane's statement that historical-build-001 will NOT be landed."
+ ],
+ "important_confound": "The fix does two things, not one: besides turning the 3D filter on, the training-pixel budget bound now uses training pixels, so M-fixed trained with a LOWER splat budget (e.g. bicycle 1.43M vs 2M, room 0.91M vs 1.2M, counter 0.71M vs 1.2M). The registration's 'cause' text names this, but 'the filter fix's own effect' = filter-on + smaller budget. The ob diagnostic suggests the budget part is small (<=0.04 dB mean, seed 1).",
+ "recommended_class": "PARITY (verified), labelled 'gsplat-aa not same-batch' and 'research build, not shipped'. Row: PARITY with gsplat-antialiased on Mip-Splatting Table 3 protocol; per-scale x1 PARITY, x2 PARITY, x4 AHEAD, x8 AHEAD. The parent parity:12-table3 BEHIND verdict for the shipped/registered M arm STANDS and is not superseded.",
+ "wording_caveats": [
+  "M-fixed is a RESEARCH BUILD (research-o2-multires3 historical-build-068 = hook binary + fix historical-build-001). The lane says historical-build-001 will NOT be landed, so this result describes no shipped product; the shipped/main mip mode remains the parity:12-table3 arm (row BEHIND, x2 -0.14). Do not write 'our renderer is at parity/ahead' without 'with an unlanded 3D-filter gate fix'.",
+  "gsplat-aa is from an earlier batch (09:15) - say 'not same-batch'; drift check (<=0.007 dB) supports reuse.",
+  "x1/x2 PARITY are floor-limited: means are +0.17/+0.15 dB (well over 2 SD), but stump x1 (-0.09) and room x2 (-0.98) fall below -0.05. Do not call x1/x2 'ahead'; do not hide room x2 (still ~-1 dB, ~79% of views worse).",
+  "gsplat-antialiased is gsplat's antialiasing mode, not the official Mip-Splatting method; no 'vs Mip-Splatting' claim.",
+  "PSNR/SSIM only; no LPIPS for our arms at any scale.",
+  "Same-batch secondary: the fix costs 0.29 dB at x1 (bonsai -1.07) while gaining +0.29/+0.59/+0.84 dB at x2/x4/x8; it also lowers the splat budget (confound above).",
+  "Carried disclosures: x1 GT resampler differs per arm; 4 scenes scored 1 px shorter on our side; gsplat memory descriptive; gsplat version label hard-coded in the driver; mixed drivers (quality only)."
+ ]
+}

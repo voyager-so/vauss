@@ -1,0 +1,31 @@
+{
+ "kind": "render",
+ "claim": "nht-paper-parity-11b-m360-s42",
+ "verified_by": "publications (recompute from 9 per-view.jsonl)",
+ "verified_at": "2026-10-09T00:10-07:00",
+ "inputs": "$SPLAT_DATA/research/r-oracle/nht-paper-parity-report.json -> 9 per_view paths",
+ "gates": [
+  "n per scene = standard every-8th held-out count (22/18/35/25/24/39/16/30/37), unique view ids",
+  "per-scene means match report exactly"
+ ],
+ "per_scene_delta_vs_paper": {
+  "flowers": 0.041,
+  "treehill": 0.011,
+  "kitchen": -0.892,
+  "bicycle": 0.168,
+  "garden": 0.036,
+  "room": -0.106,
+  "stump": 0.058,
+  "counter": -0.142,
+  "bonsai": 0.063
+ },
+ "mean_psnr": 28.649677,
+ "paper_headline": 28.738,
+ "paper_per_scene_mean": 28.7344,
+ "delta": {
+  "vs_headline": -0.0883,
+  "vs_per_scene_mean": -0.0848
+ },
+ "verdict": "PASS (|delta| <= 0.15 registered gate). NHT reproduction is at parity with the paper on M360 9-scene mean, single seed 42. Kitchen is the outlier (-0.89 dB); 7/9 scenes within 0.15.",
+ "use": "Reference arm (R-oracle) for parity tables; not our method."
+}

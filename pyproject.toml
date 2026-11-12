@@ -1,0 +1,13 @@
+# Environment for the reference evaluation scripts in eval/ (metrics.py, sfm_health.py, video_stats.py,
+# runstats.py). They are not part of splat; the Rust crates (splat-eval) are tested against their outputs.
+[project]
+name = "splat-eval-reference"
+version = "0.0.1"
+requires-python = ">=3.12,<3.13"
+dependencies = ["numpy>=2", "pillow>=10"]
+
+[project.optional-dependencies]
+eval = ["torch", "torchmetrics", "lpips"]
+
+[tool.uv]
+package = false

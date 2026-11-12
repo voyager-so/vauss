@@ -1,0 +1,289 @@
+{
+ "kind": "render",
+ "claim": "b1c-stack-deblurnerf10-v1",
+ "status": "verified-numbers; health metric pending",
+ "verified_by": "publications (own script from raw per-view rows; scene bootstrap 10000 resamples, numpy default_rng(0), percentile CI)",
+ "verified_at": "2026-10-09T07:50-07:00",
+ "inputs": {
+  "stack": "$SPLAT_DATA/research/b1c/como-port/stack-<scene>-{v1 (s42),s43-v1,s44-v1}/out/run/b1c/sharp-reference.json como_secondary.rows (no-fit PNG; same scorer protocol as CoMo no-fit-png); fitted = secondary-pose-alignment/aligned/sharp-reference.json como_secondary.rows",
+  "como_s0": "$SPLAT_DATA/research/b1a/como-full-suite-blur<scene>-v1 and como-reference-blur{ball,girl}-r4 run/schema-v1/{no-fit-png,pose-fitted-png}.jsonl (seed 0; scorer 0f3b0b35; same rows as verified/como-deblurnerf10.json, 10-scene no-fit mean 27.558 reproduced)",
+  "lane_analysis": "stack-3seed-analysis.json, stack-s4344-analysis.json (all lane numbers reproduced)"
+ },
+ "checks": {
+  "runs_complete": "30/30 (10 scenes x seeds 42/43/44), all exit_code 0, all launch.json arm=dssim,adc, seed as labelled",
+  "views": "identical view-id sets per scene for stack (every seed) and CoMo s0, both protocols: ball 4, basket 7, buick 7, coffee 5, decoration 7, girl 6, heron 5, parterre 6, puppet 7, stair 6 = 60 views",
+  "code": "4 launcher commits used: historical-build-022 (decoration, stair s42), historical-build-069 (basket, puppet s42), historical-build-062 (ball, buick, coffee, girl, heron, parterre s42), historical-build-087 (all 20 s43/s44; descends from historical-build-073). Frozen per-run source snapshots diffed: research/ trees identical to historical-build-022 except added analyze_stack.py (all later) and launch_arm.py (s43/s44 only) -> training code identical; launcher/analysis-only changes. PASS",
+  "gpu": "RTX PRO 6000 (s43/s44 launch --gpu rtxpro6000; s42 provenance 'NVIDIA RTX PRO 6000 Blackwell Server Edition')",
+  "extension_condition": "s42 no-fit mean 27.392 >= 27.26 -> s43/s44 extension condition met"
+ },
+ "per_seed_nofit_png_psnr_10scene": {
+  "s42": 27.392,
+  "s43": 27.387,
+  "s44": 27.296
+ },
+ "no_fit_png_3seed": {
+  "all10": {
+   "stack_psnr": 27.358,
+   "como_s0_psnr": 27.558,
+   "delta_psnr": -0.199,
+   "ci95": [
+    -0.349,
+    -0.061
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "1/3/6",
+   "stack_ssim": 0.8283,
+   "como_s0_ssim": 0.8343,
+   "delta_ssim": -0.0059,
+   "stack_lpips_alex": 0.0867,
+   "como_s0_lpips_alex": 0.0843,
+   "delta_lpips_alex": 0.0024
+  },
+  "non_tuning8": {
+   "stack_psnr": 26.387,
+   "como_s0_psnr": 26.542,
+   "delta_psnr": -0.155,
+   "ci95": [
+    -0.278,
+    -0.025
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "1/2/5",
+   "stack_ssim": 0.8148,
+   "como_s0_ssim": 0.8212,
+   "delta_ssim": -0.0064,
+   "stack_lpips_alex": 0.085,
+   "como_s0_lpips_alex": 0.084,
+   "delta_lpips_alex": 0.001
+  },
+  "per_scene_delta_psnr": {
+   "ball": -0.068,
+   "basket": -0.226,
+   "buick": -0.439,
+   "coffee": -0.685,
+   "decoration": -0.349,
+   "girl": -0.064,
+   "heron": -0.162,
+   "parterre": 0.018,
+   "puppet": 0.177,
+   "stair": -0.195
+  }
+ },
+ "no_fit_png_s43_s44_only": {
+  "all10": {
+   "stack_psnr": 27.341,
+   "como_s0_psnr": 27.558,
+   "delta_psnr": -0.216,
+   "ci95": [
+    -0.39,
+    -0.074
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "0/3/7",
+   "stack_ssim": 0.8277,
+   "como_s0_ssim": 0.8343,
+   "delta_ssim": -0.0065,
+   "stack_lpips_alex": 0.0875,
+   "como_s0_lpips_alex": 0.0843,
+   "delta_lpips_alex": 0.0031
+  },
+  "non_tuning8": {
+   "stack_psnr": 26.379,
+   "como_s0_psnr": 26.542,
+   "delta_psnr": -0.163,
+   "ci95": [
+    -0.276,
+    -0.058
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "0/2/6",
+   "stack_ssim": 0.8142,
+   "como_s0_ssim": 0.8212,
+   "delta_ssim": -0.007,
+   "stack_lpips_alex": 0.0857,
+   "como_s0_lpips_alex": 0.084,
+   "delta_lpips_alex": 0.0018
+  },
+  "per_scene_delta_psnr": {
+   "ball": -0.016,
+   "basket": -0.228,
+   "buick": -0.483,
+   "coffee": -0.843,
+   "decoration": -0.237,
+   "girl": -0.122,
+   "heron": -0.116,
+   "parterre": 0.059,
+   "puppet": 0.037,
+   "stair": -0.214
+  }
+ },
+ "pose_fitted_png_3seed": {
+  "all10": {
+   "stack_psnr": 28.159,
+   "como_s0_psnr": 28.337,
+   "delta_psnr": -0.178,
+   "ci95": [
+    -0.274,
+    -0.078
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "1/1/8",
+   "stack_ssim": 0.8429,
+   "como_s0_ssim": 0.8487,
+   "delta_ssim": -0.0058,
+   "stack_lpips_alex": 0.0841,
+   "como_s0_lpips_alex": 0.0818,
+   "delta_lpips_alex": 0.0023
+  },
+  "non_tuning8": {
+   "stack_psnr": 27.106,
+   "como_s0_psnr": 27.256,
+   "delta_psnr": -0.151,
+   "ci95": [
+    -0.257,
+    -0.039
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "1/1/6",
+   "stack_ssim": 0.8301,
+   "como_s0_ssim": 0.8367,
+   "delta_ssim": -0.0066,
+   "stack_lpips_alex": 0.0823,
+   "como_s0_lpips_alex": 0.0813,
+   "delta_lpips_alex": 0.0011
+  },
+  "per_scene_delta_psnr": {
+   "ball": -0.188,
+   "basket": -0.164,
+   "buick": -0.373,
+   "coffee": -0.388,
+   "decoration": -0.355,
+   "girl": 0.13,
+   "heron": -0.177,
+   "parterre": -0.112,
+   "puppet": -0.001,
+   "stair": -0.152
+  }
+ },
+ "pose_fitted_png_s43_s44_only": {
+  "all10": {
+   "stack_psnr": 28.144,
+   "como_s0_psnr": 28.337,
+   "delta_psnr": -0.193,
+   "ci95": [
+    -0.287,
+    -0.091
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "1/0/9",
+   "stack_ssim": 0.8421,
+   "como_s0_ssim": 0.8487,
+   "delta_ssim": -0.0066,
+   "stack_lpips_alex": 0.0849,
+   "como_s0_lpips_alex": 0.0818,
+   "delta_lpips_alex": 0.0031
+  },
+  "non_tuning8": {
+   "stack_psnr": 27.092,
+   "como_s0_psnr": 27.256,
+   "delta_psnr": -0.165,
+   "ci95": [
+    -0.265,
+    -0.055
+   ],
+   "verdict": "BEHIND",
+   "wins_parity_losses": "1/0/7",
+   "stack_ssim": 0.8291,
+   "como_s0_ssim": 0.8367,
+   "delta_ssim": -0.0076,
+   "stack_lpips_alex": 0.0832,
+   "como_s0_lpips_alex": 0.0813,
+   "delta_lpips_alex": 0.0019
+  },
+  "per_scene_delta_psnr": {
+   "ball": -0.17,
+   "basket": -0.124,
+   "buick": -0.398,
+   "coffee": -0.438,
+   "decoration": -0.312,
+   "girl": 0.142,
+   "heron": -0.147,
+   "parterre": -0.123,
+   "puppet": -0.131,
+   "stair": -0.226
+  }
+ },
+ "per_seed_descriptive": {
+  "nofit_s42": {
+   "all10": {
+    "delta_psnr": -0.165,
+    "ci95": [
+     -0.318,
+     0.009
+    ],
+    "verdict": "BEHIND"
+   },
+   "non_tuning8": {
+    "delta_psnr": -0.139,
+    "ci95": [
+     -0.322,
+     0.07
+    ],
+    "verdict": "BEHIND"
+   }
+  },
+  "nofit_s43": {
+   "all10": {
+    "delta_psnr": -0.171,
+    "ci95": [
+     -0.374,
+     -0.018
+    ],
+    "verdict": "BEHIND"
+   },
+   "non_tuning8": {
+    "delta_psnr": -0.093,
+    "ci95": [
+     -0.219,
+     0.015
+    ],
+    "verdict": "PARITY"
+   }
+  },
+  "nofit_s44": {
+   "all10": {
+    "delta_psnr": -0.262,
+    "ci95": [
+     -0.428,
+     -0.1
+    ],
+    "verdict": "BEHIND"
+   },
+   "non_tuning8": {
+    "delta_psnr": -0.233,
+    "ci95": [
+     -0.37,
+     -0.078
+    ],
+    "verdict": "BEHIND"
+   }
+  }
+ },
+ "verdict": "BEHIND released CoMoGaussian s0 by 0.199 dB no-fit PNG PSNR (3-seed scene means, CI [-0.349, -0.061], excludes 0; 1/3/6 W/P/L); non-tuning 8 BEHIND -0.155 [-0.278, -0.025] (agrees); seeds 43+44 only BEHIND -0.216 [-0.390, -0.074] (8-scene -0.163 [-0.276, -0.058]) -> agrees with 3-seed verdict. Fitted BEHIND -0.178 [-0.274, -0.078]. SSIM -0.006, Alex LPIPS +0.0024 (worse) on the 10-scene mean. Gap vs CoMo narrowed from B1c's -0.496 to -0.199 but not closed.",
+ "class": "HEADLINE (negative) - registered conditions met (3-seed and 43+44-only verdicts agree, 8-scene agrees, 10/10 scenes). Recording held: per historical-build-086 / historical-build-067 no verdict from this group is recorded before the health metric; numbers verified now.",
+ "health_metric": "not yet measured. Required (historical-build-067 correction): dead/relocated splat fraction per 100 training steps, flag > 50%, where the engine exposes it; supplementary post-hoc final-PLY dead fraction (sigmoid(opacity) < 0.005), CPU fal job before 10:30. Cap asymmetry: stack ADC uncapped (final count reported), CoMo ADC uncapped.",
+ "timing": "Lane reports train-call wall 1,889-1,980 s on RTX PRO 6000. NOT verified: the metrics.json train_s field spans 1,391-2,638 s per run (s42 1,896-2,352; s43/s44 1,391-2,638); the lane's span definition must be shown to match locked span (a) per como-released-seed2-v1 amendment. No speed comparison until same-batch CoMo s2 lands; then the less favourable of spans (a)/(b) is quoted, both shown.",
+ "disclosures": [
+  "registered comparator is CoMo-released seed 0, run in a different batch/request and earlier than the stack runs; same-batch CoMo s2 (pubs:p1:como-released-seed2-v1) still running and will be reported alongside, not replacing, this verdict",
+  "seed mismatch: stack 3-seed mean (42/43/44) vs CoMo single seed 0",
+  "coffee and ball are tuning scenes (3-round, 9-arm screen); 8-scene non-tuning result reported together",
+  "optional stopping: s43/s44 conditional on s42 >= 27.26; 43+44-only verdict reported per amendment and agrees",
+  "s42 runs launched from three launcher commits (historical-build-022, historical-build-069, historical-build-062); training code identical by snapshot diff",
+  "lpips_scale full (scorer 0f3b0b35, Alex normalize=True), N/N per-view rows",
+  "seed-gate (rule:seed-gate) is not applicable: registered before the rule; secondary only"
+ ],
+ "mismatches": [
+  "none in quality numbers (all lane figures reproduced to 3 dp)",
+  "timing range 1,889-1,980 s not reproduced from train_s (1,391-2,638 s); unverified"
+ ]
+}

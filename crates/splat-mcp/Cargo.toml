@@ -1,0 +1,18 @@
+[package]
+name = "splat-mcp"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+[dependencies]
+splat-contracts.workspace = true
+splat-core.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+rmcp = { workspace = true, features = ["server", "transport-io"] }
+image.workspace = true
+base64.workspace = true
+
+[dev-dependencies]
+rmcp = { workspace = true, features = ["client", "server"] }

@@ -1,0 +1,55 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-render"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "brush_render"
+
+[dependencies]
+brush-cube = { path = "../splat-train-cube", package = "splat-train-cube" }
+brush-scan = { path = "../splat-train-scan", package = "splat-train-scan" }
+brush-sort = { path = "../splat-train-sort", package = "splat-train-sort" }
+
+# WebGPU everywhere. On macOS you can opt into native MSL with
+# `brush-cube/metal` (see that crate's manifest for why it is not on by
+# default). We still avoid Vulkan on Linux/Windows after the crashes in
+# #423 / #395.
+burn = { workspace = true, features = ["wgpu", "autodiff"] }
+burn-wgpu.workspace = true
+burn-cubecl.workspace = true
+burn-fusion.workspace = true
+
+glam.workspace = true
+clap.workspace = true
+serde.workspace = true
+tracing.workspace = true
+log.workspace = true
+bytemuck.workspace = true
+
+tokio = { version = "1", features = ["macros", "rt", "sync"] }
+
+[features]
+debug-validation = []
+
+# The workspace tokio is "full"; its net half (mio) can't build for wasm. Wasm gets only the
+# features listed above, native keeps exactly the workspace features it had.
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio.workspace = true
+
+[dev-dependencies]
+assert_approx_eq.workspace = true
+wasm-bindgen-test = "0.3"
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+[lints]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["getrandom"]

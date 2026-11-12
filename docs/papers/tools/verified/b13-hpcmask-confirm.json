@@ -1,0 +1,743 @@
+{
+ "schema": "pubs-verify/b13-hpcmask-confirm/v1",
+ "claim_group": "b13-hpcmask-confirm-6scene-v1",
+ "generated_at": "2026-10-09T06:00:00-07:00",
+ "inputs": {
+  "data": "$SPLAT_DATA/research/b13/hpcport/conf6/<scene>/seed42/{base,hpcmask-norobust}{.json,-per-view.jsonl,-per-view-summary.json},metrics.json,multi-arm.json,dv-sharp-*.json,renders/<arm>/eval_*.png",
+  "summary": "$SPLAT_DATA/research/b13/hpcport/conf6/summary.json",
+  "report": "research/b13/RESULTS-CONF6.md @ research-b13 historical-build-046",
+  "manifests": "research/b13/hpcport-conf6-*-s42.json @ historical-build-037 (05:03:20 PT)",
+  "hpc_gt": "hpc/cpu-audit/hpc-released-renders/extracted/dinov2_vits14_reg/<scene>/renders/test_step0030000_model0/*_color_gt.png",
+  "sharp_gt": "hpc/dataverse/sharp-gt/onthego-dv-*-clean/eval_*.png"
+ },
+ "method": "Independent numpy 8-bit PSNR per view (RGB, mean over pixels and channels, 10*log10(1/MSE)) of every render in both arms vs HPC's released *_color_gt.png (primary) and vs B13's sharp GT; HPC's released *_color_pred.png re-scored vs the same sharp GT. SSIM/LPIPS taken from per-view rows (canonical scorer aa83), not recomputed. Verdict recomputed from the numpy PSNRs under the registered rule.",
+ "registered_rule": "Vs HPC published 23.863: PARITY if |mean delta| <= 0.3; AHEAD if mean delta > +0.3 and >= 4/6 scenes positive; else BEHIND. Same rule on the 4 non-tuning scenes vs their published mean (AHEAD positivity threshold read proportionally, >= 2/3; moot since |delta| <= 0.3).",
+ "per_scene": {
+  "mountain": {
+   "n_hpc_split": 11,
+   "arms": {
+    "base": {
+     "n": 11,
+     "unique": 11,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 11,
+     "n_expected": 11,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-e6de5e42-93fb-ed26-eedf-176ebf18a02b",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 22.12299800506911,
+     "psnr_numpy_hpcgt": 22.122998042975176,
+     "max_abs_numpy_vs_row": 2.023451628474504e-07,
+     "psnr_metrics_json": 22.12299800506911,
+     "psnr_rowjson": 22.12299800506911,
+     "ssim_rows": 0.7676016515667293,
+     "lpips_alex_rows": 0.16135928373445163,
+     "lpips_vgg_rows": 0.20482424917546185,
+     "psnr_numpy_sharp": 21.46151279057048,
+     "psnr_sharp_lane": 21.46151178533381,
+     "alex_sharp_lane": 0.21318861097097397
+    },
+    "hpcmask-norobust": {
+     "n": 11,
+     "unique": 11,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 11,
+     "n_expected": 11,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-e6de5e42-93fb-ed26-eedf-176ebf18a02b",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 22.16014623455578,
+     "psnr_numpy_hpcgt": 22.160146279026822,
+     "max_abs_numpy_vs_row": 2.1147940998389458e-07,
+     "psnr_metrics_json": 22.16014623455578,
+     "psnr_rowjson": 22.16014623455578,
+     "ssim_rows": 0.7687907405693101,
+     "lpips_alex_rows": 0.1585713503035632,
+     "lpips_vgg_rows": 0.20410148325291547,
+     "psnr_numpy_sharp": 21.49535011199275,
+     "psnr_sharp_lane": 21.49534901705655,
+     "alex_sharp_lane": 0.21038311516696756
+    }
+   },
+   "hpc_sharp_numpy": 21.499167684415795,
+   "hpc_sharp_rescore_file": 21.499,
+   "hpc_sharp_summary": 21.499157645485617,
+   "published": {
+    "psnr": 22.2,
+    "ssim": 0.784,
+    "lpips_alex": 0.129
+   },
+   "published_prev_verified": 22.2,
+   "d_vs_pub": -0.039853720973177076,
+   "d_method_minus_base": 0.037148236051645966,
+   "lane_summary_diff": {
+    "method": 4.447104373639377e-08,
+    "base": 3.7906065841752934e-08
+   },
+   "exec": {
+    "request_id": "01a1208c-e08e-71e3-b917-1997cfbe8c21",
+    "submit_pt": "05:04:25",
+    "end_pt": "05:27:35",
+    "end_how": "fetched",
+    "submits": 1,
+    "attempts_for_scene": 1,
+    "both_arms_same_request": true,
+    "same_gpu_uuid": true
+   }
+  },
+  "fountain": {
+   "n_hpc_split": 16,
+   "arms": {
+    "base": {
+     "n": 16,
+     "unique": 16,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 16,
+     "n_expected": 16,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-76eee8e3-225d-3bff-9bbd-652fee67972d",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 22.39629921952367,
+     "psnr_numpy_hpcgt": 22.396299355529056,
+     "max_abs_numpy_vs_row": 2.240042071832704e-07,
+     "psnr_metrics_json": 22.39629921952367,
+     "psnr_rowjson": 22.39629921952367,
+     "ssim_rows": 0.8078973410955611,
+     "lpips_alex_rows": 0.14204482547938824,
+     "lpips_vgg_rows": 0.17224740190431476,
+     "psnr_numpy_sharp": 21.34171166385335,
+     "psnr_sharp_lane": 21.341711044311523,
+     "alex_sharp_lane": 0.20407867524772882
+    },
+    "hpcmask-norobust": {
+     "n": 16,
+     "unique": 16,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 16,
+     "n_expected": 16,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-76eee8e3-225d-3bff-9bbd-652fee67972d",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 22.840466991013468,
+     "psnr_numpy_hpcgt": 22.840467129522676,
+     "max_abs_numpy_vs_row": 2.245012993284945e-07,
+     "psnr_metrics_json": 22.840466991013464,
+     "psnr_rowjson": 22.840466991013464,
+     "ssim_rows": 0.8141351088216396,
+     "lpips_alex_rows": 0.13241589721292257,
+     "lpips_vgg_rows": 0.16430345783010125,
+     "psnr_numpy_sharp": 21.7293668497787,
+     "psnr_sharp_lane": 21.729365706443787,
+     "alex_sharp_lane": 0.1943738106638193
+    }
+   },
+   "hpc_sharp_numpy": 22.274703518384158,
+   "hpc_sharp_rescore_file": 22.275,
+   "hpc_sharp_summary": 22.27469754219055,
+   "published": {
+    "psnr": 23.4,
+    "ssim": 0.813,
+    "lpips_alex": 0.117
+   },
+   "published_prev_verified": 23.4,
+   "d_vs_pub": -0.559532870477323,
+   "d_method_minus_base": 0.4441677739936196,
+   "lane_summary_diff": {
+    "method": 1.3850921121161264e-07,
+    "base": 1.3600538650848648e-07
+   },
+   "exec": {
+    "request_id": "01a1208c-93f5-7b52-a8d0-a64d031d28bb",
+    "submit_pt": "05:04:06",
+    "end_pt": "05:32:10",
+    "end_how": "fetched",
+    "submits": 1,
+    "attempts_for_scene": 1,
+    "both_arms_same_request": true,
+    "same_gpu_uuid": true
+   }
+  },
+  "corner": {
+   "n_hpc_split": 20,
+   "arms": {
+    "base": {
+     "n": 20,
+     "unique": 20,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 20,
+     "n_expected": 20,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-314a655a-da36-eb2f-ebbb-4612177f15d3",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 25.126750476373083,
+     "psnr_numpy_hpcgt": 25.126750552867605,
+     "max_abs_numpy_vs_row": 3.1337424033495154e-07,
+     "psnr_metrics_json": 25.12675047637309,
+     "psnr_rowjson": 25.12675047637309,
+     "ssim_rows": 0.8879069587702736,
+     "lpips_alex_rows": 0.10625350158661603,
+     "lpips_vgg_rows": 0.14533394537866115,
+     "psnr_numpy_sharp": 24.489171535161642,
+     "psnr_sharp_lane": 24.489169979095458,
+     "alex_sharp_lane": 0.14372851904481648
+    },
+    "hpcmask-norobust": {
+     "n": 20,
+     "unique": 20,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 20,
+     "n_expected": 20,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-314a655a-da36-eb2f-ebbb-4612177f15d3",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 25.94116262507432,
+     "psnr_numpy_hpcgt": 25.941162707844008,
+     "max_abs_numpy_vs_row": 3.113157518441767e-07,
+     "psnr_metrics_json": 25.94116262507432,
+     "psnr_rowjson": 25.94116262507432,
+     "ssim_rows": 0.903508385734946,
+     "lpips_alex_rows": 0.07874232456088066,
+     "lpips_vgg_rows": 0.11909347269684076,
+     "psnr_numpy_sharp": 25.188420055078716,
+     "psnr_sharp_lane": 25.188418483734132,
+     "alex_sharp_lane": 0.11544128339737654
+    }
+   },
+   "hpc_sharp_numpy": 24.902491736375005,
+   "hpc_sharp_rescore_file": 24.902,
+   "hpc_sharp_summary": 24.90249099731445,
+   "published": {
+    "psnr": 25.72,
+    "ssim": 0.9,
+    "lpips_alex": 0.077
+   },
+   "published_prev_verified": 25.72,
+   "d_vs_pub": 0.22116270784400882,
+   "d_method_minus_base": 0.8144121549764023,
+   "lane_summary_diff": {
+    "method": 8.276968799236784e-08,
+    "base": 7.64945156106478e-08
+   },
+   "exec": {
+    "request_id": "01a120a2-425b-7e80-9d31-aa03bb7a2f04",
+    "submit_pt": "05:27:47",
+    "end_pt": "05:48:49",
+    "end_how": "fetched",
+    "submits": 1,
+    "attempts_for_scene": 1,
+    "both_arms_same_request": true,
+    "same_gpu_uuid": true
+   }
+  },
+  "patio": {
+   "n_hpc_split": 26,
+   "arms": {
+    "base": {
+     "n": 26,
+     "unique": 26,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 26,
+     "n_expected": 26,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-d3d5f3f2-46f9-cf35-5e42-3ea0e47dbe00",
+     "size": [
+      480,
+      270
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 22.317040773079274,
+     "psnr_numpy_hpcgt": 22.31704095391241,
+     "max_abs_numpy_vs_row": 3.4380200375494496e-07,
+     "psnr_metrics_json": 22.31704077307927,
+     "psnr_rowjson": 22.31704077307927,
+     "ssim_rows": 0.8537234569046016,
+     "lpips_alex_rows": 0.1038883776905445,
+     "lpips_vgg_rows": 0.14194658398628235,
+     "psnr_numpy_sharp": 21.51341985880416,
+     "psnr_sharp_lane": 21.513418491070087,
+     "alex_sharp_lane": 0.17084738067709482
+    },
+    "hpcmask-norobust": {
+     "n": 26,
+     "unique": 26,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 26,
+     "n_expected": 26,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-d3d5f3f2-46f9-cf35-5e42-3ea0e47dbe00",
+     "size": [
+      480,
+      270
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 22.41866529087695,
+     "psnr_numpy_hpcgt": 22.418665470328886,
+     "max_abs_numpy_vs_row": 3.469107490161605e-07,
+     "psnr_metrics_json": 22.418665290876945,
+     "psnr_rowjson": 22.418665290876945,
+     "ssim_rows": 0.855552044442889,
+     "lpips_alex_rows": 0.10227717846058883,
+     "lpips_vgg_rows": 0.14072395173402932,
+     "psnr_numpy_sharp": 21.61428420094081,
+     "psnr_sharp_lane": 21.614282828110916,
+     "alex_sharp_lane": 0.16927616240886542
+    }
+   },
+   "hpc_sharp_numpy": 21.849607122912396,
+   "hpc_sharp_rescore_file": 21.85,
+   "hpc_sharp_summary": 21.84960570702186,
+   "published": {
+    "psnr": 22.67,
+    "ssim": 0.845,
+    "lpips_alex": 0.095
+   },
+   "published_prev_verified": 22.67,
+   "d_vs_pub": -0.2513345296711158,
+   "d_method_minus_base": 0.10162451641647507,
+   "lane_summary_diff": {
+    "method": 1.794519413067519e-07,
+    "base": 1.808331404618002e-07
+   },
+   "exec": {
+    "request_id": "01a120a4-6385-7133-bbde-ad2b495fb69c",
+    "submit_pt": "05:30:06",
+    "end_pt": "05:37:59",
+    "end_how": "fetched",
+    "submits": 1,
+    "attempts_for_scene": 1,
+    "both_arms_same_request": true,
+    "same_gpu_uuid": true
+   }
+  },
+  "spot": {
+   "n_hpc_split": 10,
+   "arms": {
+    "base": {
+     "n": 10,
+     "unique": 10,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 10,
+     "n_expected": 10,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-94202a6a-f696-b1e1-f3b9-ce4d696f27d9",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 24.778160288042663,
+     "psnr_numpy_hpcgt": 24.778160678401797,
+     "max_abs_numpy_vs_row": 5.687942561394266e-07,
+     "psnr_metrics_json": 24.778160288042663,
+     "psnr_rowjson": 24.778160288042663,
+     "ssim_rows": 0.8966546824637257,
+     "lpips_alex_rows": 0.10146242901682853,
+     "lpips_vgg_rows": 0.14110034629702567,
+     "psnr_numpy_sharp": 24.133376119401227,
+     "psnr_sharp_lane": 24.133374404907226,
+     "alex_sharp_lane": 0.13767112269997597
+    },
+    "hpcmask-norobust": {
+     "n": 10,
+     "unique": 10,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 10,
+     "n_expected": 10,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-94202a6a-f696-b1e1-f3b9-ce4d696f27d9",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 25.344247942027557,
+     "psnr_numpy_hpcgt": 25.34424834179337,
+     "max_abs_numpy_vs_row": 6.032643611320054e-07,
+     "psnr_metrics_json": 25.344247942027557,
+     "psnr_rowjson": 25.344247942027557,
+     "ssim_rows": 0.9008580171439536,
+     "lpips_alex_rows": 0.09644774571061135,
+     "lpips_vgg_rows": 0.13576539978384972,
+     "psnr_numpy_sharp": 24.640414000491628,
+     "psnr_sharp_lane": 24.640412902832033,
+     "alex_sharp_lane": 0.13088498190045356
+    }
+   },
+   "hpc_sharp_numpy": 24.947489099155685,
+   "hpc_sharp_rescore_file": 24.947,
+   "hpc_sharp_summary": 24.9474817276001,
+   "published": {
+    "psnr": 25.83,
+    "ssim": 0.899,
+    "lpips_alex": 0.096
+   },
+   "published_prev_verified": 25.83,
+   "d_vs_pub": -0.48575165820662747,
+   "d_method_minus_base": 0.5660876633915741,
+   "lane_summary_diff": {
+    "method": 3.997658133414461e-07,
+    "base": 3.903591334619705e-07
+   },
+   "exec": {
+    "request_id": "01a1208c-41fa-7422-aa6a-9e6d6df57827",
+    "submit_pt": "05:03:45",
+    "end_pt": "05:33:06",
+    "end_how": "fetched",
+    "submits": 1,
+    "attempts_for_scene": 1,
+    "both_arms_same_request": true,
+    "same_gpu_uuid": true
+   }
+  },
+  "patio_high": {
+   "n_hpc_split": 45,
+   "arms": {
+    "base": {
+     "n": 45,
+     "unique": 45,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 45,
+     "n_expected": 45,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-d3d5f3f2-46f9-cf35-5e42-3ea0e47dbe00",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 22.72657586093116,
+     "psnr_numpy_hpcgt": 22.726576056764618,
+     "max_abs_numpy_vs_row": 3.306650881995665e-07,
+     "psnr_metrics_json": 22.726575860931167,
+     "psnr_rowjson": 22.726575860931167,
+     "ssim_rows": 0.8372828797209089,
+     "lpips_alex_rows": 0.15188860644896826,
+     "lpips_vgg_rows": 0.1721720889210701,
+     "psnr_numpy_sharp": 21.99612360555455,
+     "psnr_sharp_lane": 21.996122529771593,
+     "alex_sharp_lane": 0.21775008771154616
+    },
+    "hpcmask-norobust": {
+     "n": 45,
+     "unique": 45,
+     "ids_equal_hpc_split": true,
+     "views_hash_ok": true,
+     "n_scored": 45,
+     "n_expected": 45,
+     "binary_row": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "binary_summary": "94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf",
+     "experiment": "historical-record",
+     "pvs_run_id": "historical-record",
+     "scorer_sha": "aa83e487c5066171c1623beee488f2c156b6d3d4e9eff7c0386ee1df279780be",
+     "gpu_uuid": "GPU-d3d5f3f2-46f9-cf35-5e42-3ea0e47dbe00",
+     "size": [
+      504,
+      378
+     ],
+     "lpips_scale_field": null,
+     "psnr_rows": 23.515949185574463,
+     "psnr_numpy_hpcgt": 23.515949383898064,
+     "max_abs_numpy_vs_row": 3.127085825838094e-07,
+     "psnr_metrics_json": 23.515949185574463,
+     "psnr_rowjson": 23.515949185574463,
+     "ssim_rows": 0.8533141276028746,
+     "lpips_alex_rows": 0.12931155098809136,
+     "lpips_vgg_rows": 0.15492108166217805,
+     "psnr_numpy_sharp": 22.686145224985662,
+     "psnr_sharp_lane": 22.686144002278645,
+     "alex_sharp_lane": 0.1924802664253447
+    }
+   },
+   "hpc_sharp_numpy": 22.565137374660235,
+   "hpc_sharp_rescore_file": 22.565,
+   "hpc_sharp_summary": 22.56513353983561,
+   "published": {
+    "psnr": 23.36,
+    "ssim": 0.85,
+    "lpips_alex": 0.122
+   },
+   "published_prev_verified": 23.36,
+   "d_vs_pub": 0.155949383898065,
+   "d_method_minus_base": 0.7893733271334469,
+   "lane_summary_diff": {
+    "method": 1.9832360109717229e-07,
+    "base": 1.9583345078899583e-07
+   },
+   "exec": {
+    "request_id": "01a1208b-e5b5-7cc1-9101-5983e061ce90",
+    "submit_pt": "05:03:21",
+    "end_pt": "05:29:44",
+    "end_how": "fetched",
+    "submits": 1,
+    "attempts_for_scene": 1,
+    "both_arms_same_request": true,
+    "same_gpu_uuid": true
+   }
+  }
+ },
+ "aggregate": {
+  "all6": {
+   "method_mean": 23.703439885402304,
+   "base_mean": 23.24463760674178,
+   "published_mean": 23.863333333333333,
+   "mean_delta": -0.15989344793102825,
+   "n_positive": 2,
+   "n": 6,
+   "verdict": "PARITY",
+   "method_alex": 0.11629434120610965,
+   "published_alex": 0.106,
+   "method_ssim": 0.8493597373859355,
+   "published_ssim": 0.8484999999999999,
+   "sharp_method": 22.892330073878043,
+   "sharp_base": 22.489219262224236,
+   "sharp_hpc": 23.00643275598388,
+   "paired_mean": 0.4588022786605273,
+   "paired_n_positive": 6
+  },
+  "nontuning4": {
+   "method_mean": 23.508980960274446,
+   "base_mean": 23.07334140162995,
+   "published_mean": 23.4875,
+   "mean_delta": 0.021480960274445238,
+   "n_positive": 2,
+   "n": 4,
+   "verdict": "PARITY",
+   "method_alex": 0.117225601078281,
+   "published_alex": 0.10575000000000001,
+   "method_ssim": 0.845291324587505,
+   "published_ssim": 0.84475,
+   "sharp_method": 22.746049898249485,
+   "sharp_base": 22.36505694752271,
+   "sharp_hpc": 22.70410097959086,
+   "paired_mean": 0.43563955864449255,
+   "paired_n_positive": 4
+  }
+ },
+ "lane_vs_recomputed": {
+  "all6_method_mean": [
+   23.703,
+   23.703
+  ],
+  "all6_delta": [
+   -0.16,
+   -0.16
+  ],
+  "nontuning4_method_mean": [
+   23.509,
+   23.509
+  ],
+  "nontuning4_delta": [
+   0.021,
+   0.021
+  ],
+  "paired_mean": [
+   0.459,
+   0.459
+  ],
+  "paired_positive": [
+   "6/6",
+   "6/6"
+  ],
+  "sharp": [
+   [
+    22.892,
+    23.006
+   ],
+   [
+    22.892,
+    23.006
+   ]
+  ],
+  "alex": [
+   [
+    0.116,
+    0.106
+   ],
+   [
+    0.1163,
+    0.106
+   ]
+  ],
+  "match": true,
+  "max_abs_numpy_vs_inrun_perview_psnr": 6e-07,
+  "max_abs_scene_mean_vs_summary": 4e-07
+ },
+ "published_values": {
+  "source": "same per-scene PSNR as verified/b13-ours-on-dataverse.json (22.20, 23.40, 25.72, 22.67, 23.36, 25.83; mean 23.8633); SSIM/Alex published values as in summary.json rows; Alex mean 0.106 all6, 0.10575 non-tuning",
+  "match": true
+ },
+ "timeline_pt": {
+  "replicate_amendment_registered": "04:19:23 (historical-build-083; claims line 164)",
+  "confirm_registered_commit": "04:42:31 (historical-build-009, merged historical-build-088 04:42:32; line 172 registered_at 04:45:00, registered_commit historical-build-054 = main tip 04:42:04)",
+  "replicate_runs": {
+   "r2_spot": "submit 03:31:17 end 04:03:30",
+   "r2_fountain": "03:37:44 / 04:18:17",
+   "r3a_spot": "04:20:24 / 04:47:03",
+   "r3a_fountain": "04:28:15 / 04:54:58",
+   "r3b_spot": "04:32:16 / 05:02:59"
+  },
+  "replicate_rule_data_complete": "05:02:59",
+  "conf6_manifests_commit": "05:03:20 (historical-build-037)",
+  "first_conf6_submit": "05:03:21",
+  "last_conf6_submit": "05:30:06",
+  "launches_after_registration": true,
+  "launches_after_replicate_data": true
+ },
+ "replicate_rule_recomputed": {
+  "spot_deltas_r2_r3a_r3b": [
+   0.589,
+   0.4279,
+   0.8441
+  ],
+  "spot_mean_delta": 0.6204,
+  "fountain_deltas_r2_r3a": [
+   0.2919,
+   0.3105
+  ],
+  "fountain_mean_delta": 0.3012,
+  "spot_base_runs": [
+   24.9509,
+   25.0774,
+   24.8913
+  ],
+  "spot_base_sd_sample_3runs": 0.0951,
+  "spot_base_sd_sample_fresh2": 0.1316,
+  "both_tuning_mean_delta_positive": true,
+  "spot_mean_delta_exceeds_1sd": true,
+  "pass": true
+ },
+ "lpips_scale": "no lpips_scale field in any row or summary (scorer aa83 rows predate it). All render grids are 504x378 (patio 480x270), below the 512-px CPU downscale threshold, so LPIPS is full-resolution regardless; primary scored in-run on fal RTX PRO 6000; sharp-GT lane torch 2.7.1+cpu at native grid.",
+ "retries_cancels_stalls": {
+  "submits": 6,
+  "one_per_scene": true,
+  "all_end_fetched": true,
+  "cancelled_jsonl_hits": 0,
+  "stalls_jsonl_hits": 0,
+  "scene_log_retry_or_error_lines": 0
+ },
+ "sharp_gt_construction": "identical files (hpc/dataverse/sharp-gt/onthego-dv-*-clean/eval_*.png) to verified/b13-hpc-rescore.json; HPC sharp PSNR recomputed here equals that file's psnr_vs_sharp_gt on all 6 scenes (mean 23.006); method/base sharp numpy PSNR equal the dv-sharp lane values to 3 decimals",
+ "check_failures": [],
+ "verdict": {
+  "verification": "PASS",
+  "all6": "PARITY (-0.160, 2/6 positive)",
+  "nontuning4": "PARITY (+0.021, 2/4 positive)",
+  "class": "PROVISIONAL (single seed)",
+  "paired_method_minus_base": "+0.459 dB mean, 6/6 positive (single run per scene; Spot run SD 0.1-0.3 dB)"
+ },
+ "deviations": [
+  {
+   "id": "replicate_pass_not_recorded_before_launch",
+   "found": "No archived study registry (not distributed) amendment or research-b13 commit records the replicate-rule verdict. The last replicate run (r3b Spot) was fetched at 05:02:59 and the first conf6 submit was 05:03:21, 22 s later.",
+   "effect": "Recomputed here: the rule passes (Spot mean delta +0.620 > SD 0.095 (3 base runs) or 0.132 (2 fresh); Fountain mean +0.301 > 0). Launch condition met in substance; disclose that the verdict was not logged before launch."
+  },
+  {
+   "id": "lpips_scale_field_absent",
+   "found": "protocol says 'lpips_scale recorded'; no row carries the field",
+   "effect": "none on values (grids <= 504 px, full-res LPIPS); disclose"
+  },
+  {
+   "id": "binary_sha_in_arm_rows_not_per_view_lines",
+   "found": "sha256 94b2b272... is in every arm row (<arm>.json binary_sha256) and every per-view summary (binary_or_commit); the per-view jsonl lines carry no binary field (same layout as b13-ours-on-dataverse)",
+   "effect": "none"
+  },
+  {
+   "id": "late_launches_corner_patio",
+   "found": "corner (05:27:47) and patio (05:30:06) were submitted after the round-4 amendments (05:17, 05:26), held by a 4-slot queue shared with r4 runs",
+   "effect": "none: same arms file, binary sha and manifests committed 05:03:20; round-4 explicitly does not modify this group"
+  },
+  {
+   "id": "alex_ssim_not_recomputed",
+   "found": "SSIM/LPIPS from rows",
+   "effect": "Alex 0.116 vs 0.106 (method worse) rests on canonical scorer; PSNR independently recomputed"
+  },
+  {
+   "id": "tuning_scenes_and_post_hoc_combination",
+   "found": "spot and fountain were tuning scenes; norobust+hpcmask combination was chosen post-result on them (disclosed in line 164)",
+   "effect": "non-tuning-4 verdict reported alongside: PARITY +0.021"
+  },
+  {
+   "id": "single_seed",
+   "found": "seed 42 only",
+   "effect": "PROVISIONAL max; no SOTA claim"
+  }
+ ]
+}

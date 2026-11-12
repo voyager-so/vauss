@@ -1,0 +1,1249 @@
+use super::{
+    graph::{GraphRecording, ReplayDispatch, ReplayTask, WgpuGraph},
+    mem_manager::WgpuMemManager,
+    poll::WgpuPoll,
+    timings::{QueryProfiler, TimestampQuerySetBudget},
+};
+use crate::{
+    WgpuResource,
+    controller::WgpuAllocController,
+    schedule::{Addresses, ScheduleTask},
+};
+use core::iter;
+#[cfg(renderdoc)]
+use core::{cell::LazyCell, ptr::null};
+use cubecl_common::{
+    bytes::Bytes,
+    profile::{ProfileDuration, TimingMethod},
+};
+use cubecl_core::{
+    CubeCount, MemoryConfiguration,
+    server::{BufferBinding, IoError, ProfileError, ProfilingToken, ServerError},
+    zspace::Shape,
+};
+use cubecl_environment::backtrace::BackTrace;
+use cubecl_environment::future::{self, DynFut};
+use cubecl_environment::stream::StreamId;
+#[cfg(renderdoc)]
+use cubecl_environment::sync::Mutex;
+use cubecl_ir::MemoryDeviceProperties;
+use cubecl_server::{
+    logging::ServerLogger,
+    memory_management::{ErrorGraph, FailureId, ManagedMemoryHandle, SharedMemoryBindings},
+    metadata_cache::{MetadataCachePolicy, MetadataInfoCache},
+    stream::{StreamCapture, StreamMemory},
+    timestamp_profiler::TimestampProfiler,
+};
+#[cfg(renderdoc)]
+use renderdoc::{RenderDoc, V100};
+use std::{future::Future, num::NonZero, pin::Pin, sync::Arc};
+use wgpu::ComputePipeline;
+
+#[cfg(renderdoc)]
+thread_local! {
+    static RENDERDOC: LazyCell<Option<Mutex<RenderDoc<V100>>>> = LazyCell::new(|| RenderDoc::new().ok().map(Mutex::new));
+}
+
+#[derive(Debug)]
+enum Timings {
+    // Boxed: `QueryProfiler` is much larger than `TimestampProfiler`
+    // (clippy::large_enum_variant).
+    Device(Box<QueryProfiler>),
+    System(TimestampProfiler),
+}
+
+/// Queue writes are submitted (and their staging buffers released) after this many.
+const MAX_PENDING_WRITES: usize = 64;
+
+/// The largest single queue write or readback staging buffer; larger transfers are split.
+/// Kept well below the smallest host-visible heaps (a 256 MiB BAR without resizable BAR).
+const MAX_WRITE_CHUNK: u64 = 64 << 20;
+
+
+/// One bounded piece of a transfer: `len` bytes of the GPU range at `start` (relative to the
+/// resource), and the part of the host payload that lands in it.
+#[derive(Debug, PartialEq, Eq)]
+struct TransferChunk {
+    start: u64,
+    len: u64,
+    payload: core::ops::Range<usize>,
+}
+
+/// Split a transfer over `extent` bytes of GPU memory (a multiple of the copy alignment)
+/// carrying a `payload`-byte host buffer (`payload <= extent`) into pieces of at most
+/// `MAX_WRITE_CHUNK` bytes. Every piece's staging buffer is bounded by `MAX_WRITE_CHUNK`
+/// whatever the payload length; a piece past the end of the payload carries an empty slice.
+fn transfer_chunks(extent: u64, payload: usize) -> impl Iterator<Item = TransferChunk> {
+    // Never drop bytes: a payload longer than its destination is a caller bug, and the
+    // unsplit path panics on it too (`write_buffer_with` + `copy_from_slice`).
+    assert!(payload as u64 <= extent, "write of {payload} bytes into a {extent}-byte destination");
+    (0..extent.div_ceil(MAX_WRITE_CHUNK)).map(move |i| {
+        let start = i * MAX_WRITE_CHUNK;
+        let len = (extent - start).min(MAX_WRITE_CHUNK);
+        let lo = (start as usize).min(payload);
+        let hi = ((start + len) as usize).min(payload);
+        TransferChunk { start, len, payload: lo..hi }
+    })
+}
+
+#[derive(Debug)]
+pub struct WgpuStream {
+    pub mem_manage: WgpuMemManager,
+    pub device: wgpu::Device,
+    compute_pass: Option<wgpu::ComputePass<'static>>,
+    timings: Timings,
+    tasks_count: usize,
+    tasks_max: usize,
+    queue: wgpu::Queue,
+    encoder: wgpu::CommandEncoder,
+    poll: WgpuPoll,
+    submission_load: SubmissionLoad,
+    /// Number of consecutive `write_buffer` calls without a `queue.submit()`.
+    /// Used to prevent wgpu staging buffer pool exhaustion during bulk writes
+    /// (e.g. model loading with hundreds of tensors).
+    pending_write_count: usize,
+    /// Cross-stream input bindings for tasks recorded but not yet submitted.
+    /// Kept alive here until the next `flush` ties their release to the submission's completion.
+    /// See [`ScheduleTask::Execute::pins`](crate::schedule::ScheduleTask).
+    shared_bindings: SharedMemoryBindings,
+    /// Reusable per-launch info uniforms (kernel shapes/strides/scalars), keyed
+    /// by the exact info words they were built from — same scheme as the CUDA
+    /// and HIP servers. A hit reuses the already-uploaded uniform buffer, so a
+    /// stable-shape launch costs no uniform reservation and no
+    /// `queue.write_buffer`. The cached [`ManagedMemoryHandle`] keeps the slice
+    /// reserved past the per-flush release in
+    /// [`WgpuMemManager::release_uniforms`].
+    pub(crate) info_cache: MetadataInfoCache<(ManagedMemoryHandle, WgpuResource)>,
+    /// This stream's position in the graph-capture lifecycle (see
+    /// [`StreamCapture`]). Enforces the ordered `graph_prepare` →
+    /// `begin_capture` → `end_capture` transitions; while recording, enqueued
+    /// launches append to `recording` instead of the encoder.
+    pub(crate) capturing: StreamCapture,
+    /// The launches recorded since `begin_capture`, drained into a
+    /// [`WgpuGraph`] at `end_capture`.
+    recording: GraphRecording,
+}
+
+impl StreamMemory for WgpuStream {
+    fn failure(&self, binding: &BufferBinding) -> Option<FailureId> {
+        self.mem_manage.failure(binding)
+    }
+
+    fn taint(&mut self, binding: &BufferBinding, failure: FailureId, failures: &mut ErrorGraph) {
+        self.mem_manage.taint(binding, failure, failures)
+    }
+
+    fn written(&mut self, binding: &BufferBinding, failures: &mut ErrorGraph) {
+        self.mem_manage.written(binding, failures)
+    }
+}
+
+impl WgpuStream {
+    /// Creates a new WGPU stream.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        device: wgpu::Device,
+        queue: wgpu::Queue,
+        memory_properties: MemoryDeviceProperties,
+        memory_config: MemoryConfiguration,
+        timing_method: TimingMethod,
+        timing_budget: Arc<TimestampQuerySetBudget>,
+        tasks_max: usize,
+        logger: Arc<ServerLogger>,
+        use_vulkan_compiler: bool,
+    ) -> Self {
+        // Device timing needs a counter sample buffer per query set, capped per device on
+        // Metal. Reserve a budget slot up front (lock-free); if none is free, fall back to
+        // the system timer so we never exceed the hardware limit.
+        let timings = if timing_method == TimingMethod::Device && timing_budget.try_acquire() {
+            Timings::Device(Box::new(QueryProfiler::new(&queue, &device, timing_budget)))
+        } else {
+            if cfg!(target_family = "wasm") {
+                // On WASM, there's not much we can do here anymore. This should be very rare however,
+                // all modern GPU's support timestamp queries.
+                panic!(
+                    "Cannot profile on web assembly without timestamp_query feature as it requires blocking."
+                );
+            }
+            Timings::System(TimestampProfiler::default())
+        };
+
+        #[cfg(renderdoc)]
+        RENDERDOC.with(|renderdoc| {
+            if let Some(renderdoc) = &**renderdoc {
+                let mut renderdoc = renderdoc.lock();
+                renderdoc.start_frame_capture(null(), null());
+            }
+        });
+
+        let poll = WgpuPoll::new(device.clone());
+
+        #[allow(unused_mut)]
+        let mut mem_manage = WgpuMemManager::new(
+            device.clone(),
+            memory_properties,
+            memory_config,
+            logger,
+            use_vulkan_compiler,
+        );
+
+        Self {
+            mem_manage,
+            compute_pass: None,
+            timings,
+            encoder: {
+                device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("CubeCL Tasks Encoder"),
+                })
+            },
+            device,
+            queue,
+            tasks_count: 0,
+            tasks_max,
+            poll,
+            submission_load: SubmissionLoad::default(),
+            pending_write_count: 0,
+            shared_bindings: SharedMemoryBindings::default(),
+            // Tighter entry cap than the default policy: the uniforms pool is
+            // bucketed exclusive pages with a 32 KiB minimum, so every cached
+            // entry pins a whole page (512 × 32 KiB ≈ 16 MiB worst case) —
+            // unlike CUDA/HIP where an entry is a small dynamic-pool slice.
+            info_cache: MetadataInfoCache::new(MetadataCachePolicy::new(512, 2048)),
+            capturing: StreamCapture::default(),
+            recording: GraphRecording::default(),
+        }
+    }
+
+    /// Refuse `operation` while a capture is recording on this stream.
+    ///
+    /// A software graph records dispatches and nothing else, so everything a
+    /// launch is not — a read, a sync, a profile, a host write, a replay — has
+    /// no recorded form and must not silently do nothing. One place builds the
+    /// refusal so every caller reports the same thing; whether that refusal is
+    /// returned to the caller or landed on the buffers it left untouched is
+    /// the caller's call.
+    ///
+    /// # Errors
+    ///
+    /// Fails while [`StreamCapture::is_recording`] holds, naming `operation`.
+    pub(crate) fn reject_while_recording(&self, operation: &str) -> Result<(), ServerError> {
+        if !self.capturing.is_recording() {
+            return Ok(());
+        }
+        Err(ServerError::graph_state(format!(
+            "{operation}: a wgpu capture window records dispatches only, so this operation \
+             cannot be part of a graph"
+        )))
+    }
+
+    /// Queue an error raised inside a capture window, for the stream that owns
+    /// the capture to surface when it calls `end_capture`.
+    ///
+    /// Only the capture's own flush may take it: several logical streams share
+    /// this backend stream, and neither `flush` nor `sync` is refused while a
+    /// capture records, so a shared entry would be drained by whichever
+    /// neighbour flushes first — failing that neighbour on work it never
+    /// issued, and leaving `end_capture` to seal a graph with the failed
+    /// dispatch silently missing.
+    ///
+    /// Falls back to shared outside a window, which the callers make
+    /// unreachable: each raises its error only while recording.
+    ///
+    /// Only the report lives here. What the rejected work was going to write
+    /// is tainted at the raise site, on the allocations themselves.
+    fn capture_error(&mut self, error: ServerError) {
+        match self.capturing.is_recording() {
+            true => self.capturing.fail(error),
+            // Outside a window there is nothing to doom and nothing to claim
+            // that the raise site has not claimed already, so the log is the
+            // whole report.
+            false => log::warn!("{error}"),
+        }
+    }
+
+    /// Mark every open profile invalid: a failure inside a profiling window
+    /// invalidates the measurement. A no-op with no profile open.
+    pub fn profile_failure(&mut self, error: &ServerError) {
+        self.profile_error(error.into());
+    }
+
+    /// Enqueue a [`ScheduleTask`] on this stream.
+    ///
+    /// # Arguments
+    ///
+    /// * `task` - The task to execute.
+    pub fn enqueue_task(&mut self, task: ScheduleTask, failures: &mut ErrorGraph) {
+        match task {
+            ScheduleTask::Write {
+                data,
+                buffer,
+                handle,
+            } => {
+                // Defensive: the server already rejects writes while recording,
+                // and `begin_capture` drains the queue, so none should reach here.
+                if let Err(err) = self.reject_while_recording("write") {
+                    // Taint what this stream's own manager holds; a destination
+                    // owned by another stream is the server-side rejection's to
+                    // taint, and that rejection comes first.
+                    let failure = failures.insert(err.clone());
+                    self.mem_manage.taint(&handle, failure, failures);
+                    failures.prune(failure);
+                    self.capture_error(err);
+                    return;
+                }
+                // It is important to flush before writing, as the write operation is inserted
+                // into the QUEUE not the encoder. We want to make sure all outstanding work
+                // happens _before_ the write operation.
+                self.submit(failures);
+                if !self.write_mapped(&buffer, &data) {
+                    self.write_to_buffer(&buffer, &data);
+                }
+            }
+            ScheduleTask::Execute {
+                pipeline,
+                count,
+                resources,
+                mut shared_inputs,
+            } => {
+                // The capture lifecycle drives the info cache: while a graph is
+                // prepared or recording, every buffer is cached, none is
+                // evicted, and touched entries are pinned to the graph being
+                // built (see [`StreamCapture::cache_mode`]). Set on the
+                // launch path, before anything resolves an info buffer, as the
+                // hardware backends do.
+                self.info_cache.mode(self.capturing.cache_mode());
+
+                if self.capturing.is_recording() {
+                    // Cross-stream input pins belong to the graph for its whole
+                    // lifetime, not to the next submission.
+                    self.recording
+                        .shared
+                        .bindings
+                        .append(&mut shared_inputs.bindings);
+                    let (resources, custom_handles, addresses) = resources.into_resources(self);
+                    self.record_pipeline(pipeline, &resources, &custom_handles, addresses, &count);
+                    return;
+                }
+                // Drain into the stream's pending pins; the handle returns its buffer to the
+                // server pool when it drops at the end of this arm.
+                self.shared_bindings
+                    .bindings
+                    .append(&mut shared_inputs.bindings);
+                let (resources, custom_handles, addresses) = resources.into_resources(self);
+                self.register_pipeline(
+                    pipeline,
+                    &resources,
+                    &custom_handles,
+                    addresses,
+                    &count,
+                    failures,
+                );
+            }
+        }
+    }
+
+    /// Read multiple buffers lazily to [Bytes], potentially using pinned memory.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - The current stream.
+    /// * `descriptors` - A vector of copy descriptors specifying the source data.
+    ///
+    /// # Returns
+    ///
+    /// A [Result] containing a vector of [Bytes] with the copied data, or an [`IoError`] if any copy fails.
+    pub fn read_resources(
+        &mut self,
+        descriptors: Vec<(WgpuResource, Shape, usize)>,
+        stream_id: StreamId,
+        failures: &mut ErrorGraph,
+    ) -> DynFut<Result<Vec<Bytes>, ServerError>> {
+        self.compute_pass = None;
+        let mut staging_info = Vec::with_capacity(descriptors.len());
+        let mut callbacks = Vec::with_capacity(descriptors.len());
+
+        for (resource, shape, elem_size) in descriptors {
+            let size = shape.iter().product::<usize>() * elem_size;
+
+            // Zero-sized resources don't need a GPU copy.
+            if resource.size == 0 {
+                staging_info.push(None);
+                continue;
+            }
+
+            // Copying into a buffer has to be 4 byte aligned. We can safely do so, as
+            // memory is 32 bytes aligned (see WgpuStorage).
+            let align = wgpu::COPY_BUFFER_ALIGNMENT;
+            let aligned_len = resource.size.div_ceil(align) * align;
+
+            // A read larger than `MAX_WRITE_CHUNK` goes through several bounded staging
+            // buffers (see `write_to_buffer`: one host-visible allocation over ~1 GiB fails on
+            // some drivers) and is assembled on the host.
+            let mut chunks = Vec::with_capacity(aligned_len.div_ceil(MAX_WRITE_CHUNK) as usize);
+            for TransferChunk { start, len, .. } in transfer_chunks(aligned_len, 0) {
+                let (staging, binding) = self.mem_manage.reserve_staging(len).unwrap();
+                self.tasks_count += 1;
+                self.encoder.copy_buffer_to_buffer(
+                    &resource.buffer,
+                    resource.offset + start,
+                    &staging.buffer,
+                    0,
+                    len,
+                );
+                chunks.push((staging, binding, len));
+            }
+            staging_info.push(Some((chunks, size)));
+        }
+
+        // Flush all commands to the queue, so GPU gets started on copying to the
+        // staging buffer. This is also where accumulated stream errors resurface:
+        // a kernel that failed at launch (e.g. a compilation error) never wrote
+        // the buffers this read is about to return, so returning bytes instead of
+        // the error would silently hand back stale memory.
+        if let Err(err) = self.flush(stream_id, failures) {
+            return Box::pin(async move { Err(err) });
+        }
+
+        for (staging, _binding, _len) in staging_info.iter().flatten().flat_map(|(chunks, _)| chunks) {
+            let (sender, receiver) = cubecl_environment::future::channel::bounded(1);
+            staging
+                .buffer
+                .slice(..)
+                .map_async(wgpu::MapMode::Read, move |v| {
+                    // This might fail if the channel is closed (eg. the future is dropped).
+                    // This is fine, just means results aren't needed anymore.
+                    let _ = sender.try_send(v);
+                });
+            callbacks.push(receiver);
+        }
+
+        let poll = self.poll.start_polling();
+
+        Box::pin(async move {
+            for receiver in callbacks.iter() {
+                receiver
+                    .recv()
+                    .await
+                    .expect("Unable to receive buffer slice result.")
+                    .expect("Failed to map buffer");
+            }
+
+            // Can stop polling now.
+            core::mem::drop(poll);
+
+            let result = {
+                staging_info
+                    .into_iter()
+                    .map(|entry| match entry {
+                        Some((mut chunks, size)) if chunks.len() == 1 => {
+                            let (staging, binding, _len) = chunks.pop().unwrap();
+                            let controller =
+                                Box::new(WgpuAllocController::init(binding, staging.buffer));
+                            // SAFETY: The binding has initialized memory for at least `size` bytes.
+                            unsafe { Bytes::from_controller(controller, size) }
+                        }
+                        Some((chunks, size)) => {
+                            let mut out = Vec::with_capacity(size);
+                            for (staging, binding, _len) in chunks {
+                                // Dropping the controller unmaps the chunk and releases its binding.
+                                let controller = WgpuAllocController::init(binding, staging.buffer);
+                                let view = controller.mapped();
+                                let take = view.len().min(size - out.len());
+                                out.extend_from_slice(&view[..take]);
+                            }
+                            Bytes::from_bytes_vec(out)
+                        }
+                        None => Bytes::from_bytes_vec(vec![]),
+                    })
+                    .collect()
+            };
+
+            Ok(result)
+        })
+    }
+
+    // Bit silly but needed to make the borrow checker happy.
+    fn system_profiler(&mut self) -> &mut TimestampProfiler {
+        let Timings::System(timing) = &mut self.timings else {
+            panic!("Unexpected timings type");
+        };
+        timing
+    }
+
+    pub fn start_profile(
+        &mut self,
+        stream_id: StreamId,
+        failures: &mut ErrorGraph,
+    ) -> Result<ProfilingToken, ServerError> {
+        if matches!(self.timings, Timings::System(_)) {
+            cubecl_environment::future::block_on(self.sync(stream_id, failures))?;
+        } else {
+            self.flush(stream_id, failures)?;
+        }
+
+        match &mut self.timings {
+            Timings::System(_) => {
+                let profiler = self.system_profiler();
+                Ok(profiler.start())
+            }
+            Timings::Device(query) => {
+                self.compute_pass = None;
+                let token = query.start_profile();
+                Ok(token)
+            }
+        }
+    }
+
+    pub fn profile_error(&mut self, error: ProfileError) {
+        match &mut self.timings {
+            Timings::Device(profiler) => {
+                profiler.error(error);
+            }
+            Timings::System(profiler) => {
+                profiler.error(error);
+            }
+        }
+    }
+
+    pub fn end_profile(
+        &mut self,
+        token: ProfilingToken,
+        stream_id: StreamId,
+        failures: &mut ErrorGraph,
+    ) -> Result<ProfileDuration, ProfileError> {
+        match &mut self.timings {
+            Timings::System(..) => {
+                // Nb: WASM _has_ to use device timing and will panic here if query timestamps are not supported.
+                let result = future::block_on(self.sync(stream_id, failures));
+                let profiler = self.system_profiler();
+
+                if let Err(err) = result {
+                    profiler.error(ProfileError::Server(Box::new(err)));
+                }
+                profiler.stop(token)
+            }
+            Timings::Device(..) => {
+                let poll = self.poll.start_polling();
+                self.compute_pass = None;
+
+                // Submit commands needed for profiling.
+                let buffer = {
+                    let Timings::Device(timing) = &mut self.timings else {
+                        return Err(ProfileError::Unknown {
+                            reason: "Unexpected timings type".to_string(),
+                            backtrace: BackTrace::capture(),
+                        });
+                    };
+                    timing.stop_profile_setup(token, &self.device, &mut self.encoder)?
+                };
+
+                // This flushes the queue to execute the encoder write command to write the
+                // timings.
+                self.tasks_count += 1;
+                let result = self.flush(stream_id, failures);
+
+                let Timings::Device(timing) = &mut self.timings else {
+                    return Err(ProfileError::Unknown {
+                        reason: "Unexpected timings type".to_string(),
+                        backtrace: BackTrace::capture(),
+                    });
+                };
+
+                match result {
+                    Ok(_) => timing.stop_profile(buffer, poll),
+                    Err(err) => {
+                        // Dropped rather than mapped: the flush this window
+                        // needed has failed, so a map requested here may never
+                        // complete, and the map's callback is what releases the
+                        // poll handle. The query sets were already given back in
+                        // `stop_profile_setup`, so there is nothing else to undo.
+                        drop(buffer);
+                        drop(poll);
+                        Err(ProfileError::Server(Box::new(err)))
+                    }
+                }
+            }
+        }
+    }
+
+    /// Drop `token`'s window without measuring it.
+    ///
+    /// Neither arm syncs or flushes, which is the whole difference from
+    /// [`end_profile`](Self::end_profile): the device arm hands the query set
+    /// back, the system arm forgets the start instant, and the work in the
+    /// window carries on as if it had never been bracketed.
+    pub fn abandon_profile(&mut self, token: ProfilingToken) {
+        match &mut self.timings {
+            Timings::System(profiler) => profiler.abandon(token),
+            Timings::Device(timing) => timing.abandon_profile(token),
+        }
+    }
+
+    pub fn sync(
+        &mut self,
+        stream_id: StreamId,
+        failures: &mut ErrorGraph,
+    ) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + Send + 'static>> {
+        let error_scope = self.device.push_error_scope(wgpu::ErrorFilter::Internal);
+
+        let flush_error = self.flush(stream_id, failures).err();
+
+        let queue = self.queue.clone();
+        let error_future = error_scope.pop();
+        let poll = self.poll.start_polling();
+
+        Box::pin(async move {
+            let (sender, receiver) = cubecl_environment::future::channel::bounded::<()>(1);
+            queue.on_submitted_work_done(move || {
+                // Signal that we're done.
+                let _ = sender.try_send(());
+                core::mem::drop(poll);
+            });
+            let _ = receiver.recv().await;
+
+            if let Some(error) = error_future.await {
+                return Err(ServerError::Generic {
+                    reason: format!("{error}"),
+                    backtrace: BackTrace::capture(),
+                });
+            }
+
+            match flush_error {
+                Some(err) => Err(err),
+                None => Ok(()),
+            }
+        })
+    }
+
+    /// Allocates a new empty buffer using the main memory pool.
+    pub fn empty(
+        &mut self,
+        size: u64,
+        failures: &mut ErrorGraph,
+    ) -> Result<ManagedMemoryHandle, IoError> {
+        self.mem_manage.reserve(size, failures)
+    }
+
+    pub(crate) fn create_uniform(&mut self, data: &[u8]) -> WgpuResource {
+        let (handle, resource) = self.mem_manage.reserve_uniform(data.len() as u64);
+        // A uniform created inside a recording window (e.g. a Vulkan address
+        // buffer) is referenced by the recorded task on every replay, so it is
+        // pinned to the recording instead of released on the next flush.
+        if self.capturing.is_recording() {
+            self.recording.uniform_pins.push(handle);
+        }
+        self.write_to_buffer(&resource, data);
+        resource
+    }
+
+    /// Stage the metadata info `words` into a uniform, reusing a cached one
+    /// when a launch has already staged these exact words. The info is
+    /// read-only metadata (no buffer bindings), so sharing it across launches —
+    /// even of different kernels — is sound; see
+    /// [`MetadataInfoCache`](cubecl_server::metadata_cache::MetadataInfoCache).
+    /// `words` is taken by value so a miss hands it to the cache as the key
+    /// without cloning. A hit's buffer bytes always equal the key bytes, so it
+    /// is byte-identical to what the miss path would have built and uploaded.
+    pub(crate) fn info_uniform(&mut self, words: Vec<u64>) -> WgpuResource {
+        let size = core::mem::size_of_val(words.as_slice());
+        if !self.info_cache.should_cache(size) {
+            return self.create_uniform(bytemuck::cast_slice(&words));
+        }
+        if let Some((_handle, resource)) = self.info_cache.get(&words) {
+            return resource;
+        }
+        let (handle, resource) = self.mem_manage.reserve_uniform(size as u64);
+        self.write_to_buffer(&resource, bytemuck::cast_slice(&words));
+        self.info_cache.insert(words, (handle, resource.clone()));
+        resource
+    }
+
+    /// Copies into a mapped buffer, skipping staging. Returns `false` to fall back to the queue.
+    ///
+    /// Not ordered by the queue, so call it only after a submit, never for uniforms.
+    #[cfg(not(target_family = "wasm"))]
+    fn write_mapped(&mut self, resource: &WgpuResource, data: &[u8]) -> bool {
+        let Some(host_ptr) = resource.host_ptr else {
+            return false;
+        };
+        // The copy below is unchecked; the queue path validates.
+        if data.len() as u64 > resource.size {
+            return false;
+        }
+
+        // A pooled range may have belonged to a tensor whose kernels are still running, so
+        // the copy needs an idle queue. Never drain one to get it: the stall costs a
+        // pipelined loop the CPU/GPU overlap it lives on, and it buys nothing on a bulk
+        // upload, which finds the queue idle anyway because nothing is queued behind what
+        // it is loading. So take the mapping when the queue is already free, and leave the
+        // write to the queue when it is not.
+        match self.device.poll(wgpu::PollType::Poll) {
+            Ok(status) if status.wait_finished() => {}
+            Ok(_) => return false,
+            Err(e) => {
+                log::warn!("wgpu: poll before a mapped write failed ({e})");
+                return false;
+            }
+        }
+
+        // SAFETY: The range is in bounds and the queue is idle.
+        unsafe {
+            let dst = host_ptr.0.as_ptr().add(resource.offset as usize);
+            core::ptr::copy_nonoverlapping(data.as_ptr(), dst, data.len());
+        }
+        true
+    }
+
+    #[cfg(target_family = "wasm")]
+    fn write_mapped(&mut self, _resource: &WgpuResource, _data: &[u8]) -> bool {
+        false
+    }
+
+    // Nb: this function submits a command to the _queue_ not to the encoder,
+    // so you have to be really careful about the ordering of operations here.
+    // Any buffer which has outstanding (not yet flushed) compute work should
+    // NOT be copied to.
+    fn write_to_buffer(&mut self, resource: &WgpuResource, data: &[u8]) {
+        // Nothing to write for zero-sized resources.
+        if resource.size == 0 {
+            return;
+        }
+
+        // wgpu stages each queue write in one host-visible buffer the size of the write. A
+        // single large upload (a 5.9M-splat PLY's SH coefficients are 1.1 GB) can exceed what
+        // the driver will give one host-visible allocation, and wgpu then panics with
+        // "Out of Memory" with almost all of the GPU free. Split it into bounded writes and
+        // flush each one, so only one bounded staging buffer is alive at a time.
+        // The split is over the destination extent the write stages (the whole resource,
+        // padded to the copy alignment), not the payload: a payload shorter than its
+        // resource still stages the full extent, so each chunk keeps that behaviour for its
+        // own range (its slice of the payload, possibly empty).
+        let extent = resource.size.next_multiple_of(wgpu::COPY_BUFFER_ALIGNMENT);
+        if extent > MAX_WRITE_CHUNK {
+            for chunk in transfer_chunks(extent, data.len()) {
+                let part = WgpuResource { offset: resource.offset + chunk.start, size: chunk.len, ..resource.clone() };
+                self.write_to_buffer(&part, &data[chunk.payload]);
+                self.flush_pending_writes();
+            }
+            return;
+        }
+
+        // Copying into a buffer has to be 4 byte aligned. We can safely do so, as
+        // memory is also aligned (see WgpuStorage). Per the WebGPU spec, this
+        // just has to be a multiple of 4: https://www.w3.org/TR/webgpu/#dom-gpuqueue-writebuffer
+        let copy_align = wgpu::COPY_BUFFER_ALIGNMENT;
+        let size = resource.size.next_multiple_of(copy_align);
+
+        if size == data.len() as u64 {
+            // write_buffer is the recommended way to write this data, as:
+            // - On WebGPU, from WASM, this can save a copy to the JS memory.
+            // - On devices with unified memory, this could skip the staging buffer entirely.
+            self.queue
+                .write_buffer(&resource.buffer, resource.offset, data);
+        } else {
+            // For sizes not aligned we need to only write a part of the staging buffer, do this
+            // with `write_buffer_with`.
+            let mut buffer = self
+                .queue
+                .write_buffer_with(
+                    &resource.buffer,
+                    resource.offset,
+                    NonZero::new(size).unwrap(),
+                )
+                .expect("Internal error: Failed to call `write_buffer_with`, this likely means no staging buffer could be allocated.");
+            buffer.slice(0..data.len()).copy_from_slice(data);
+        }
+
+        self.pending_write_count += 1;
+
+        if self.pending_write_count >= MAX_PENDING_WRITES {
+            self.flush_pending_writes();
+        }
+    }
+
+    /// Submit an empty command buffer so wgpu runs (and then frees the staging buffers of)
+    /// every pending queue write, and wait for it.
+    fn flush_pending_writes(&mut self) {
+        // Prevent wgpu staging buffer pool exhaustion during bulk writes (e.g. model
+        // loading with hundreds of tensors). queue.write_buffer() is async — wgpu
+        // copies data into an internal staging buffer, then transfers to GPU on the
+        // next queue.submit(). Without periodic submits, hundreds of writes accumulate
+        // and staging buffers get recycled before the GPU copy completes, silently
+        // corrupting early tensors.
+        // See: https://github.com/tracel-ai/cubecl/issues/1120
+        // Submit a fresh, empty command buffer to flush all pending write_buffer work.
+        // wgpu flushes its internal staging-buffer copies on any queue.submit(),
+        // so we don't need to touch the main compute encoder here.
+        let write_flush_encoder =
+            self.device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("CubeCL Write Flush Encoder"),
+                });
+        let index = self.queue.submit([write_flush_encoder.finish()]);
+
+        // Wait for the GPU to finish processing these writes before continuing.
+        #[cfg(not(target_family = "wasm"))]
+        if let Err(e) = self.device.poll(wgpu::PollType::Wait {
+            submission_index: Some(index),
+            timeout: None,
+        }) {
+            log::warn!("wgpu: write flush poll failed ({e})");
+        }
+
+        self.pending_write_count = 0;
+    }
+
+    fn flush_if_needed(&mut self, failures: &mut ErrorGraph) {
+        // Flush when there are too many tasks, or when too many handles are locked.
+        // Locked handles should only accumulate in rare circumstances (where uniforms
+        // are being created but no work is submitted).
+        if self.tasks_count >= self.tasks_max {
+            self.submit(failures);
+        }
+    }
+
+    /// Submit the queued work and surface nothing.
+    ///
+    /// For the pooled paths that flush the stream without any logical stream
+    /// asking — a full task queue, the ordering barrier before a write, the
+    /// scheduler aligning streams. Whatever is queued stays queued, for the
+    /// flush of the stream that owns it.
+    pub fn submit(&mut self, failures: &mut ErrorGraph) {
+        self.submit_tasks(failures);
+        self.collect_validation_errors();
+    }
+
+    /// Submit the queued work, then report the device fault if one arrived.
+    /// A launch failure is not the flush's to report: it lives on the buffers
+    /// the launch left unwritten, and surfaces on any read, sync or check of
+    /// them.
+    pub fn flush(
+        &mut self,
+        _owner: StreamId,
+        failures: &mut ErrorGraph,
+    ) -> Result<(), ServerError> {
+        self.submit(failures);
+        Ok(())
+    }
+
+    fn submit_tasks(&mut self, failures: &mut ErrorGraph) {
+        if self.tasks_count == 0 {
+            self.shared_bindings.clear();
+            return;
+        }
+
+        // End the current compute pass.
+        self.compute_pass = None;
+
+        // Submit the pending actions to the queue. This will _first_ submit the
+        // pending uniforms copy operations, then the main tasks.
+        let tasks_encoder = {
+            std::mem::replace(&mut self.encoder, {
+                self.device
+                    .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                        label: Some("CubeCL Tasks Encoder"),
+                    })
+            })
+        };
+
+        // splat patch (wasm only): buffers freed before this submit can be destroyed once it is
+        // in the queue (see `storage::take_pending_destroy`).
+        // SAFETY ASSUMPTION: one CubeCL stream on wasm (the trainer sets StreamPolicy::Single, and
+        // the browser has one thread). The pending list is per thread, not per stream: with a
+        // second stream, a buffer freed on it could be destroyed here while that stream's
+        // unsubmitted encoder still uses it. Make the list per stream before adding one.
+        #[cfg(target_family = "wasm")]
+        let freed = super::storage::take_pending_destroy();
+
+        // This will _first_ fire off all pending write_buffer work.
+        let index = self.queue.submit([tasks_encoder.finish()]);
+
+        #[cfg(target_family = "wasm")]
+        for buffer in freed {
+            buffer.destroy();
+        }
+
+        // Release cross-stream input pins.
+        if !self.shared_bindings.is_empty() {
+            let pins = core::mem::take(&mut self.shared_bindings);
+            self.queue.on_submitted_work_done(move || {
+                drop(pins);
+            });
+        }
+
+        self.submission_load
+            .regulate(&self.device, self.tasks_count, index);
+
+        // Cleanup allocations and deallocations.
+        self.mem_manage.memory_cleanup(false, failures);
+        self.mem_manage.release_uniforms();
+
+        #[cfg(renderdoc)]
+        RENDERDOC.with(|renderdoc| {
+            if let Some(renderdoc) = &**renderdoc {
+                let mut renderdoc = renderdoc.lock();
+                renderdoc.end_frame_capture(null(), null());
+                renderdoc.start_frame_capture(null(), null());
+            }
+        });
+
+        self.tasks_count = 0;
+        self.pending_write_count = 0;
+    }
+
+    /// Drain the driver's validation canary into the log.
+    ///
+    /// The driver reports these against the device and not against the launch
+    /// that caused them, so there is no buffer to claim: whatever the rejected
+    /// work was going to write was claimed at the raise site, and this is the
+    /// diagnostic for the cases that reach nobody else.
+    fn collect_validation_errors(&mut self) {
+        #[cfg(feature = "deny-validation-errors")]
+        {
+            let validation_errors = wgpu_hal::VALIDATION_CANARY.get_and_reset();
+            for err in validation_errors.into_iter() {
+                log::warn!("wgpu validation: {err}");
+            }
+        }
+    }
+
+    /// Start a new compute pass if needed. The `forget_lifetime` allows
+    /// storing this with a 'static lifetime, but the compute pass must
+    /// be dropped before the encoder. This isn't unsafe - it's still checked at runtime.
+    ///
+    /// An associated function over the individual fields (rather than a
+    /// `&mut self` method) so callers keep access to their other fields while
+    /// the returned pass borrows `compute_pass`.
+    fn current_pass<'a>(
+        compute_pass: &'a mut Option<wgpu::ComputePass<'static>>,
+        timings: &mut Timings,
+        encoder: &mut wgpu::CommandEncoder,
+        device: &wgpu::Device,
+    ) -> &'a mut wgpu::ComputePass<'static> {
+        compute_pass.get_or_insert_with(|| {
+            let writes = match timings {
+                Timings::Device(query_time) => query_time.register_profile_device(device),
+                Timings::System(_) => None,
+            };
+            encoder
+                .begin_compute_pass(&wgpu::ComputePassDescriptor {
+                    label: None,
+                    timestamp_writes: writes,
+                })
+                .forget_lifetime()
+        })
+    }
+
+    /// Record one launch into the in-progress recording instead of encoding
+    /// it: the counterpart of [`register_pipeline`](Self::register_pipeline)
+    /// while a capture is recording. Everything a replay needs is resolved
+    /// here, once — the bind group is built, the indirect-dispatch buffer is
+    /// resolved — so replaying is nothing but re-encoding prebuilt state.
+    fn record_pipeline(
+        &mut self,
+        pipeline: Arc<ComputePipeline>,
+        resources: &[WgpuResource],
+        custom_resources: &[WgpuResource],
+        immediates: Option<Addresses>,
+        dispatch: &CubeCount,
+    ) {
+        // An empty dispatch is a no-op on the normal path; record nothing.
+        if dispatch.is_empty() {
+            return;
+        }
+
+        let bind_group = (!resources.is_empty()).then(|| {
+            let entries = resources
+                .iter()
+                .enumerate()
+                .map(|(i, r)| wgpu::BindGroupEntry {
+                    binding: i as u32,
+                    resource: r.as_wgpu_bind_resource(),
+                })
+                .collect::<Vec<_>>();
+            let group_layout = pipeline.get_bind_group_layout(0);
+            self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &group_layout,
+                entries: &entries,
+            })
+        });
+
+        let dispatch = match dispatch.clone() {
+            CubeCount::Static(x, y, z) => ReplayDispatch::Static(x, y, z),
+            CubeCount::Dynamic(binding) => match self.mem_manage.get_resource(binding) {
+                Ok(resource) => ReplayDispatch::Dynamic(resource),
+                Err(err) => {
+                    // The recording is now incomplete; `end_capture` sees the
+                    // doomed window and rejects the capture. It taints nothing
+                    // itself: rejecting the capture is what taints the buffers,
+                    // and it taints every one the recording was given, this
+                    // launch's included.
+                    self.capture_error(err.into());
+                    return;
+                }
+            },
+        };
+
+        self.recording.tasks.push(ReplayTask {
+            pipeline,
+            bind_group,
+            immediates,
+            transitions: custom_resources.to_vec(),
+            dispatch,
+        });
+    }
+
+    /// Move the in-progress recording out of the stream (leaving it empty),
+    /// for `end_capture` to seal into a [`WgpuGraph`].
+    pub(crate) fn take_recording(&mut self) -> GraphRecording {
+        core::mem::take(&mut self.recording)
+    }
+
+    /// Re-encode a captured graph's tasks — one dispatch per recorded launch,
+    /// prebuilt state only — and let the normal `tasks_max`/submission-load
+    /// batching decide when to submit. Fire-and-forget like a launch: the
+    /// work lands on this stream's encoder in recorded order.
+    pub(crate) fn replay_graph(&mut self, graph: &WgpuGraph, failures: &mut ErrorGraph) {
+        // Consecutive tasks often share a pipeline (decode loops); skip the
+        // redundant `set_pipeline`. Pass state does not survive a flush, so
+        // the tracking resets whenever the pass was closed.
+        let mut last_pipeline: Option<&Arc<ComputePipeline>> = None;
+
+        for task in graph.tasks.iter() {
+            if self.compute_pass.is_none() {
+                last_pipeline = None;
+            }
+            let pass = Self::current_pass(
+                &mut self.compute_pass,
+                &mut self.timings,
+                &mut self.encoder,
+                &self.device,
+            );
+
+            if !last_pipeline.is_some_and(|prev| Arc::ptr_eq(prev, &task.pipeline)) {
+                pass.set_pipeline(&task.pipeline);
+                last_pipeline = Some(&task.pipeline);
+            }
+            if let Some(bind_group) = &task.bind_group {
+                pass.set_bind_group(0, bind_group, &[]);
+            }
+            if let Some(immediates) = &task.immediates {
+                pass.set_immediates(0, bytemuck::cast_slice(immediates));
+            }
+            if !task.transitions.is_empty() {
+                let buffer_transitions =
+                    task.transitions
+                        .iter()
+                        .map(|resource| wgpu::BufferTransition {
+                            buffer: &resource.buffer,
+                            state: wgpu::BufferUses::STORAGE_READ_WRITE,
+                        });
+                pass.transition_resources(buffer_transitions, iter::empty());
+            }
+            match &task.dispatch {
+                ReplayDispatch::Static(x, y, z) => pass.dispatch_workgroups(*x, *y, *z),
+                ReplayDispatch::Dynamic(resource) => {
+                    pass.dispatch_workgroups_indirect(&resource.buffer, resource.offset)
+                }
+            }
+
+            self.tasks_count += 1;
+            self.flush_if_needed(failures);
+        }
+    }
+
+    fn register_pipeline(
+        &mut self,
+        pipeline: Arc<ComputePipeline>,
+        resources: &[WgpuResource],
+        custom_resources: &[WgpuResource],
+        addresses: Option<Addresses>,
+        dispatch: &CubeCount,
+        failures: &mut ErrorGraph,
+    ) {
+        if dispatch.is_empty() {
+            return;
+        }
+
+        let bind_group = (!resources.is_empty()).then(|| {
+            self.mem_manage
+                .bind_groups()
+                .get_or_create(&self.device, &pipeline, resources)
+        });
+
+        let pass = Self::current_pass(
+            &mut self.compute_pass,
+            &mut self.timings,
+            &mut self.encoder,
+            &self.device,
+        );
+
+        self.tasks_count += 1;
+
+        pass.set_pipeline(&pipeline);
+
+        if let Some(bind_group) = &bind_group {
+            pass.set_bind_group(0, bind_group, &[]);
+        }
+
+        if let Some(addresses) = addresses {
+            pass.set_immediates(0, bytemuck::cast_slice(&addresses));
+        }
+
+        if !custom_resources.is_empty() {
+            let buffer_transitions =
+                custom_resources
+                    .iter()
+                    .map(|resource| wgpu::BufferTransition {
+                        buffer: &resource.buffer,
+                        state: wgpu::BufferUses::STORAGE_READ_WRITE,
+                    });
+            pass.transition_resources(buffer_transitions, iter::empty())
+        }
+
+        match dispatch.clone() {
+            CubeCount::Static(x, y, z) => {
+                pass.dispatch_workgroups(x, y, z);
+            }
+            CubeCount::Dynamic(binding) => {
+                let res = self.mem_manage.get_resource(binding).unwrap();
+                pass.dispatch_workgroups_indirect(&res.buffer, res.offset);
+            }
+        }
+
+        self.flush_if_needed(failures);
+    }
+}
+
+#[cfg(not(target_family = "wasm"))]
+mod __submission_load {
+    #[derive(Default, Debug)]
+    pub enum SubmissionLoad {
+        Init {
+            last_index: wgpu::SubmissionIndex,
+            tasks_count_submitted: usize,
+        },
+        #[default]
+        Empty,
+    }
+
+    impl SubmissionLoad {
+        pub fn regulate(
+            &mut self,
+            device: &wgpu::Device,
+            tasks_count: usize,
+            mut index: wgpu::SubmissionIndex,
+        ) {
+            match self {
+                SubmissionLoad::Init {
+                    last_index,
+                    tasks_count_submitted,
+                } => {
+                    *tasks_count_submitted += tasks_count;
+
+                    // Enough to keep the GPU busy.
+                    //
+                    // - Too much can hang the GPU and create slowdown.
+                    // - Too little and GPU utilization is really bad.
+                    //
+                    // TODO: Could be smarter and dynamic based on stats.
+                    const MAX_TOTAL_TASKS: usize = 512;
+
+                    if *tasks_count_submitted >= MAX_TOTAL_TASKS {
+                        core::mem::swap(last_index, &mut index);
+                        if let Err(e) = device.poll(wgpu::PollType::Wait {
+                            submission_index: Some(index),
+                            timeout: None,
+                        }) {
+                            log::warn!(
+                                "wgpu: requested wait timed out before the submission was completed during sync. ({e})"
+                            )
+                        }
+                        *tasks_count_submitted = 0;
+                    }
+                }
+                SubmissionLoad::Empty => {
+                    *self = Self::Init {
+                        last_index: index,
+                        tasks_count_submitted: 0,
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_family = "wasm")]
+mod __submission_load_wasm {
+    #[derive(Default, Debug)]
+    pub struct SubmissionLoad;
+
+    impl SubmissionLoad {
+        pub fn regulate(
+            &mut self,
+            _device: &wgpu::Device,
+            _tasks_count: usize,
+            _index: wgpu::SubmissionIndex,
+        ) {
+            // Nothing to do.
+        }
+    }
+}
+
+#[cfg(not(target_family = "wasm"))]
+use __submission_load::*;
+#[cfg(target_family = "wasm")]
+use __submission_load_wasm::*;
+
+#[cfg(test)]
+mod transfer_chunk_tests {
+    use super::*;
+
+    const C: u64 = MAX_WRITE_CHUNK;
+
+    fn check(extent: u64, payload: usize) {
+        let chunks: Vec<_> = transfer_chunks(extent, payload).collect();
+        let mut next = 0;
+        let mut covered = 0;
+        for c in &chunks {
+            assert!(c.len > 0 && c.len <= C, "{c:?}");
+            assert_eq!(c.start, next, "gap or overlap at {c:?}");
+            assert_eq!(c.start % wgpu::COPY_BUFFER_ALIGNMENT, 0);
+            assert_eq!(c.len % wgpu::COPY_BUFFER_ALIGNMENT, 0);
+            assert!(c.payload.len() as u64 <= c.len);
+            assert_eq!(c.payload.start, covered);
+            covered = c.payload.end;
+            next += c.len;
+        }
+        assert_eq!(next, extent);
+        assert_eq!(covered, payload);
+    }
+
+    #[test]
+    fn payload_equal_to_extent_with_unaligned_tails() {
+        for tail in [1usize, 2, 3, 4] {
+            let payload = 2 * C as usize + tail;
+            check((payload as u64).next_multiple_of(4), payload);
+        }
+        check(3 * C, 3 * C as usize);
+    }
+
+    /// The review case: a 1,536 MiB resource written with a short payload must never stage
+    /// more than one chunk at a time (before, the tail write staged the whole remainder).
+    #[test]
+    fn payload_shorter_than_resource() {
+        let extent = 1536 << 20;
+        for payload in [0, 1, 2, 3, C as usize, C as usize + 1, (C as usize) * 5 + 3] {
+            check(extent, payload);
+        }
+        let last = transfer_chunks(extent, C as usize + 1).nth(1).unwrap();
+        assert_eq!((last.len, last.payload), (C, C as usize..C as usize + 1));
+    }
+
+    #[test]
+    #[should_panic(expected = "into a")]
+    fn payload_longer_than_extent_panics() {
+        let _ = transfer_chunks(2 * C, 2 * C as usize + 1).count();
+    }
+}

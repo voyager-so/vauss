@@ -1,0 +1,27 @@
+[package]
+name = "splat-fill"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+description = "Generative fill-in loop: novel views near the walked path, rendered, repaired by a fixer model and trained back in at low weight"
+
+# No new third-party deps (licenses as in the workspace: glam, image, rayon, rand, serde, sha2 MIT/Apache-2.0).
+[dependencies]
+splat-brush.workspace = true
+splat-webexport.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+glam.workspace = true
+image.workspace = true
+rand.workspace = true
+rayon.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+# zstd MIT (BSD-3 libzstd): compressed-PLY test fixtures, as splat-webexport reads them.
+zstd = "0.13"
+
+[lints]
+workspace = true

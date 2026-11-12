@@ -1,0 +1,7 @@
+# Linux x86-64, built on Ubuntu 22.04 (glibc 2.35, the oldest glibc it runs on). glibc stays dynamic;
+# everything else is static.
+--enable-pthreads
+# Vulkan Video (h264_vulkan/hevc_vulkan/av1_vulkan encode and decode). FFmpeg loads libvulkan at run
+# time; only the Khronos headers are compiled in.
+--enable-vulkan
+--extra-ldflags=-static-libgcc

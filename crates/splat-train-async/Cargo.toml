@@ -1,0 +1,30 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-async"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "brush_async"
+
+[dependencies]
+tokio = { version = "1", features = ["rt", "sync", "macros"] }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+js-sys = "0.3"
+
+# The workspace tokio is "full"; its net half (mio) can't build for wasm. Wasm gets only the
+# features listed above, native keeps exactly the workspace features it had.
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync", "macros", "time"] }
+futures = "0.3"
+
+[lints]
+workspace = true

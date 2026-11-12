@@ -1,0 +1,9 @@
+This crate is derived from Brush and remains licensed under Apache-2.0, including modifications.
+Copyright (c) Arthur Brussee and the Brush contributors.
+See ../splat-train/NOTICE and the repository NOTICE for provenance and changes.
+
+The marked neural appearance implementation and derived per-scene configurations
+are derived from nerficg-project/efficient-gaussian-appearance at 4efbe67
+(https://github.com/nerficg-project/efficient-gaussian-appearance),
+Copyright 2026 The Efficient Gaussian Appearance Authors, Apache-2.0.
+These portions remain Apache-2.0 and are excluded from the Vauss Preview License.

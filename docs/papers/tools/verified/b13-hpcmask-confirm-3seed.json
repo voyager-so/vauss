@@ -1,0 +1,902 @@
+{
+ "schema": "pubs-verify/b13-hpcmask-confirm-3seed/v1",
+ "claim_group": "b13-hpcmask-confirm-6scene-v1",
+ "generated_at": "2026-10-09T07:15:00-07:00",
+ "supersedes_for_class": "verified/b13-hpcmask-confirm.json (s42 only, PROVISIONAL); s42 numbers reproduce exactly here",
+ "inputs": {
+  "data": "$SPLAT_DATA/research/b13/hpcport/conf6/<scene>/seed{42,43,44}/{base,hpcmask-norobust}{.json,-per-view.jsonl,-per-view-summary.json},metrics.json,multi-arm.json,renders/<arm>/eval_*.png",
+  "lane_summaries": "conf6/summary-seeds-{42-43-44,43-44,42,43,44}.json",
+  "report": "research/b13/RESULTS-CONF6-3SEED.md @ research-b13 historical-build-066",
+  "hpc_gt": "$SPLAT_DATA/research/b13/hpc/cpu-audit/hpc-released-renders/extracted/dinov2_vits14_reg/<scene>/renders/test_step0030000_model0/*_color_gt.png",
+  "sharp_gt": "$SPLAT_DATA/research/b13/hpc/dataverse/sharp-gt/onthego-dv-*-clean/eval_*.png",
+  "registration": "archived study registry (not distributed) lines 172 (registration), 219 (seeds 43/44 extension, commit historical-build-032 05:51:33 PT), 222 (s42 verified)"
+ },
+ "method": "Independent numpy 8-bit RGB PSNR per view of every saved render (both arms, 3 seeds, 6 scenes = 36 runs, 768 view-scores) vs HPC's released *_color_gt.png (primary) and vs B13 sharp GT (secondary); HPC *_color_pred.png re-scored vs sharp GT. SSIM/LPIPS from per-view rows (canonical scorer aa83). Scene mean = mean over views; seed-pooled scene mean = mean over seeds; group mean = unweighted mean over scenes. Registered rule applied to the recomputed numbers.",
+ "registered_rule": "Vs HPC published 23.863: PARITY if |mean delta| <= 0.3; AHEAD if mean delta > +0.3 and >= 4/6 positive; else BEHIND; same on non-tuning 4. Extension: verdict on 3-seed means AND on seeds 43+44 alone; HEADLINE only if those agree, else PROVISIONAL. LPIPS (Alex/VGG) and SSIM reported next to every PSNR verdict.",
+ "checks": {
+  "views_same_across_arms_and_seeds": "PASS: every run scores exactly HPC's released test split per scene (11/16/20/26/10/45), ids == renders == split, views_hash matches, n_scored == n_expected, no duplicates",
+  "in_exec_pairing": "PASS: for all 18 scene x seed cells base and method share one exec dir (binary path /tmp/splat/exec/<id>), one /tmp/b13-native/<run> root, same host and GPU UUID, run back-to-back (base then method); multi-arm.json exps match the rows",
+  "binary_sha": "PASS: 94b2b2723f907769fa506eebffcaa9bc1b9996659de7c306a029b8f69c402ccf in every arm row (binary_sha256) and per-view summary (binary_or_commit), 36/36; per-view jsonl lines carry no binary field (same layout as s42)",
+  "lpips_scale": "field absent in all rows/summaries/metrics (scorer aa83 predates it). All grids are 504x378 (patio 480x270), below the 512-px downscale threshold, so LPIPS is full resolution. Same deviation as s42; no effect on values.",
+  "seed_took_effect": "PASS: --seed 42/43/44 in engine args, row seed and per-view seed agree; method PSNR differs across seeds in every scene (per-scene seed SD 0.017-0.120 dB), different splat counts",
+  "numpy_vs_inrun": "max |numpy - in-run per-view PSNR| = 6.3e-07 dB over all 768 view-scores; lane summaries match to <2e-7",
+  "tuning_scenes": "spot and fountain (registration tuning_scenes); non-tuning 4 = mountain, corner, patio, patio_high",
+  "extension_timing": "extension amendment committed historical-build-032 at 05:51:33 PT; first s43 run started 05:52:32 PT (spot historical-record 20261009-125232 UTC). Pre-launch by commit time; the line's registered_at stamp (06:00) is later than the launch and should not be cited as the registration time."
+ },
+ "aggregate": {
+  "3seed": {
+   "all6": {
+    "method": 23.6625,
+    "base": 23.2597,
+    "pub": 23.8633,
+    "delta": -0.2008,
+    "n_pos": "2/6",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.1114,
+     "fountain": -0.5403,
+     "corner": 0.1529,
+     "patio": -0.3458,
+     "spot": -0.5121,
+     "patio_high": 0.1519
+    },
+    "ssim": 0.8492,
+    "alex": 0.1166,
+    "vgg": 0.1532,
+    "pub_ssim": 0.8485,
+    "pub_alex": 0.106,
+    "sharp_method": 22.856,
+    "sharp_base": 22.5052,
+    "sharp_hpc": 23.0064,
+    "paired": 0.4028
+   },
+   "nontuning4": {
+    "method": 23.4494,
+    "base": 23.0756,
+    "pub": 23.4875,
+    "delta": -0.0381,
+    "n_pos": "2/4",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.1114,
+     "corner": 0.1529,
+     "patio": -0.3458,
+     "patio_high": 0.1519
+    },
+    "ssim": 0.8451,
+    "alex": 0.1174,
+    "vgg": 0.1548,
+    "pub_ssim": 0.8448,
+    "pub_alex": 0.1058,
+    "sharp_method": 22.6938,
+    "sharp_base": 22.371,
+    "sharp_hpc": 22.7041,
+    "paired": 0.3738
+   }
+  },
+  "s43_44": {
+   "all6": {
+    "method": 23.642,
+    "base": 23.2672,
+    "pub": 23.8633,
+    "delta": -0.2213,
+    "n_pos": "2/6",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.1472,
+     "fountain": -0.5307,
+     "corner": 0.1187,
+     "patio": -0.3931,
+     "spot": -0.5253,
+     "patio_high": 0.1498
+    },
+    "ssim": 0.8491,
+    "alex": 0.1167,
+    "vgg": 0.1532,
+    "pub_ssim": 0.8485,
+    "pub_alex": 0.106,
+    "sharp_method": 22.8378,
+    "sharp_base": 22.5132,
+    "sharp_hpc": 23.0064,
+    "paired": 0.3748
+   },
+   "nontuning4": {
+    "method": 23.4196,
+    "base": 23.0767,
+    "pub": 23.4875,
+    "delta": -0.0679,
+    "n_pos": "2/4",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.1472,
+     "corner": 0.1187,
+     "patio": -0.3931,
+     "patio_high": 0.1498
+    },
+    "ssim": 0.8449,
+    "alex": 0.1176,
+    "vgg": 0.1548,
+    "pub_ssim": 0.8448,
+    "pub_alex": 0.1058,
+    "sharp_method": 22.6676,
+    "sharp_base": 22.3739,
+    "sharp_hpc": 22.7041,
+    "paired": 0.3429
+   }
+  },
+  "s42": {
+   "all6": {
+    "method": 23.7034,
+    "base": 23.2446,
+    "pub": 23.8633,
+    "delta": -0.1599,
+    "n_pos": "2/6",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.0399,
+     "fountain": -0.5595,
+     "corner": 0.2212,
+     "patio": -0.2513,
+     "spot": -0.4858,
+     "patio_high": 0.1559
+    },
+    "ssim": 0.8494,
+    "alex": 0.1163,
+    "vgg": 0.1532,
+    "pub_ssim": 0.8485,
+    "pub_alex": 0.106,
+    "sharp_method": 22.8923,
+    "sharp_base": 22.4892,
+    "sharp_hpc": 23.0064,
+    "paired": 0.4588
+   },
+   "nontuning4": {
+    "method": 23.509,
+    "base": 23.0733,
+    "pub": 23.4875,
+    "delta": 0.0215,
+    "n_pos": "2/4",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.0399,
+     "corner": 0.2212,
+     "patio": -0.2513,
+     "patio_high": 0.1559
+    },
+    "ssim": 0.8453,
+    "alex": 0.1172,
+    "vgg": 0.1547,
+    "pub_ssim": 0.8448,
+    "pub_alex": 0.1058,
+    "sharp_method": 22.746,
+    "sharp_base": 22.3651,
+    "sharp_hpc": 22.7041,
+    "paired": 0.4356
+   }
+  },
+  "s43": {
+   "all6": {
+    "method": 23.6004,
+    "base": 23.2855,
+    "pub": 23.8633,
+    "delta": -0.263,
+    "n_pos": "2/6",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.0862,
+     "fountain": -0.5305,
+     "corner": 0.052,
+     "patio": -0.429,
+     "spot": -0.6435,
+     "patio_high": 0.0595
+    },
+    "ssim": 0.8491,
+    "alex": 0.1169,
+    "vgg": 0.153,
+    "pub_ssim": 0.8485,
+    "pub_alex": 0.106,
+    "sharp_method": 22.8003,
+    "sharp_base": 22.525,
+    "sharp_hpc": 23.0064,
+    "paired": 0.3148
+   },
+   "nontuning4": {
+    "method": 23.3866,
+    "base": 23.1116,
+    "pub": 23.4875,
+    "delta": -0.1009,
+    "n_pos": "2/4",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.0862,
+     "corner": 0.052,
+     "patio": -0.429,
+     "patio_high": 0.0595
+    },
+    "ssim": 0.8451,
+    "alex": 0.1176,
+    "vgg": 0.1548,
+    "pub_ssim": 0.8448,
+    "pub_alex": 0.1058,
+    "sharp_method": 22.6366,
+    "sharp_base": 22.3994,
+    "sharp_hpc": 22.7041,
+    "paired": 0.275
+   }
+  },
+  "s44": {
+   "all6": {
+    "method": 23.6837,
+    "base": 23.2488,
+    "pub": 23.8633,
+    "delta": -0.1797,
+    "n_pos": "2/6",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.2082,
+     "fountain": -0.531,
+     "corner": 0.1855,
+     "patio": -0.3572,
+     "spot": -0.4071,
+     "patio_high": 0.2402
+    },
+    "ssim": 0.8491,
+    "alex": 0.1166,
+    "vgg": 0.1534,
+    "pub_ssim": 0.8485,
+    "pub_alex": 0.106,
+    "sharp_method": 22.8754,
+    "sharp_base": 22.5014,
+    "sharp_hpc": 23.0064,
+    "paired": 0.4348
+   },
+   "nontuning4": {
+    "method": 23.4525,
+    "base": 23.0417,
+    "pub": 23.4875,
+    "delta": -0.035,
+    "n_pos": "2/4",
+    "verdict": "PARITY",
+    "per_scene_delta": {
+     "mountain": -0.2082,
+     "corner": 0.1855,
+     "patio": -0.3572,
+     "patio_high": 0.2402
+    },
+    "ssim": 0.8448,
+    "alex": 0.1175,
+    "vgg": 0.1549,
+    "pub_ssim": 0.8448,
+    "pub_alex": 0.1058,
+    "sharp_method": 22.6986,
+    "sharp_base": 22.3484,
+    "sharp_hpc": 22.7041,
+    "paired": 0.4108
+   }
+  }
+ },
+ "paired_method_minus_base": {
+  "per_seed": [
+   0.4588,
+   0.3148,
+   0.4348
+  ],
+  "mean": 0.4028,
+  "sd": 0.0771,
+  "seed_noise_rule": "mean +0.403 > 2 x SD 0.154 with 3 seeds: the method-vs-base gain counts",
+  "per_scene_s42_43_44": {
+   "mountain": [
+    0.0371,
+    -0.0734,
+    -0.0489
+   ],
+   "fountain": [
+    0.4442,
+    0.4114,
+    0.3849
+   ],
+   "corner": [
+    0.8144,
+    0.5945,
+    0.9042
+   ],
+   "patio": [
+    0.1016,
+    0.0174,
+    0.191
+   ],
+   "spot": [
+    0.5661,
+    0.3777,
+    0.5808
+   ],
+   "patio_high": [
+    0.7894,
+    0.5614,
+    0.5971
+   ]
+  },
+  "note": "mountain ~0 (-0.028 mean, 2/3 negative) and patio small (+0.103); gain concentrated in corner, patio_high, spot, fountain"
+ },
+ "per_scene": {
+  "mountain": {
+   "tuning": false,
+   "n_views": 11,
+   "hpc_pred_vs_sharp": 21.4992,
+   "seeds": {
+    "42": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-e6de5e42-93fb-ed26-eedf-176ebf18a02b",
+     "host": "6500b32b52d5",
+     "exec_dir_shared": true,
+     "n": 11,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      42,
+      42
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.123,
+     "method_psnr": 22.1601,
+     "d_method": 0.0371,
+     "method_ssim": 0.7688,
+     "method_alex": 0.1586,
+     "method_vgg": 0.2041,
+     "method_psnr_sharp": 21.4954,
+     "base_psnr_sharp": 21.4615,
+     "max_abs_numpy_vs_row": 2.1147940998389458e-07
+    },
+    "43": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-30132091-ca1b-1a3a-d678-5b52d090d391",
+     "host": "18319854baa9",
+     "exec_dir_shared": true,
+     "n": 11,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      43,
+      43
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.1873,
+     "method_psnr": 22.1138,
+     "d_method": -0.0734,
+     "method_ssim": 0.7704,
+     "method_alex": 0.1579,
+     "method_vgg": 0.2022,
+     "method_psnr_sharp": 21.4543,
+     "base_psnr_sharp": 21.514,
+     "max_abs_numpy_vs_row": 2.018177731599735e-07
+    },
+    "44": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-4f08b5d3-52dc-dedb-2378-f6ec6cd8a0f1",
+     "host": "3e81457b57af",
+     "exec_dir_shared": true,
+     "n": 11,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      44,
+      44
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.0407,
+     "method_psnr": 21.9918,
+     "d_method": -0.0489,
+     "method_ssim": 0.7667,
+     "method_alex": 0.1594,
+     "method_vgg": 0.2051,
+     "method_psnr_sharp": 21.3483,
+     "base_psnr_sharp": 21.3875,
+     "max_abs_numpy_vs_row": 2.1226831847798167e-07
+    }
+   },
+   "method_seed_sd": 0.087
+  },
+  "fountain": {
+   "tuning": true,
+   "n_views": 16,
+   "hpc_pred_vs_sharp": 22.2747,
+   "seeds": {
+    "42": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-76eee8e3-225d-3bff-9bbd-652fee67972d",
+     "host": "ef047ee2e892",
+     "exec_dir_shared": true,
+     "n": 16,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      42,
+      42
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.3963,
+     "method_psnr": 22.8405,
+     "d_method": 0.4442,
+     "method_ssim": 0.8141,
+     "method_alex": 0.1324,
+     "method_vgg": 0.1643,
+     "method_psnr_sharp": 21.7294,
+     "base_psnr_sharp": 21.3417,
+     "max_abs_numpy_vs_row": 2.245012993284945e-07
+    },
+    "43": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-f57d76a3-0241-5a8f-ea65-041889836cd7",
+     "host": "1a85e11f900e",
+     "exec_dir_shared": true,
+     "n": 16,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      43,
+      43
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.4582,
+     "method_psnr": 22.8695,
+     "d_method": 0.4114,
+     "method_ssim": 0.8152,
+     "method_alex": 0.1324,
+     "method_vgg": 0.1633,
+     "method_psnr_sharp": 21.7587,
+     "base_psnr_sharp": 21.4032,
+     "max_abs_numpy_vs_row": 2.2647821040777671e-07
+    },
+    "44": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-314a655a-da36-eb2f-ebbb-4612177f15d3",
+     "host": "751655a8f5e6",
+     "exec_dir_shared": true,
+     "n": 16,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      44,
+      44
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.4841,
+     "method_psnr": 22.869,
+     "d_method": 0.3849,
+     "method_ssim": 0.8149,
+     "method_alex": 0.1316,
+     "method_vgg": 0.1648,
+     "method_psnr_sharp": 21.7558,
+     "base_psnr_sharp": 21.429,
+     "max_abs_numpy_vs_row": 2.228721243113796e-07
+    }
+   },
+   "method_seed_sd": 0.0166
+  },
+  "corner": {
+   "tuning": false,
+   "n_views": 20,
+   "hpc_pred_vs_sharp": 24.9025,
+   "seeds": {
+    "42": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-314a655a-da36-eb2f-ebbb-4612177f15d3",
+     "host": "623fc85df905",
+     "exec_dir_shared": true,
+     "n": 20,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      42,
+      42
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 25.1268,
+     "method_psnr": 25.9412,
+     "d_method": 0.8144,
+     "method_ssim": 0.9035,
+     "method_alex": 0.0787,
+     "method_vgg": 0.1191,
+     "method_psnr_sharp": 25.1884,
+     "base_psnr_sharp": 24.4892,
+     "max_abs_numpy_vs_row": 3.1337424033495154e-07
+    },
+    "43": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-6f9a458a-54b8-7b0e-e565-2019354b854e",
+     "host": "b374aec20f10",
+     "exec_dir_shared": true,
+     "n": 20,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      43,
+      43
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 25.1774,
+     "method_psnr": 25.772,
+     "d_method": 0.5945,
+     "method_ssim": 0.902,
+     "method_alex": 0.0787,
+     "method_vgg": 0.12,
+     "method_psnr_sharp": 25.0407,
+     "base_psnr_sharp": 24.5352,
+     "max_abs_numpy_vs_row": 3.172639218007589e-07
+    },
+    "44": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-a7633ac4-0975-e2a3-e8a4-c3422aabd0bd",
+     "host": "a00593837fcb",
+     "exec_dir_shared": true,
+     "n": 20,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      44,
+      44
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 25.0013,
+     "method_psnr": 25.9055,
+     "d_method": 0.9042,
+     "method_ssim": 0.9026,
+     "method_alex": 0.0789,
+     "method_vgg": 0.1197,
+     "method_psnr_sharp": 25.1813,
+     "base_psnr_sharp": 24.4085,
+     "max_abs_numpy_vs_row": 3.2137878847038337e-07
+    }
+   },
+   "method_seed_sd": 0.0892
+  },
+  "patio": {
+   "tuning": false,
+   "n_views": 26,
+   "hpc_pred_vs_sharp": 21.8496,
+   "seeds": {
+    "42": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-d3d5f3f2-46f9-cf35-5e42-3ea0e47dbe00",
+     "host": "5d7e406b810c",
+     "exec_dir_shared": true,
+     "n": 26,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      42,
+      42
+     ],
+     "size": [
+      270,
+      480
+     ],
+     "base_psnr": 22.317,
+     "method_psnr": 22.4187,
+     "d_method": 0.1016,
+     "method_ssim": 0.8556,
+     "method_alex": 0.1023,
+     "method_vgg": 0.1407,
+     "method_psnr_sharp": 21.6143,
+     "base_psnr_sharp": 21.5134,
+     "max_abs_numpy_vs_row": 3.469107490161605e-07
+    },
+    "43": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-004eab68-c989-0912-8150-7968fdbf6975",
+     "host": "1a5a6eaeaf13",
+     "exec_dir_shared": true,
+     "n": 26,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      43,
+      43
+     ],
+     "size": [
+      270,
+      480
+     ],
+     "base_psnr": 22.2237,
+     "method_psnr": 22.241,
+     "d_method": 0.0174,
+     "method_ssim": 0.8545,
+     "method_alex": 0.1038,
+     "method_vgg": 0.1423,
+     "method_psnr_sharp": 21.4524,
+     "base_psnr_sharp": 21.4433,
+     "max_abs_numpy_vs_row": 3.400848669343759e-07
+    },
+    "44": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-79b244ab-de07-647e-7dd9-0da99997d504",
+     "host": "477799d28f07",
+     "exec_dir_shared": true,
+     "n": 26,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      44,
+      44
+     ],
+     "size": [
+      270,
+      480
+     ],
+     "base_psnr": 22.1218,
+     "method_psnr": 22.3128,
+     "d_method": 0.191,
+     "method_ssim": 0.8551,
+     "method_alex": 0.1032,
+     "method_vgg": 0.1405,
+     "method_psnr_sharp": 21.5094,
+     "base_psnr_sharp": 21.3618,
+     "max_abs_numpy_vs_row": 3.5430191402952005e-07
+    }
+   },
+   "method_seed_sd": 0.0894
+  },
+  "spot": {
+   "tuning": true,
+   "n_views": 10,
+   "hpc_pred_vs_sharp": 24.9475,
+   "seeds": {
+    "42": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-94202a6a-f696-b1e1-f3b9-ce4d696f27d9",
+     "host": "ffeb3f177f93",
+     "exec_dir_shared": true,
+     "n": 10,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      42,
+      42
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 24.7782,
+     "method_psnr": 25.3442,
+     "d_method": 0.5661,
+     "method_ssim": 0.9009,
+     "method_alex": 0.0964,
+     "method_vgg": 0.1358,
+     "method_psnr_sharp": 24.6404,
+     "base_psnr_sharp": 24.1334,
+     "max_abs_numpy_vs_row": 6.032643611320054e-07
+    },
+    "43": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-2ffb8c5f-42b2-ab6a-a869-a1a64623038e",
+     "host": "8165cc71fff6",
+     "exec_dir_shared": true,
+     "n": 10,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      43,
+      43
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 24.8087,
+     "method_psnr": 25.1865,
+     "d_method": 0.3777,
+     "method_ssim": 0.8993,
+     "method_alex": 0.0985,
+     "method_vgg": 0.1354,
+     "method_psnr_sharp": 24.4968,
+     "base_psnr_sharp": 24.149,
+     "max_abs_numpy_vs_row": 6.135419390318475e-07
+    },
+    "44": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-1d31045c-18ca-0ab7-85bc-dd2837dab71e",
+     "host": "0547080516cb",
+     "exec_dir_shared": true,
+     "n": 10,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      44,
+      44
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 24.8421,
+     "method_psnr": 25.4229,
+     "d_method": 0.5808,
+     "method_ssim": 0.9005,
+     "method_alex": 0.0979,
+     "method_vgg": 0.136,
+     "method_psnr_sharp": 24.702,
+     "base_psnr_sharp": 24.1856,
+     "max_abs_numpy_vs_row": 6.276439776797815e-07
+    }
+   },
+   "method_seed_sd": 0.1204
+  },
+  "patio_high": {
+   "tuning": false,
+   "n_views": 45,
+   "hpc_pred_vs_sharp": 22.5651,
+   "seeds": {
+    "42": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-d3d5f3f2-46f9-cf35-5e42-3ea0e47dbe00",
+     "host": "5d7e406b810c",
+     "exec_dir_shared": true,
+     "n": 45,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      42,
+      42
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.7266,
+     "method_psnr": 23.5159,
+     "d_method": 0.7894,
+     "method_ssim": 0.8533,
+     "method_alex": 0.1293,
+     "method_vgg": 0.1549,
+     "method_psnr_sharp": 22.6861,
+     "base_psnr_sharp": 21.9961,
+     "max_abs_numpy_vs_row": 3.306650881995665e-07
+    },
+    "43": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-0175f3fe-b6e4-109b-756a-2449bfd78989",
+     "host": "dbc3a03583dc",
+     "exec_dir_shared": true,
+     "n": 45,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      43,
+      43
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 22.8581,
+     "method_psnr": 23.4195,
+     "d_method": 0.5614,
+     "method_ssim": 0.8534,
+     "method_alex": 0.1301,
+     "method_vgg": 0.1548,
+     "method_psnr_sharp": 22.599,
+     "base_psnr_sharp": 22.1054,
+     "max_abs_numpy_vs_row": 3.2185294074338344e-07
+    },
+    "44": {
+     "base_exp": "historical-record",
+     "method_exp": "historical-record",
+     "gpu_uuid": "GPU-0175f3fe-b6e4-109b-756a-2449bfd78989",
+     "host": "dbc3a03583dc",
+     "exec_dir_shared": true,
+     "n": 45,
+     "views_ok": true,
+     "sha_ok": true,
+     "seed_args": [
+      44,
+      44
+     ],
+     "size": [
+      378,
+      504
+     ],
+     "base_psnr": 23.0031,
+     "method_psnr": 23.6002,
+     "d_method": 0.5971,
+     "method_ssim": 0.8547,
+     "method_alex": 0.1284,
+     "method_vgg": 0.1541,
+     "method_psnr_sharp": 22.7555,
+     "base_psnr_sharp": 22.2359,
+     "max_abs_numpy_vs_row": 3.1648307086129535e-07
+    }
+   },
+   "method_seed_sd": 0.0904
+  }
+ },
+ "lane_vs_recomputed": {
+  "all6": [
+   "23.662 vs 23.863, -0.201, 2/6",
+   "23.6625 vs 23.8633, -0.2008, 2/6"
+  ],
+  "nontuning4": [
+   "-0.038",
+   "-0.0381"
+  ],
+  "paired": [
+   "+0.459/+0.315/+0.435 mean +0.403 SD 0.077",
+   "+0.4588/+0.3148/+0.4348 mean +0.4028 SD 0.0771"
+  ],
+  "alex": [
+   ".117 vs .106",
+   "0.1166 vs 0.106"
+  ],
+  "seeds_43_44_only": {
+   "lane_message": "-0.180 / -0.035",
+   "recomputed": "-0.2213 / -0.0679 (2/6, 2/4; PARITY / PARITY)",
+   "RESULTS-CONF6-3SEED.md and summary-seeds-43-44.json": "-0.221 / -0.068 (match recomputed)",
+   "diagnosis": "the lane's message quoted the seed-44-only numbers (-0.1797 / -0.0350), not seeds 43+44. Verdict unchanged (both PARITY). Correct value for any citation: -0.221 / -0.068."
+  },
+  "match": "all lane numbers match except the 43+44-only line in the lane message"
+ },
+ "fairness_disclosures": [
+  "Recipe (hpcmask-norobust) was selected on spot and fountain; both tuning scenes are the two most negative vs HPC (-0.512, -0.540). Non-tuning-4 verdict (PARITY, -0.038) is quoted with the all-6 verdict.",
+  "After b13-ahead-screen-v1 all 6 Dataverse scenes have been used for selection of later arms; this frozen recipe predates that, but no scene in this set is a clean held-out for future variants.",
+  "HPC numbers are its PUBLISHED per-scene values (PSNR 22.20/23.40/25.72/22.67/25.83/23.36), not a re-run; HPC per-seed variance is unknown, so PARITY is against a single published number.",
+  "GT: our primary arm is scored against HPC's own released GT (*_color_gt.png) - in-run PSNR equals numpy-vs-HPC-GT to 6e-7 dB - i.e. the same GT HPC was evaluated on, on HPC's own test split. Secondary sharp GT (B13-built): method 22.856 vs HPC released preds 23.006 (-0.150, 3 seeds), non-tuning 22.694 vs 22.704.",
+  "Perceptual: LPIPS-Alex worse than HPC (0.1166 vs 0.106 all6; 0.1174 vs 0.1058 non-tuning); SSIM at parity (0.8492 vs 0.8485). The PARITY verdict is PSNR-only; any headline must carry the Alex gap.",
+  "Seeds 43/44 extension was decided after s42 (PARITY) was known; the registered 43+44-only check is the guard and agrees.",
+  "lpips_scale field not recorded (full resolution by grid size)."
+ ],
+ "check_failures": [],
+ "verdict": {
+  "verification": "PASS (one reporting mismatch in the lane message: 43+44-only quoted as -0.180/-0.035; correct -0.221/-0.068; verdict unchanged)",
+  "3seed_all6": "PARITY (-0.201, 2/6 positive)",
+  "3seed_nontuning4": "PARITY (-0.038, 2/4)",
+  "s43_44_all6": "PARITY (-0.221, 2/6)",
+  "s43_44_nontuning4": "PARITY (-0.068, 2/4)",
+  "agreement": "3-seed and 43+44-only verdicts agree on both groups",
+  "class": "HEADLINE (PARITY with HPC published PSNR on HPC's own GT/split, 6 scenes x 3 seeds), mandatory qualifiers: PSNR parity only - LPIPS-Alex behind HPC (0.117 vs 0.106); recipe tuned on spot/fountain; HPC values are published single numbers; not AHEAD.",
+  "method_vs_base": "+0.403 dB mean over 3 seeds (SD 0.077, passes seed-noise rule); 16/18 scene-seed cells positive (negatives: mountain s43, s44)"
+ }
+}

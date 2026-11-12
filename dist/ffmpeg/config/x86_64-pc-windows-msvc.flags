@@ -1,0 +1,14 @@
+# Windows x86-64, Windows 10 or later. Cross-compiled on Ubuntu 24.04 with mingw-w64 (GCC, win32
+# threads) and linked fully static, so it needs no DLLs. Media Foundation (h264_mf encode) and
+# D3D11VA/DXVA2 decode are the OS's own.
+--enable-cross-compile
+--target-os=mingw32
+--arch=x86_64
+--cross-prefix=x86_64-w64-mingw32-
+--pkg-config=pkg-config
+--enable-w32threads
+--disable-pthreads
+--enable-d3d11va
+--enable-dxva2
+--enable-mediafoundation
+--extra-ldflags=-static

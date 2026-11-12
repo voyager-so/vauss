@@ -1,0 +1,38 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-sort"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "brush_sort"
+
+[dependencies]
+brush-cube = { path = "../splat-train-cube", package = "splat-train-cube" }
+brush-scan = { path = "../splat-train-scan", package = "splat-train-scan" }
+burn.workspace = true
+burn-wgpu.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+bytemuck = { workspace = true, features = ["derive"] }
+divan = "0.1.17"
+rand.workspace = true
+tokio = { workspace = true, features = ["macros", "rt"] }
+wasm-bindgen-test = "0.3"
+
+[[bench]]
+name = "sort_bench"
+harness = false
+path = "benches/sort_bench.rs"
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+[package.metadata.cargo-shear]
+ignored = ["bytemuck", "getrandom"]
+
+[lints]
+workspace = true

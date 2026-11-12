@@ -1,0 +1,39 @@
+[package]
+name = "splat-brush"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+[dependencies]
+splat-contracts.workspace = true
+splat-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+image.workspace = true
+glam.workspace = true
+sha2.workspace = true
+fs4.workspace = true
+brush-train.workspace = true
+brush-dataset.workspace = true
+brush-render.workspace = true
+brush-serde.workspace = true
+brush-vfs.workspace = true
+burn.workspace = true
+burn-wgpu.workspace = true
+wgpu.workspace = true
+ctrlc.workspace = true
+thiserror.workspace = true
+splat-eval.workspace = true
+splat-sfm.workspace = true
+splat-sfm-learned.workspace = true
+splat-mesh.workspace = true
+splat-inpaint.workspace = true
+rand.workspace = true
+zip.workspace = true
+exr = { version = "1.74", default-features = false }
+lzfse_rust = "0.2.1"
+
+[dev-dependencies]
+tempfile.workspace = true

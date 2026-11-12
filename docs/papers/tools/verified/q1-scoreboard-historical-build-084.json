@@ -1,0 +1,2254 @@
+{
+ "schema": "pubs-verify/v1",
+ "claim_id": "q1-scoreboard-historical-build-084",
+ "label": "Q1 scoreboard: ours (brush-cli main historical-build-084, default preset) vs gsplat 1.5.3 MCMC preset at our splat count (cap_max per scene), 13 tracker scenes x 3 same-runner pairs (ours seeds 1/2/3 | MCMC 42/43/44), L40S",
+ "verified_against": {
+  "claims_entries": [
+   "registration 2026-10-09T06:22 (registered_commit historical-build-094, class_max PROVISIONAL)",
+   "amendment 2026-10-09T06:24 (MCMC 3 seeds; paired-group requirement stands)"
+  ],
+  "origin_main_at_verify": "historical-build-058",
+  "data": "$SPLAT_DATA/runs/q1/scoreboard/out/<scene>-s<n>/{summary.json,rows.jsonl,perview.jsonl,*.log,*.drive.log}",
+  "table": "$SPLAT_DATA/runs/q1/scoreboard/scoreboard-historical-build-084.md",
+  "harness": "scoreboard/harness/{run.py,gs_run.py}"
+ },
+ "method": "Independent recompute from perview.jsonl (PSNR/LPIPS-VGG means, cross-checked against rows.jsonl metrics to 1e-6) and summary.json (train_s, NVML peak_used_mib - baseline_mib recomputed and matched to recorded peak_mib on all 78 runs); seed/cap echo parsed from gsplat-mcmc.log '@@ CONFIG'; provider from <scene>-s<n>.drive.log ('modal call'), same rule as table.py. Read-only, CPU only.",
+ "per_scene": {
+  "bicycle": {
+   "dPSNR_mean": 0.161,
+   "dPSNR_seeds": [
+    0.14,
+    0.169,
+    0.175
+   ],
+   "dLPIPS_vgg_mean": -0.0113,
+   "dLPIPS_vgg_seeds": [
+    -0.0109,
+    -0.0107,
+    -0.0124
+   ],
+   "train_s_ours_mcmc": [
+    162.1,
+    891.9
+   ],
+   "train_s_ratio_mean": 0.182,
+   "train_s_ratio_pairs": [
+    0.173,
+    0.193,
+    0.18
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    2208,
+    3593
+   ],
+   "mem_ratio_mean": 0.615,
+   "mem_ratio_pairs": [
+    0.616,
+    0.65,
+    0.578
+   ],
+   "provider_by_seed_s1_s2_s3": "modal/fal/fal"
+  },
+  "flowers": {
+   "dPSNR_mean": -0.43,
+   "dPSNR_seeds": [
+    -0.434,
+    -0.407,
+    -0.449
+   ],
+   "dLPIPS_vgg_mean": -0.0406,
+   "dLPIPS_vgg_seeds": [
+    -0.0398,
+    -0.0411,
+    -0.0409
+   ],
+   "train_s_ours_mcmc": [
+    177.6,
+    958.2
+   ],
+   "train_s_ratio_mean": 0.186,
+   "train_s_ratio_pairs": [
+    0.203,
+    0.19,
+    0.165
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    2269,
+    3654
+   ],
+   "mem_ratio_mean": 0.621,
+   "mem_ratio_pairs": [
+    0.715,
+    0.58,
+    0.568
+   ],
+   "provider_by_seed_s1_s2_s3": "fal/fal/fal"
+  },
+  "garden": {
+   "dPSNR_mean": 0.399,
+   "dPSNR_seeds": [
+    0.405,
+    0.301,
+    0.49
+   ],
+   "dLPIPS_vgg_mean": -0.0185,
+   "dLPIPS_vgg_seeds": [
+    -0.0183,
+    -0.0186,
+    -0.0186
+   ],
+   "train_s_ours_mcmc": [
+    184.9,
+    923.5
+   ],
+   "train_s_ratio_mean": 0.2,
+   "train_s_ratio_pairs": [
+    0.192,
+    0.212,
+    0.197
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    2365,
+    3570
+   ],
+   "mem_ratio_mean": 0.663,
+   "mem_ratio_pairs": [
+    0.652,
+    0.684,
+    0.651
+   ],
+   "provider_by_seed_s1_s2_s3": "modal/fal/fal"
+  },
+  "stump": {
+   "dPSNR_mean": 0.004,
+   "dPSNR_seeds": [
+    0.005,
+    -0.066,
+    0.073
+   ],
+   "dLPIPS_vgg_mean": -0.0161,
+   "dLPIPS_vgg_seeds": [
+    -0.0168,
+    -0.0155,
+    -0.016
+   ],
+   "train_s_ours_mcmc": [
+    155.6,
+    855.2
+   ],
+   "train_s_ratio_mean": 0.182,
+   "train_s_ratio_pairs": [
+    0.187,
+    0.186,
+    0.173
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    2060,
+    3516
+   ],
+   "mem_ratio_mean": 0.586,
+   "mem_ratio_pairs": [
+    0.592,
+    0.58,
+    0.585
+   ],
+   "provider_by_seed_s1_s2_s3": "fal/fal/fal"
+  },
+  "treehill": {
+   "dPSNR_mean": -0.232,
+   "dPSNR_seeds": [
+    -0.266,
+    -0.254,
+    -0.175
+   ],
+   "dLPIPS_vgg_mean": -0.0175,
+   "dLPIPS_vgg_seeds": [
+    -0.0168,
+    -0.017,
+    -0.0186
+   ],
+   "train_s_ours_mcmc": [
+    156.7,
+    891.2
+   ],
+   "train_s_ratio_mean": 0.176,
+   "train_s_ratio_pairs": [
+    0.179,
+    0.168,
+    0.181
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    1924,
+    3628
+   ],
+   "mem_ratio_mean": 0.531,
+   "mem_ratio_pairs": [
+    0.562,
+    0.489,
+    0.543
+   ],
+   "provider_by_seed_s1_s2_s3": "fal/fal/fal"
+  },
+  "room": {
+   "dPSNR_mean": 0.793,
+   "dPSNR_seeds": [
+    0.713,
+    0.659,
+    1.007
+   ],
+   "dLPIPS_vgg_mean": -0.0073,
+   "dLPIPS_vgg_seeds": [
+    -0.0046,
+    -0.0086,
+    -0.0087
+   ],
+   "train_s_ours_mcmc": [
+    174.2,
+    768.3
+   ],
+   "train_s_ratio_mean": 0.227,
+   "train_s_ratio_pairs": [
+    0.228,
+    0.214,
+    0.238
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    2028,
+    2858
+   ],
+   "mem_ratio_mean": 0.71,
+   "mem_ratio_pairs": [
+    0.634,
+    0.769,
+    0.727
+   ],
+   "provider_by_seed_s1_s2_s3": "modal/fal/fal"
+  },
+  "counter": {
+   "dPSNR_mean": 0.449,
+   "dPSNR_seeds": [
+    0.46,
+    0.444,
+    0.443
+   ],
+   "dLPIPS_vgg_mean": -0.0099,
+   "dLPIPS_vgg_seeds": [
+    -0.0102,
+    -0.0097,
+    -0.0098
+   ],
+   "train_s_ours_mcmc": [
+    174.9,
+    833.0
+   ],
+   "train_s_ratio_mean": 0.21,
+   "train_s_ratio_pairs": [
+    0.214,
+    0.216,
+    0.201
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    1572,
+    2644
+   ],
+   "mem_ratio_mean": 0.594,
+   "mem_ratio_pairs": [
+    0.588,
+    0.61,
+    0.586
+   ],
+   "provider_by_seed_s1_s2_s3": "fal/fal/fal"
+  },
+  "kitchen": {
+   "dPSNR_mean": 0.543,
+   "dPSNR_seeds": [
+    0.299,
+    0.678,
+    0.653
+   ],
+   "dLPIPS_vgg_mean": -0.0116,
+   "dLPIPS_vgg_seeds": [
+    -0.011,
+    -0.0127,
+    -0.0112
+   ],
+   "train_s_ours_mcmc": [
+    177.4,
+    812.1
+   ],
+   "train_s_ratio_mean": 0.219,
+   "train_s_ratio_pairs": [
+    0.2,
+    0.239,
+    0.218
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    1563,
+    2569
+   ],
+   "mem_ratio_mean": 0.608,
+   "mem_ratio_pairs": [
+    0.613,
+    0.619,
+    0.593
+   ],
+   "provider_by_seed_s1_s2_s3": "modal/fal/fal"
+  },
+  "bonsai": {
+   "dPSNR_mean": 0.637,
+   "dPSNR_seeds": [
+    0.575,
+    0.673,
+    0.663
+   ],
+   "dLPIPS_vgg_mean": -0.0108,
+   "dLPIPS_vgg_seeds": [
+    -0.0108,
+    -0.0108,
+    -0.0107
+   ],
+   "train_s_ours_mcmc": [
+    231.6,
+    1133.7
+   ],
+   "train_s_ratio_mean": 0.204,
+   "train_s_ratio_pairs": [
+    0.197,
+    0.207,
+    0.209
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    2305,
+    3810
+   ],
+   "mem_ratio_mean": 0.605,
+   "mem_ratio_pairs": [
+    0.599,
+    0.607,
+    0.609
+   ],
+   "provider_by_seed_s1_s2_s3": "fal/fal/fal"
+  },
+  "truck-full": {
+   "dPSNR_mean": 0.024,
+   "dPSNR_seeds": [
+    -0.044,
+    0.007,
+    0.108
+   ],
+   "dLPIPS_vgg_mean": -0.0125,
+   "dLPIPS_vgg_seeds": [
+    -0.0124,
+    -0.0123,
+    -0.0129
+   ],
+   "train_s_ours_mcmc": [
+    198.6,
+    950.2
+   ],
+   "train_s_ratio_mean": 0.209,
+   "train_s_ratio_pairs": [
+    0.21,
+    0.21,
+    0.207
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    2079,
+    3774
+   ],
+   "mem_ratio_mean": 0.551,
+   "mem_ratio_pairs": [
+    0.554,
+    0.548,
+    0.551
+   ],
+   "provider_by_seed_s1_s2_s3": "fal/fal/fal"
+  },
+  "train": {
+   "dPSNR_mean": -0.236,
+   "dPSNR_seeds": [
+    -0.364,
+    -0.249,
+    -0.097
+   ],
+   "dLPIPS_vgg_mean": -0.0212,
+   "dLPIPS_vgg_seeds": [
+    -0.0225,
+    -0.0209,
+    -0.0201
+   ],
+   "train_s_ours_mcmc": [
+    160.6,
+    650.7
+   ],
+   "train_s_ratio_mean": 0.247,
+   "train_s_ratio_pairs": [
+    0.235,
+    0.259,
+    0.247
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    1318,
+    2476
+   ],
+   "mem_ratio_mean": 0.532,
+   "mem_ratio_pairs": [
+    0.519,
+    0.527,
+    0.551
+   ],
+   "provider_by_seed_s1_s2_s3": "modal/fal/fal"
+  },
+  "playroom": {
+   "dPSNR_mean": 0.372,
+   "dPSNR_seeds": [
+    0.305,
+    0.726,
+    0.084
+   ],
+   "dLPIPS_vgg_mean": -0.019,
+   "dLPIPS_vgg_seeds": [
+    -0.0165,
+    -0.0243,
+    -0.0161
+   ],
+   "train_s_ours_mcmc": [
+    110.9,
+    633.2
+   ],
+   "train_s_ratio_mean": 0.175,
+   "train_s_ratio_pairs": [
+    0.176,
+    0.176,
+    0.174
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    1371,
+    2754
+   ],
+   "mem_ratio_mean": 0.498,
+   "mem_ratio_pairs": [
+    0.468,
+    0.531,
+    0.496
+   ],
+   "provider_by_seed_s1_s2_s3": "fal/fal/fal"
+  },
+  "drjohnson": {
+   "dPSNR_mean": 0.416,
+   "dPSNR_seeds": [
+    0.473,
+    0.432,
+    0.344
+   ],
+   "dLPIPS_vgg_mean": -0.0105,
+   "dLPIPS_vgg_seeds": [
+    -0.0099,
+    -0.0103,
+    -0.0112
+   ],
+   "train_s_ours_mcmc": [
+    125.6,
+    754.7
+   ],
+   "train_s_ratio_mean": 0.169,
+   "train_s_ratio_pairs": [
+    0.152,
+    0.167,
+    0.189
+   ],
+   "nvml_minus_idle_mib_ours_mcmc": [
+    1338,
+    2594
+   ],
+   "mem_ratio_mean": 0.516,
+   "mem_ratio_pairs": [
+    0.509,
+    0.509,
+    0.53
+   ],
+   "provider_by_seed_s1_s2_s3": "modal/fal/fal"
+  }
+ },
+ "registered_rule": {
+  "quality": {
+   "rule": "paired LPIPS-VGG <= MCMC on >=10/13 AND mean dPSNR >= 0",
+   "lpips_scenes": "13/13 (39/39 pairs)",
+   "mean_dPSNR": 0.223,
+   "verdict": "AHEAD"
+  },
+  "speed": {
+   "rule": "paired train_s ratio ours/MCMC < 0.90 on >=10/13",
+   "scenes": "13/13 (39/39 pairs)",
+   "scene_mean_range": [
+    0.169,
+    0.247
+   ],
+   "pair_range": [
+    0.152,
+    0.259
+   ],
+   "verdict": "AHEAD"
+  },
+  "memory": {
+   "rule": "paired NVML-minus-idle <= MCMC on >=10/13 (MiB both arms)",
+   "scenes": "13/13 (39/39 pairs)",
+   "scene_mean_range": [
+    0.498,
+    0.71
+   ],
+   "pair_range": [
+    0.468,
+    0.769
+   ],
+   "verdict": "AHEAD"
+  },
+  "row": "AHEAD (all three axes) under the registered rule; lane numbers reproduce (mean dPSNR +0.223; speed 0.17-0.25; memory 0.50-0.71)"
+ },
+ "seed_gate": {
+  "rule": "rule:seed-gate: per-seed 13-scene mean paired delta, |mean| > 2xSD",
+  "dPSNR": {
+   "per_seed_13scene_mean": [
+    0.1744,
+    0.2395,
+    0.2554
+   ],
+   "mean": 0.2231,
+   "sd": 0.0429,
+   "two_sd": 0.0858,
+   "pass": true
+  },
+  "dLPIPS_vgg": {
+   "per_seed_13scene_mean": [
+    -0.0154,
+    -0.0163,
+    -0.0159
+   ],
+   "mean": -0.0159,
+   "sd": 0.0005,
+   "two_sd": 0.0009,
+   "pass": true
+  },
+  "lpips_guard": "PASS: no scene has dLPIPS > 0 (every scene and every pair favours ours)",
+  "psnr_guard": "FAIL: 3 scenes below -0.05 dB: flowers -0.430, train -0.236, treehill -0.232 (each 3/3 seeds negative). A seed-gated 'AHEAD on PSNR' claim is not permitted; PSNR is reported as a mean with the losses named.",
+  "verdict": "Quality AHEAD is admissible as an LPIPS-VGG claim (gate pass, guard pass). PSNR: mean +0.22 dB passes the gate but fails the per-scene guard -> 'mixed, mean +0.22 dB'."
+ },
+ "checks": {
+  "pairs_complete": "PASS 39/39, rc 0 on all 78 runs, 30000 steps both arms (gsplat steps echoed in CONFIG)",
+  "same_runner_per_pair": "PASS: both arms in one request per (scene, seed) by harness construction (one summary.json per pair with one runner record). Runner driver varies across pairs (580.95.05 / 590.48.01 / 610.57.04), never within a pair.",
+  "alternating_order": "PASS: ours first on odd seeds (s1, s3), MCMC first on s2, all 39",
+  "count_matching": "PASS with disclosure: gsplat cap_max echoed in gsplat log == caps.json on 39/39 and gsplat achieved == cap on 39/39; caps come from our q1t-historical-build-019 achieved counts, not from the paired historical-build-084 run, so our paired achieved count differs from the cap by -0.53% to +1.29% (gsplat/ours count ratio 0.987-1.005). Near-equal, not exact; disclose.",
+  "one_ours_binary": "PASS: sha historical-build-084 on 39/39, brush_sha256 772a7722...9b6f on 39/39",
+  "seed_echo": "PASS for gsplat (CONFIG seed == 41+ours seed on 39/39). Ours: seed passed via --seed and recorded in summary.json; brush log has no seed echo line (harness-level echo only).",
+  "lpips_scale": "PASS: lpips_scale=full, n_scored == n_expected, identical view sets per pair, 78/78 runs",
+  "provider": "6/39 pairs on Modal L40S, all seed 1: bicycle, drjohnson, garden, kitchen, room, train. MISMATCH in the lane table: its provider column is built from unordered glob() output, so the slot positions are wrong for 5 of 6 scenes (e.g. kitchen shows fal/fal/modal; actual modal/fal/fal). Counts per scene are right. Mixing providers is not material for the ratios: each ratio is within one pair on one runner; Modal-pair ratios (speed 0.152-0.235, mem 0.509-0.652) sit inside the fal-only range (speed 0.165-0.259). Disclose; fix the column.",
+  "health_metric": "MISSING on both arms: no health/degeneracy field in summary.json, rows.jsonl or logs. Flag; not a verdict blocker under the registered rule, which names none.",
+  "warmup": "Disclosed asymmetry: ours warm-up = one full 30k default run (fills the CubeCL autotune cache; header comment says '1.2M' but cap=None, so default budget); gsplat warm-up = 2000 steps (as GS-EQ, as registered). Both discarded.",
+  "clocks": "Ours train_s = brush 'train_only_s' (first to last optimizer step, GPU-synced); gsplat train_s = torch.cuda.synchronize + perf_counter from the first rasterize call of step 0 to after the last step (gs_run.py). Equivalent definitions; both exclude eval/render/export. gsplat loader stock (num_workers 4, pin_memory, preload off, echoed 39/39).",
+  "memory_measure": "NVML memory.used, 100 ms sampler (10 Hz, not the 20 Hz splat-perf sampler named as preferred), same sampler both arms, peak minus pre-launch idle, MiB both sides. Meets the registered condition.",
+  "competitor_recipe_source": "MISMATCH vs registration: registered 'gsplat 937e299, R-oracle run.py'; ran gsplat 1.5.3 examples/simple_trainer.py MCMC preset (authors' defaults) via the GS-EQ gs_run.py wrapper, with changes: cap_max = our count, seed patch, no in-run eval/ckpt/ply. MCMC strategy is not affected by the 937e299 DefaultStrategy opacity-reset bug. Cite as 'gsplat 1.5.3 simple_trainer MCMC preset (authors' defaults), cap_max set to our per-scene count'.",
+  "fairness": "Ours at defaults vs gsplat count-matched (a deliberate configuration, not gsplat's default cap of 1M and not gsplat tuned). No test-view selection in this run: caps come from a training-count run, configs fixed before launch, all 13 scenes reported. Recipe-level contamination: our default recipe and budget formula were developed on these 13 tracker scenes (disclosed by the lane; held-out check is q1-heldout-historical-build-096, not verified here)."
+ },
+ "mismatches": [
+  "gsplat version/source: registered 937e299 + R-oracle run.py; ran gsplat 1.5.3 simple_trainer via gs_run.py",
+  "table provider column slot order wrong (glob order); all 6 Modal pairs are seed 1",
+  "caps from q1t-historical-build-019 counts, not the paired historical-build-084 counts (-0.53..+1.29%)",
+  "health metric missing on both arms",
+  "memory sampler 10 Hz (100 ms), not 20 Hz splat-perf (allowed: same sampler both arms)",
+  "run.py header says ours warm-up at 1.2M; it ran at the default budget (cap=None)"
+ ],
+ "class": "PROVISIONAL (registered class_max). The stated reason (1 MCMC seed) no longer applies after the 3-seed amendment; raising the class needs a pubs amendment plus the recipe-source correction.",
+ "verdict": {
+  "quality": "AHEAD (LPIPS-VGG: 13/13 scenes, 39/39 pairs, seed gate pass); PSNR mixed, mean +0.22 dB, losses on flowers -0.43, train -0.24, treehill -0.23",
+  "speed": "AHEAD at equal splat count (train_s 0.17-0.25x of MCMC, 13/13)",
+  "memory": "AHEAD at equal splat count (NVML-minus-idle 0.50-0.71x, 13/13)",
+  "row": "AHEAD under the registered rule, PROVISIONAL, with the count-matched scope wording below"
+ },
+ "permitted_wording": "At equal splat count (gsplat-MCMC at our splat count: gsplat 1.5.3 simple_trainer MCMC preset with cap_max set to our per-scene count; our engine at its default preset), on 13 tracker scenes x 3 seed pairs on L40S, each pair run back to back on one runner: our engine trains in 0.17-0.25x the time (first-to-last optimizer step) and uses 0.50-0.71x the GPU memory (NVML peak minus idle, MiB), with lower LPIPS-VGG on 13/13 scenes and a mean PSNR of +0.22 dB (lower PSNR on flowers -0.43, train -0.24, treehill -0.23 dB). Equal count, not equal quality and not tuned-vs-tuned; our defaults were developed on these scenes. PROVISIONAL.",
+ "forbidden_wording": [
+  "'faster than gsplat' / '4-6x faster than gsplat' without 'at our splat count'",
+  "'gsplat-MCMC' unqualified or 'gsplat defaults' for this arm",
+  "'better quality than gsplat-MCMC' or 'higher PSNR on every scene'",
+  "'gsplat 937e299' for this run",
+  "any equal-quality speed claim from these rows (GS-EQ / GS-EQ-SWEEP cover that)"
+ ],
+ "pairs": [
+  {
+   "scene": "bicycle",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1938000,
+   "gs_cap_log": 1938000,
+   "cap_json": 1938000,
+   "ours_splats": 1942701,
+   "gs_splats": 1938000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "modal",
+   "ours_train": 162.226,
+   "gs_train": 935.659,
+   "ours_mem": 2222,
+   "gs_mem": 3606,
+   "ours_mem_rec": 2222,
+   "gs_mem_rec": 3606,
+   "ours_psnr": 25.640591874364556,
+   "gs_psnr": 25.50067572095259,
+   "ours_lp": 0.21099392235279082,
+   "gs_lp": 0.2218567770719528,
+   "ours_ssim": 0.7863560853135766,
+   "gs_ssim": 0.7809227246528081,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "bicycle",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1938000,
+   "gs_cap_log": 1938000,
+   "cap_json": 1938000,
+   "ours_splats": 1932920,
+   "gs_splats": 1938000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 167.081,
+   "gs_train": 867.524,
+   "ours_mem": 2310,
+   "gs_mem": 3553,
+   "ours_mem_rec": 2310,
+   "gs_mem_rec": 3553,
+   "ours_psnr": 25.65698600410036,
+   "gs_psnr": 25.487503871399493,
+   "ours_lp": 0.21077365756034852,
+   "gs_lp": 0.22145521104335786,
+   "ours_ssim": 0.7874204919063454,
+   "gs_ssim": 0.7807616389003215,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "bicycle",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1938000,
+   "gs_cap_log": 1938000,
+   "cap_json": 1938000,
+   "ours_splats": 1931476,
+   "gs_splats": 1938000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 156.964,
+   "gs_train": 872.425,
+   "ours_mem": 2091,
+   "gs_mem": 3619,
+   "ours_mem_rec": 2091,
+   "gs_mem_rec": 3619,
+   "ours_psnr": 25.639821444941273,
+   "gs_psnr": 25.46496851147767,
+   "ours_lp": 0.21043459713459015,
+   "gs_lp": 0.22287342548370362,
+   "ours_ssim": 0.787019390354831,
+   "gs_ssim": 0.7803517960142244,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "bonsai",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1967000,
+   "gs_cap_log": 1967000,
+   "cap_json": 1967000,
+   "ours_splats": 1964742,
+   "gs_splats": 1967000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 223.332,
+   "gs_train": 1132.338,
+   "ours_mem": 2321,
+   "gs_mem": 3875,
+   "ours_mem_rec": 2321,
+   "gs_mem_rec": 3875,
+   "ours_psnr": 33.56315977091834,
+   "gs_psnr": 32.98784230299628,
+   "ours_lp": 0.21418610094366847,
+   "gs_lp": 0.22500326625398687,
+   "ours_ssim": 0.952575105550882,
+   "gs_ssim": 0.949918432880011,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "bonsai",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1967000,
+   "gs_cap_log": 1967000,
+   "cap_json": 1967000,
+   "ours_splats": 1959180,
+   "gs_splats": 1967000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 233.529,
+   "gs_train": 1130.112,
+   "ours_mem": 2294,
+   "gs_mem": 3777,
+   "ours_mem_rec": 2294,
+   "gs_mem_rec": 3777,
+   "ours_psnr": 33.5127036308822,
+   "gs_psnr": 32.83943197551822,
+   "ours_lp": 0.21446910621346654,
+   "gs_lp": 0.22526999341474996,
+   "ours_ssim": 0.9527138357537923,
+   "gs_ssim": 0.9494661262820249,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "bonsai",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1967000,
+   "gs_cap_log": 1967000,
+   "cap_json": 1967000,
+   "ours_splats": 1964672,
+   "gs_splats": 1967000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 237.841,
+   "gs_train": 1138.553,
+   "ours_mem": 2300,
+   "gs_mem": 3777,
+   "ours_mem_rec": 2300,
+   "gs_mem_rec": 3777,
+   "ours_psnr": 33.59896476718825,
+   "gs_psnr": 32.93567442202253,
+   "ours_lp": 0.21400432691380783,
+   "gs_lp": 0.2247305149967606,
+   "ours_ssim": 0.9530405171525413,
+   "gs_ssim": 0.9499266234105026,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "counter",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1173000,
+   "gs_cap_log": 1173000,
+   "cap_json": 1173000,
+   "ours_splats": 1172246,
+   "gs_splats": 1173000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 178.042,
+   "gs_train": 833.122,
+   "ours_mem": 1550,
+   "gs_mem": 2637,
+   "ours_mem_rec": 1550,
+   "gs_mem_rec": 2637,
+   "ours_psnr": 29.840062110951738,
+   "gs_psnr": 29.37972125112418,
+   "ours_lp": 0.22411823322375615,
+   "gs_lp": 0.23429288516441982,
+   "ours_ssim": 0.9202625665287699,
+   "gs_ssim": 0.916926069129419,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "counter",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1173000,
+   "gs_cap_log": 1173000,
+   "cap_json": 1173000,
+   "ours_splats": 1173748,
+   "gs_splats": 1173000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 177.303,
+   "gs_train": 821.508,
+   "ours_mem": 1614,
+   "gs_mem": 2647,
+   "ours_mem_rec": 1614,
+   "gs_mem_rec": 2647,
+   "ours_psnr": 29.81121827149559,
+   "gs_psnr": 29.367411164107025,
+   "ours_lp": 0.2239658296108246,
+   "gs_lp": 0.2336862896879514,
+   "ours_ssim": 0.9202794039846557,
+   "gs_ssim": 0.9165382961011841,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "counter",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1173000,
+   "gs_cap_log": 1173000,
+   "cap_json": 1173000,
+   "ours_splats": 1175065,
+   "gs_splats": 1173000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 169.422,
+   "gs_train": 844.288,
+   "ours_mem": 1551,
+   "gs_mem": 2647,
+   "ours_mem_rec": 1551,
+   "gs_mem_rec": 2647,
+   "ours_psnr": 29.836774239130726,
+   "gs_psnr": 29.393807244571313,
+   "ours_lp": 0.22378064543008805,
+   "gs_lp": 0.2335686335961024,
+   "ours_ssim": 0.9203478434072322,
+   "gs_ssim": 0.9166356380725722,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "drjohnson",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1179000,
+   "gs_cap_log": 1179000,
+   "cap_json": 1179000,
+   "ours_splats": 1180559,
+   "gs_splats": 1179000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "modal",
+   "ours_train": 150.578,
+   "gs_train": 993.025,
+   "ours_mem": 1336,
+   "gs_mem": 2627,
+   "ours_mem_rec": 1336,
+   "gs_mem_rec": 2627,
+   "ours_psnr": 30.02756901635398,
+   "gs_psnr": 29.55497163941596,
+   "ours_lp": 0.3004780854239608,
+   "gs_lp": 0.3104029618429415,
+   "ours_ssim": 0.9099113494562443,
+   "gs_ssim": 0.9082012672889932,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "drjohnson",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1179000,
+   "gs_cap_log": 1179000,
+   "cap_json": 1179000,
+   "ours_splats": 1178954,
+   "gs_splats": 1179000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 108.761,
+   "gs_train": 650.989,
+   "ours_mem": 1339,
+   "gs_mem": 2629,
+   "ours_mem_rec": 1339,
+   "gs_mem_rec": 2629,
+   "ours_psnr": 29.990308581159002,
+   "gs_psnr": 29.558164059031306,
+   "ours_lp": 0.3003048138184981,
+   "gs_lp": 0.3106138679114255,
+   "ours_ssim": 0.9097789072082414,
+   "gs_ssim": 0.9087173642523185,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "drjohnson",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1179000,
+   "gs_cap_log": 1179000,
+   "cap_json": 1179000,
+   "ours_splats": 1178684,
+   "gs_splats": 1179000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 117.422,
+   "gs_train": 619.996,
+   "ours_mem": 1339,
+   "gs_mem": 2525,
+   "ours_mem_rec": 1339,
+   "gs_mem_rec": 2525,
+   "ours_psnr": 30.05859994796914,
+   "gs_psnr": 29.71467684874362,
+   "ours_lp": 0.2994303337552331,
+   "gs_lp": 0.3105891130187295,
+   "ours_ssim": 0.9103681568224502,
+   "gs_ssim": 0.9088779541349018,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "flowers",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1949000,
+   "gs_cap_log": 1949000,
+   "cap_json": 1949000,
+   "ours_splats": 1967225,
+   "gs_splats": 1949000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 185.661,
+   "gs_train": 914.034,
+   "ours_mem": 2606,
+   "gs_mem": 3645,
+   "ours_mem_rec": 2606,
+   "gs_mem_rec": 3645,
+   "ours_psnr": 21.412180266797613,
+   "gs_psnr": 21.845986682669782,
+   "ours_lp": 0.303725274449045,
+   "gs_lp": 0.3435676775195382,
+   "ours_ssim": 0.627856676792003,
+   "gs_ssim": 0.6263936126771472,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "flowers",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1949000,
+   "gs_cap_log": 1949000,
+   "cap_json": 1949000,
+   "ours_splats": 1957161,
+   "gs_splats": 1949000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 174.467,
+   "gs_train": 916.18,
+   "ours_mem": 2100,
+   "gs_mem": 3621,
+   "ours_mem_rec": 2100,
+   "gs_mem_rec": 3621,
+   "ours_psnr": 21.438144424261,
+   "gs_psnr": 21.84553315971795,
+   "ours_lp": 0.303514762358232,
+   "gs_lp": 0.3445991155776111,
+   "ours_ssim": 0.6291351288842099,
+   "gs_ssim": 0.6254259122283874,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "flowers",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1949000,
+   "gs_cap_log": 1949000,
+   "cap_json": 1949000,
+   "ours_splats": 1958117,
+   "gs_splats": 1949000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 172.753,
+   "gs_train": 1044.323,
+   "ours_mem": 2101,
+   "gs_mem": 3697,
+   "ours_mem_rec": 2101,
+   "gs_mem_rec": 3697,
+   "ours_psnr": 21.403405658017082,
+   "gs_psnr": 21.85242562826924,
+   "ours_lp": 0.3031102026050741,
+   "gs_lp": 0.34396741877902637,
+   "ours_ssim": 0.6288545098510089,
+   "gs_ssim": 0.6255668291140049,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "garden",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1969000,
+   "gs_cap_log": 1969000,
+   "cap_json": 1969000,
+   "ours_splats": 1978877,
+   "gs_splats": 1969000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "modal",
+   "ours_train": 181.518,
+   "gs_train": 945.225,
+   "ours_mem": 2333,
+   "gs_mem": 3577,
+   "ours_mem_rec": 2333,
+   "gs_mem_rec": 3577,
+   "ours_psnr": 27.785577451540313,
+   "gs_psnr": 27.38019332230647,
+   "ours_lp": 0.11509125493466854,
+   "gs_lp": 0.1333501118545731,
+   "ours_ssim": 0.8730771862761793,
+   "gs_ssim": 0.8623368505188619,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "garden",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1969000,
+   "gs_cap_log": 1969000,
+   "cap_json": 1969000,
+   "ours_splats": 1994348,
+   "gs_splats": 1969000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 193.548,
+   "gs_train": 911.31,
+   "ours_mem": 2433,
+   "gs_mem": 3555,
+   "ours_mem_rec": 2433,
+   "gs_mem_rec": 3555,
+   "ours_psnr": 27.755389872451,
+   "gs_psnr": 27.45403418049459,
+   "ours_lp": 0.11480664058278005,
+   "gs_lp": 0.13335990191747746,
+   "ours_ssim": 0.8740902119856728,
+   "gs_ssim": 0.8633885094100883,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "garden",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1969000,
+   "gs_cap_log": 1969000,
+   "cap_json": 1969000,
+   "ours_splats": 1978210,
+   "gs_splats": 1969000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 179.71,
+   "gs_train": 913.981,
+   "ours_mem": 2330,
+   "gs_mem": 3577,
+   "ours_mem_rec": 2330,
+   "gs_mem_rec": 3577,
+   "ours_psnr": 27.89896148492363,
+   "gs_psnr": 27.408719194228063,
+   "ours_lp": 0.1144823394715786,
+   "gs_lp": 0.1331211601694425,
+   "ours_ssim": 0.874538007442316,
+   "gs_ssim": 0.8624109980275297,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "kitchen",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1182000,
+   "gs_cap_log": 1182000,
+   "cap_json": 1182000,
+   "ours_splats": 1181662,
+   "gs_splats": 1182000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "modal",
+   "ours_train": 173.951,
+   "gs_train": 868.625,
+   "ours_mem": 1582,
+   "gs_mem": 2579,
+   "ours_mem_rec": 1582,
+   "gs_mem_rec": 2579,
+   "ours_psnr": 31.9916013335769,
+   "gs_psnr": 31.692623888709587,
+   "ours_lp": 0.14075422861746378,
+   "gs_lp": 0.15172314579997745,
+   "ours_ssim": 0.9343447352257369,
+   "gs_ssim": 0.9303960786670986,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "kitchen",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1182000,
+   "gs_cap_log": 1182000,
+   "cap_json": 1182000,
+   "ours_splats": 1180672,
+   "gs_splats": 1182000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 184.053,
+   "gs_train": 769.351,
+   "ours_mem": 1585,
+   "gs_mem": 2561,
+   "ours_mem_rec": 1585,
+   "gs_mem_rec": 2561,
+   "ours_psnr": 32.286412730176984,
+   "gs_psnr": 31.608894243651186,
+   "ours_lp": 0.13960290125438146,
+   "gs_lp": 0.15227337053843906,
+   "ours_ssim": 0.9353638995271197,
+   "gs_ssim": 0.9306934057344289,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "kitchen",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1182000,
+   "gs_cap_log": 1182000,
+   "cap_json": 1182000,
+   "ours_splats": 1179818,
+   "gs_splats": 1182000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 174.324,
+   "gs_train": 798.256,
+   "ours_mem": 1521,
+   "gs_mem": 2567,
+   "ours_mem_rec": 1521,
+   "gs_mem_rec": 2567,
+   "ours_psnr": 32.28630888541877,
+   "gs_psnr": 31.63292583306344,
+   "ours_lp": 0.13972772806882858,
+   "gs_lp": 0.15096359231642315,
+   "ours_ssim": 0.9353624285328601,
+   "gs_ssim": 0.9308809469372037,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "playroom",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1191000,
+   "gs_cap_log": 1191000,
+   "cap_json": 1191000,
+   "ours_splats": 1198142,
+   "gs_splats": 1191000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 110.015,
+   "gs_train": 625.994,
+   "ours_mem": 1330,
+   "gs_mem": 2843,
+   "ours_mem_rec": 1330,
+   "gs_mem_rec": 2843,
+   "ours_psnr": 30.681607204248152,
+   "gs_psnr": 30.376909751340158,
+   "ours_lp": 0.2833685047667602,
+   "gs_lp": 0.2998305507775011,
+   "ours_ssim": 0.9152388138219588,
+   "gs_ssim": 0.9139364856458281,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "playroom",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1191000,
+   "gs_cap_log": 1191000,
+   "cap_json": 1191000,
+   "ours_splats": 1188540,
+   "gs_splats": 1191000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 111.313,
+   "gs_train": 633.905,
+   "ours_mem": 1455,
+   "gs_mem": 2741,
+   "ours_mem_rec": 1455,
+   "gs_mem_rec": 2741,
+   "ours_psnr": 30.634338787334652,
+   "gs_psnr": 29.90820119583965,
+   "ours_lp": 0.28329554919538824,
+   "gs_lp": 0.30764473101188394,
+   "ours_ssim": 0.9151022658796955,
+   "gs_ssim": 0.907596117208775,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "playroom",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1191000,
+   "gs_cap_log": 1191000,
+   "cap_json": 1191000,
+   "ours_splats": 1189419,
+   "gs_splats": 1191000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 111.248,
+   "gs_train": 639.628,
+   "ours_mem": 1327,
+   "gs_mem": 2677,
+   "ours_mem_rec": 1327,
+   "gs_mem_rec": 2677,
+   "ours_psnr": 30.567122579962817,
+   "gs_psnr": 30.482627979557993,
+   "ours_lp": 0.2836272752490537,
+   "gs_lp": 0.2997323634295628,
+   "ours_ssim": 0.914845648191072,
+   "gs_ssim": 0.9140387360978368,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "room",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1200000,
+   "gs_cap_log": 1200000,
+   "cap_json": 1200000,
+   "ours_splats": 1200000,
+   "gs_splats": 1200000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 580.95.05, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "modal",
+   "ours_train": 176.857,
+   "gs_train": 775.356,
+   "ours_mem": 1829,
+   "gs_mem": 2887,
+   "ours_mem_rec": 1829,
+   "gs_mem_rec": 2887,
+   "ours_psnr": 32.87423731684476,
+   "gs_psnr": 32.16108996386035,
+   "ours_lp": 0.2503952960937451,
+   "gs_lp": 0.25502389134504855,
+   "ours_ssim": 0.9327782469856555,
+   "gs_ssim": 0.9289715998757035,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "room",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1200000,
+   "gs_cap_log": 1200000,
+   "cap_json": 1200000,
+   "ours_splats": 1200000,
+   "gs_splats": 1200000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 165.385,
+   "gs_train": 771.398,
+   "ours_mem": 2198,
+   "gs_mem": 2859,
+   "ours_mem_rec": 2198,
+   "gs_mem_rec": 2859,
+   "ours_psnr": 32.867712672147604,
+   "gs_psnr": 32.208574182661145,
+   "ours_lp": 0.2495742849050424,
+   "gs_lp": 0.25817891496878403,
+   "ours_ssim": 0.9330263380090088,
+   "gs_ssim": 0.9277948266954792,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "room",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1200000,
+   "gs_cap_log": 1200000,
+   "cap_json": 1200000,
+   "ours_splats": 1200000,
+   "gs_splats": 1200000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 180.457,
+   "gs_train": 758.006,
+   "ours_mem": 2057,
+   "gs_mem": 2829,
+   "ours_mem_rec": 2057,
+   "gs_mem_rec": 2829,
+   "ours_psnr": 32.959746447758285,
+   "gs_psnr": 31.9531419098159,
+   "ours_lp": 0.24961125277555907,
+   "gs_lp": 0.2583303405688359,
+   "ours_ssim": 0.9332744458992019,
+   "gs_ssim": 0.9234719105671766,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "stump",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1917000,
+   "gs_cap_log": 1917000,
+   "cap_json": 1917000,
+   "ours_splats": 1908500,
+   "gs_splats": 1917000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 159.507,
+   "gs_train": 854.708,
+   "ours_mem": 2059,
+   "gs_mem": 3477,
+   "ours_mem_rec": 2059,
+   "gs_mem_rec": 3477,
+   "ours_psnr": 26.86585446745442,
+   "gs_psnr": 26.86125026171162,
+   "ours_lp": 0.21630707010626793,
+   "gs_lp": 0.23306702822446823,
+   "ours_ssim": 0.7968862334305806,
+   "gs_ssim": 0.7893094886202345,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "stump",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1917000,
+   "gs_cap_log": 1917000,
+   "cap_json": 1917000,
+   "ours_splats": 1908981,
+   "gs_splats": 1917000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 159.053,
+   "gs_train": 855.478,
+   "ours_mem": 2059,
+   "gs_mem": 3549,
+   "ours_mem_rec": 2059,
+   "gs_mem_rec": 3549,
+   "ours_psnr": 26.83086914718746,
+   "gs_psnr": 26.896499892321064,
+   "ours_lp": 0.21734929084777832,
+   "gs_lp": 0.23289365600794554,
+   "ours_ssim": 0.7958872034359584,
+   "gs_ssim": 0.7903329426173897,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "stump",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1917000,
+   "gs_cap_log": 1917000,
+   "cap_json": 1917000,
+   "ours_splats": 1910376,
+   "gs_splats": 1917000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 148.176,
+   "gs_train": 855.527,
+   "ours_mem": 2061,
+   "gs_mem": 3523,
+   "ours_mem_rec": 2061,
+   "gs_mem_rec": 3523,
+   "ours_psnr": 26.85591497247599,
+   "gs_psnr": 26.783244500410508,
+   "ours_lp": 0.217597384005785,
+   "gs_lp": 0.23360274359583855,
+   "ours_ssim": 0.7960710640729776,
+   "gs_ssim": 0.7882675079939431,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "train",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1200000,
+   "gs_cap_log": 1200000,
+   "cap_json": 1200000,
+   "ours_splats": 1200000,
+   "gs_splats": 1200000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "modal",
+   "ours_train": 163.588,
+   "gs_train": 696.074,
+   "ours_mem": 1294,
+   "gs_mem": 2491,
+   "ours_mem_rec": 1294,
+   "gs_mem_rec": 2491,
+   "ours_psnr": 22.10035861226873,
+   "gs_psnr": 22.46404084705574,
+   "ours_lp": 0.19420215722761655,
+   "gs_lp": 0.21666850071204335,
+   "ours_ssim": 0.8390252561031974,
+   "gs_ssim": 0.8339974179369277,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "train",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1200000,
+   "gs_cap_log": 1200000,
+   "cap_json": 1200000,
+   "ours_splats": 1200000,
+   "gs_splats": 1200000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 162.209,
+   "gs_train": 625.722,
+   "ours_mem": 1298,
+   "gs_mem": 2463,
+   "ours_mem_rec": 1298,
+   "gs_mem_rec": 2463,
+   "ours_psnr": 22.32016027048196,
+   "gs_psnr": 22.569135319246627,
+   "ours_lp": 0.19394659407828985,
+   "gs_lp": 0.21486636760987735,
+   "ours_ssim": 0.8399346131587585,
+   "gs_ssim": 0.8343360055225668,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "train",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1200000,
+   "gs_cap_log": 1200000,
+   "cap_json": 1200000,
+   "ours_splats": 1200000,
+   "gs_splats": 1200000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 155.902,
+   "gs_train": 630.404,
+   "ours_mem": 1362,
+   "gs_mem": 2473,
+   "ours_mem_rec": 1362,
+   "gs_mem_rec": 2473,
+   "ours_psnr": 22.46362073655912,
+   "gs_psnr": 22.56025156437017,
+   "ours_lp": 0.19420435907025085,
+   "gs_lp": 0.2142753208938398,
+   "ours_ssim": 0.8409066285870376,
+   "gs_ssim": 0.8355176588338125,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "treehill",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1926000,
+   "gs_cap_log": 1926000,
+   "cap_json": 1926000,
+   "ours_splats": 1915781,
+   "gs_splats": 1926000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 158.802,
+   "gs_train": 888.763,
+   "ours_mem": 1987,
+   "gs_mem": 3535,
+   "ours_mem_rec": 1987,
+   "gs_mem_rec": 3535,
+   "ours_psnr": 22.821752267027996,
+   "gs_psnr": 23.087934657324897,
+   "ours_lp": 0.3294759343067805,
+   "gs_lp": 0.34628620743751526,
+   "ours_ssim": 0.6506353682703532,
+   "gs_ssim": 0.6531431926023983,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "treehill",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1926000,
+   "gs_cap_log": 1926000,
+   "cap_json": 1926000,
+   "ours_splats": 1917082,
+   "gs_splats": 1926000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 150.085,
+   "gs_train": 892.932,
+   "ours_mem": 1860,
+   "gs_mem": 3803,
+   "ours_mem_rec": 1860,
+   "gs_mem_rec": 3803,
+   "ours_psnr": 22.820764269759156,
+   "gs_psnr": 23.074490546619376,
+   "ours_lp": 0.329361488421758,
+   "gs_lp": 0.3463422308365504,
+   "ours_ssim": 0.6508669460017101,
+   "gs_ssim": 0.6532280645203664,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "treehill",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1926000,
+   "gs_cap_log": 1926000,
+   "cap_json": 1926000,
+   "ours_splats": 1918679,
+   "gs_splats": 1926000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 161.253,
+   "gs_train": 891.869,
+   "ours_mem": 1925,
+   "gs_mem": 3545,
+   "ours_mem_rec": 1925,
+   "gs_mem_rec": 3545,
+   "ours_psnr": 22.82986019787833,
+   "gs_psnr": 23.00515240659934,
+   "ours_lp": 0.3296005328496297,
+   "gs_lp": 0.34821005662282306,
+   "ours_ssim": 0.6506420423534945,
+   "gs_ssim": 0.651817821192282,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "truck-full",
+   "seed": 1,
+   "gs_seed": 42,
+   "gs_seed_log": 42,
+   "gs_cap": 1967000,
+   "gs_cap_log": 1967000,
+   "cap_json": 1967000,
+   "ours_splats": 1963003,
+   "gs_splats": 1967000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 199.324,
+   "gs_train": 948.055,
+   "ours_mem": 2096,
+   "gs_mem": 3785,
+   "ours_mem_rec": 2096,
+   "gs_mem_rec": 3785,
+   "ours_psnr": 26.285662987494188,
+   "gs_psnr": 26.32966598281346,
+   "ours_lp": 0.11864854115992785,
+   "gs_lp": 0.13099925173446536,
+   "ours_ssim": 0.8986466008455152,
+   "gs_ssim": 0.8960719287693655,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "truck-full",
+   "seed": 2,
+   "gs_seed": 43,
+   "gs_seed_log": 43,
+   "gs_cap": 1967000,
+   "gs_cap_log": 1967000,
+   "cap_json": 1967000,
+   "ours_splats": 1978461,
+   "gs_splats": 1967000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 1,
+   "order_gs": 0,
+   "prov": "fal",
+   "ours_train": 200.179,
+   "gs_train": 954.63,
+   "ours_mem": 2043,
+   "gs_mem": 3727,
+   "ours_mem_rec": 2043,
+   "gs_mem_rec": 3727,
+   "ours_psnr": 26.2933720553899,
+   "gs_psnr": 26.28664013732814,
+   "ours_lp": 0.1189625053666532,
+   "gs_lp": 0.13125247228890657,
+   "ours_ssim": 0.8986710190126986,
+   "gs_ssim": 0.8947738968425906,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  },
+  {
+   "scene": "truck-full",
+   "seed": 3,
+   "gs_seed": 44,
+   "gs_seed_log": 44,
+   "gs_cap": 1967000,
+   "gs_cap_log": 1967000,
+   "cap_json": 1967000,
+   "ours_splats": 1966884,
+   "gs_splats": 1967000,
+   "ours_sha": "historical-build-084",
+   "brush": "772a7722e81366a677e24ab101761cdc47b6b7eb76389996056fcd3b3acf9b6f",
+   "gpu": "NVIDIA L40S, 590.48.01, 46068 MiB",
+   "order_ours": 0,
+   "order_gs": 1,
+   "prov": "fal",
+   "ours_train": 196.195,
+   "gs_train": 947.956,
+   "ours_mem": 2099,
+   "gs_mem": 3809,
+   "ours_mem_rec": 2099,
+   "gs_mem_rec": 3809,
+   "ours_psnr": 26.350946217319688,
+   "gs_psnr": 26.242839388622276,
+   "ours_lp": 0.11840135953389108,
+   "gs_lp": 0.131307891337201,
+   "ours_ssim": 0.8989630026795995,
+   "gs_ssim": 0.8950287910123204,
+   "rc": [
+    0,
+    0
+   ],
+   "steps": [
+    30000,
+    30000,
+    30000
+   ],
+   "warm": [
+    30000,
+    2000
+   ],
+   "health": []
+  }
+ ]
+}

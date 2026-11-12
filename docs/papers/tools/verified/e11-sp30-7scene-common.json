@@ -1,0 +1,1557 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "E11/SP30 7 standard scenes: main-historical-build-033-30k vs spirula-v2026.10.6-30k, common views",
+ "argv": [
+  "--arm",
+  "spirula=$SPLAT_DATA/runs/perf/results.jsonl::engine.label=spirula-v2026.10.6-30k,steps=30000,scene=garden|bicycle|truck-full|counter|train|playroom|drjohnson",
+  "--arm",
+  "ours=$SPLAT_DATA/runs/perf/results.jsonl::engine.label=main-historical-build-033-30k,steps=30000,scene=garden|bicycle|truck-full|counter|train|playroom|drjohnson",
+  "--common-views",
+  "--metric",
+  "psnr",
+  "--metric",
+  "lpips_vgg",
+  "--metric",
+  "ssim",
+  "--label",
+  "E11/SP30 7 standard scenes: main-historical-build-033-30k vs spirula-v2026.10.6-30k, common views",
+  "--json",
+  "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools/verified/e11-sp30-7scene-common.json"
+ ],
+ "cwd": "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools",
+ "generated_at": "2026-10-08T22:05:08-07:00",
+ "verifier_sha256": "3c70e4841f9909188590fe4a19827f4e4d9f12cc45b03719f7c9088e54930b7d",
+ "verifier_git_head": "historical-build-002",
+ "options": {
+  "common_views": true,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "spirula": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "filters": [
+      "engine.label=spirula-v2026.10.6-30k",
+      "steps=30000",
+      "scene=garden|bicycle|truck-full|counter|train|playroom|drjohnson"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "sha256": "818bc029b2f59ecea2e1e1807afd9e904ae9d99f2d894935999a31af2574f9ba"
+    }
+   ]
+  },
+  "ours": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "filters": [
+      "engine.label=main-historical-build-033-30k",
+      "steps=30000",
+      "scene=garden|bicycle|truck-full|counter|train|playroom|drjohnson"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "sha256": "818bc029b2f59ecea2e1e1807afd9e904ae9d99f2d894935999a31af2574f9ba"
+    }
+   ]
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "bicycle": {
+   "n_expected": 25,
+   "n_common": 23,
+   "common_view_hash": "90aeb3bdfc6460c8a1de3ce05cd110111b0442c5058c312eb325036b2e567a89",
+   "identical_view_sets": false,
+   "common_views": [
+    "_DSC8679",
+    "_DSC8687",
+    "_DSC8695",
+    "_DSC8703",
+    "_DSC8711",
+    "_DSC8727",
+    "_DSC8735",
+    "_DSC8744",
+    "_DSC8752",
+    "_DSC8760",
+    "_DSC8768",
+    "_DSC8776",
+    "_DSC8784",
+    "_DSC8792",
+    "_DSC8800",
+    "_DSC8808",
+    "_DSC8816",
+    "_DSC8824",
+    "_DSC8832",
+    "_DSC8848",
+    "_DSC8856",
+    "_DSC8864",
+    "_DSC8872"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-174943-e920d146",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1790",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "709d4d939c29bd7735888184fd9d000e0f4441104363fb538cdad9f14802094a",
+       "normalised_views_hash": "709d4d939c29bd7735888184fd9d000e0f4441104363fb538cdad9f14802094a",
+       "dropped_for_common": [
+        "_DSC8840"
+       ],
+       "mean": {
+        "psnr": 24.72006588392151,
+        "lpips_vgg": 0.27994565665721893,
+        "ssim": 0.746903750084694
+       }
+      },
+      {
+       "run": "pair-20261008-174944-6f0230d7",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1784",
+       "format": "splat-perf Row per_image",
+       "n_scored": 25,
+       "views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [
+        "_DSC8719",
+        "_DSC8840"
+       ],
+       "mean": {
+        "psnr": 24.737367360827218,
+        "lpips_vgg": 0.27930027959139453,
+        "ssim": 0.7480175002169507
+       }
+      },
+      {
+       "run": "pair-20261008-174944-a419e57a",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1797",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "5819056c636cb91811ffd063fcf00efce0f63ddea4b2230beefd70bc23c35b18",
+       "normalised_views_hash": "5819056c636cb91811ffd063fcf00efce0f63ddea4b2230beefd70bc23c35b18",
+       "dropped_for_common": [
+        "_DSC8719"
+       ],
+       "mean": {
+        "psnr": 24.682689188767373,
+        "lpips_vgg": 0.28017238948656165,
+        "ssim": 0.7463146699746703
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 24.713374144505366,
+      "lpips_vgg": 0.2798061085783917,
+      "ssim": 0.7470786400921051
+     }
+    },
+    "ours": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1785",
+       "format": "splat-perf Row per_image",
+       "n_scored": 25,
+       "views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [
+        "_DSC8719",
+        "_DSC8840"
+       ],
+       "mean": {
+        "psnr": 25.206195734800772,
+        "lpips_vgg": 0.2512365618477697,
+        "ssim": 0.7668970888937128
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1796",
+       "format": "splat-perf Row per_image",
+       "n_scored": 25,
+       "views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [
+        "_DSC8719",
+        "_DSC8840"
+       ],
+       "mean": {
+        "psnr": 25.157984576280377,
+        "lpips_vgg": 0.25126091552817303,
+        "ssim": 0.7668652630789274
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1791",
+       "format": "splat-perf Row per_image",
+       "n_scored": 25,
+       "views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [
+        "_DSC8719",
+        "_DSC8840"
+       ],
+       "mean": {
+        "psnr": 25.199993693131685,
+        "lpips_vgg": 0.2513977185539577,
+        "ssim": 0.7671236198335761
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 25.188058001404276,
+      "lpips_vgg": 0.25129839864330017,
+      "ssim": 0.7669619906020722
+     }
+    }
+   }
+  },
+  "counter": {
+   "n_expected": 30,
+   "n_common": 30,
+   "common_view_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF5857",
+    "DSCF5865",
+    "DSCF5873",
+    "DSCF5881",
+    "DSCF5889",
+    "DSCF5897",
+    "DSCF5905",
+    "DSCF5913",
+    "DSCF5921",
+    "DSCF5929",
+    "DSCF5937",
+    "DSCF5945",
+    "DSCF5953",
+    "DSCF5961",
+    "DSCF5969",
+    "DSCF5977",
+    "DSCF5985",
+    "DSCF5993",
+    "DSCF6001",
+    "DSCF6009",
+    "DSCF6017",
+    "DSCF6025",
+    "DSCF6033",
+    "DSCF6041",
+    "DSCF6049",
+    "DSCF6057",
+    "DSCF6065",
+    "DSCF6073",
+    "DSCF6081",
+    "DSCF6089"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-174945-816bcd15",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1823",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.718843247293425,
+        "lpips_vgg": 0.2310100793838501,
+        "ssim": 0.9160811624658025
+       }
+      },
+      {
+       "run": "pair-20261008-174945-8a48b195",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1820",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.566421565398553,
+        "lpips_vgg": 0.23233803361654282,
+        "ssim": 0.9154193862263703
+       }
+      },
+      {
+       "run": "pair-20261008-174945-9858c83e",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1829",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.570065245426353,
+        "lpips_vgg": 0.23219093730052312,
+        "ssim": 0.9151952908456533
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 28.61844335270611,
+      "lpips_vgg": 0.23184635010030533,
+      "ssim": 0.9155652798459419
+     }
+    },
+    "ours": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1830",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.554815212116168,
+        "lpips_vgg": 0.232529287536939,
+        "ssim": 0.9164839479712981
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1822",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.550107515056826,
+        "lpips_vgg": 0.23261848986148834,
+        "ssim": 0.916060326582326
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1821",
+       "format": "splat-perf Row per_image",
+       "n_scored": 30,
+       "views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.536855327008894,
+        "lpips_vgg": 0.23239983866612116,
+        "ssim": 0.9163844725319698
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.54725935139396,
+      "lpips_vgg": 0.23251587202151616,
+      "ssim": 0.9163095823618645
+     }
+    }
+   }
+  },
+  "drjohnson": {
+   "n_expected": 33,
+   "n_common": 33,
+   "common_view_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+   "identical_view_sets": true,
+   "common_views": [
+    "IMG_6292",
+    "IMG_6301",
+    "IMG_6313",
+    "IMG_6322",
+    "IMG_6332",
+    "IMG_6340",
+    "IMG_6349",
+    "IMG_6358",
+    "IMG_6366",
+    "IMG_6374",
+    "IMG_6382",
+    "IMG_6392",
+    "IMG_6401",
+    "IMG_6410",
+    "IMG_6421",
+    "IMG_6434",
+    "IMG_6442",
+    "IMG_6450",
+    "IMG_6459",
+    "IMG_6471",
+    "IMG_6483",
+    "IMG_6491",
+    "IMG_6500",
+    "IMG_6508",
+    "IMG_6516",
+    "IMG_6525",
+    "IMG_6534",
+    "IMG_6543",
+    "IMG_6552",
+    "IMG_6560",
+    "IMG_6569",
+    "IMG_6578",
+    "IMG_6589"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-174944-0df06f4e",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1800",
+       "format": "splat-perf Row per_image",
+       "n_scored": 33,
+       "views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "normalised_views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.860243681536947,
+        "lpips_vgg": 0.31852419087381073,
+        "ssim": 0.903627483787868
+       }
+      },
+      {
+       "run": "pair-20261008-174944-bc63d764",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1795",
+       "format": "splat-perf Row per_image",
+       "n_scored": 33,
+       "views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "normalised_views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.984611230578924,
+        "lpips_vgg": 0.31691751832311804,
+        "ssim": 0.9042704220900921
+       }
+      },
+      {
+       "run": "pair-20261008-174944-c674b6c2",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1792",
+       "format": "splat-perf Row per_image",
+       "n_scored": 33,
+       "views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "normalised_views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.01719757327131,
+        "lpips_vgg": 0.3180072045687473,
+        "ssim": 0.904014605815445
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 28.95401749512906,
+      "lpips_vgg": 0.3178163045885587,
+      "ssim": 0.9039708372311349
+     }
+    },
+    "ours": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1793",
+       "format": "splat-perf Row per_image",
+       "n_scored": 33,
+       "views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "normalised_views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.846059240465536,
+        "lpips_vgg": 0.3004898148955721,
+        "ssim": 0.9120398487967181
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1794",
+       "format": "splat-perf Row per_image",
+       "n_scored": 33,
+       "views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "normalised_views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.81887390510691,
+        "lpips_vgg": 0.3012057113828081,
+        "ssim": 0.9127002989223406
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1801",
+       "format": "splat-perf Row per_image",
+       "n_scored": 33,
+       "views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "normalised_views_hash": "51207f0c59790028e86d3cc01e5af0ab96ab2291be688565bd579765d28742b8",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.943189612100763,
+        "lpips_vgg": 0.30103253866686963,
+        "ssim": 0.9122483784802309
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.869374252557737,
+      "lpips_vgg": 0.3009093549817499,
+      "ssim": 0.9123295087330966
+     }
+    }
+   }
+  },
+  "garden": {
+   "n_expected": 24,
+   "n_common": 22,
+   "common_view_hash": "457cd94053f7dda26d117e9e0c88a1e5c4e48ad72ad82bcfbfcf4e9c033f2109",
+   "identical_view_sets": false,
+   "common_views": [
+    "DSC07956",
+    "DSC07964",
+    "DSC07972",
+    "DSC07980",
+    "DSC07988",
+    "DSC07996",
+    "DSC08004",
+    "DSC08012",
+    "DSC08020",
+    "DSC08036",
+    "DSC08044",
+    "DSC08052",
+    "DSC08060",
+    "DSC08076",
+    "DSC08084",
+    "DSC08092",
+    "DSC08100",
+    "DSC08108",
+    "DSC08116",
+    "DSC08124",
+    "DSC08132",
+    "DSC08140"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-174944-d31c8631",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1798",
+       "format": "splat-perf Row per_image",
+       "n_scored": 22,
+       "views_hash": "457cd94053f7dda26d117e9e0c88a1e5c4e48ad72ad82bcfbfcf4e9c033f2109",
+       "normalised_views_hash": "457cd94053f7dda26d117e9e0c88a1e5c4e48ad72ad82bcfbfcf4e9c033f2109",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 26.40760354026755,
+        "lpips_vgg": 0.16269126466729425,
+        "ssim": 0.8506645422644277
+       }
+      },
+      {
+       "run": "pair-20261008-174944-f307fe4f",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1789",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [
+        "DSC08028",
+        "DSC08068"
+       ],
+       "mean": {
+        "psnr": 26.41050951952774,
+        "lpips_vgg": 0.16211538016796112,
+        "ssim": 0.850803527006573
+       }
+      },
+      {
+       "run": "pair-20261008-174945-12b98604",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1809",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [
+        "DSC08028",
+        "DSC08068"
+       ],
+       "mean": {
+        "psnr": 26.41283486146144,
+        "lpips_vgg": 0.1622979146513072,
+        "ssim": 0.8505326184928337
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 26.410315973752244,
+      "lpips_vgg": 0.16236818649552084,
+      "ssim": 0.8506668959212781
+     }
+    },
+    "ours": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1799",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [
+        "DSC08028",
+        "DSC08068"
+       ],
+       "mean": {
+        "psnr": 27.236015249617218,
+        "lpips_vgg": 0.15292795273390683,
+        "ssim": 0.8530241607815355
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1788",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [
+        "DSC08028",
+        "DSC08068"
+       ],
+       "mean": {
+        "psnr": 27.253719905412513,
+        "lpips_vgg": 0.15268944000655954,
+        "ssim": 0.8531054060262634
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1810",
+       "format": "splat-perf Row per_image",
+       "n_scored": 24,
+       "views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [
+        "DSC08028",
+        "DSC08068"
+       ],
+       "mean": {
+        "psnr": 27.22382427328556,
+        "lpips_vgg": 0.1528198319402608,
+        "ssim": 0.8533344362231561
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 27.237853142771765,
+      "lpips_vgg": 0.15281240822690909,
+      "ssim": 0.8531546676769851
+     }
+    }
+   }
+  },
+  "playroom": {
+   "n_expected": 29,
+   "n_common": 29,
+   "common_view_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSC05572",
+    "DSC05580",
+    "DSC05588",
+    "DSC05596",
+    "DSC05604",
+    "DSC05612",
+    "DSC05620",
+    "DSC05628",
+    "DSC05636",
+    "DSC05644",
+    "DSC05652",
+    "DSC05661",
+    "DSC05669",
+    "DSC05678",
+    "DSC05686",
+    "DSC05695",
+    "DSC05703",
+    "DSC05711",
+    "DSC05719",
+    "DSC05728",
+    "DSC05738",
+    "DSC05747",
+    "DSC05755",
+    "DSC05763",
+    "DSC05771",
+    "DSC05780",
+    "DSC05788",
+    "DSC05797",
+    "DSC05805"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-174943-3ee51a4b",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1774",
+       "format": "splat-perf Row per_image",
+       "n_scored": 29,
+       "views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "normalised_views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.481976254318784,
+        "lpips_vgg": 0.30552793833716163,
+        "ssim": 0.9089379233397858
+       }
+      },
+      {
+       "run": "pair-20261008-174943-a8e51d6e",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1779",
+       "format": "splat-perf Row per_image",
+       "n_scored": 29,
+       "views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "normalised_views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.62580911034316,
+        "lpips_vgg": 0.3055464147493757,
+        "ssim": 0.9087313036964079
+       }
+      },
+      {
+       "run": "pair-20261008-174943-f5fa563b",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1776",
+       "format": "splat-perf Row per_image",
+       "n_scored": 29,
+       "views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "normalised_views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.790064679480903,
+        "lpips_vgg": 0.304792948837938,
+        "ssim": 0.9090573864530723
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.63261668138095,
+      "lpips_vgg": 0.3052891006414918,
+      "ssim": 0.9089088711630887
+     }
+    },
+    "ours": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1775",
+       "format": "splat-perf Row per_image",
+       "n_scored": 29,
+       "views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "normalised_views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 30.68165894818012,
+        "lpips_vgg": 0.29042694846103934,
+        "ssim": 0.9143195793345682
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1778",
+       "format": "splat-perf Row per_image",
+       "n_scored": 29,
+       "views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "normalised_views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 30.6153327025147,
+        "lpips_vgg": 0.29039461396891497,
+        "ssim": 0.9148715723350067
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1777",
+       "format": "splat-perf Row per_image",
+       "n_scored": 29,
+       "views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "normalised_views_hash": "e086f00f79de7393339b1aca693ed54eec7066ea0672c1ca39c8bc61ffed39b7",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 30.653534171592895,
+        "lpips_vgg": 0.29005351662635803,
+        "ssim": 0.914326325582542
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 30.650175274095904,
+      "lpips_vgg": 0.2902916930187708,
+      "ssim": 0.9145058257507056
+     }
+    }
+   }
+  },
+  "train": {
+   "n_expected": 38,
+   "n_common": 38,
+   "common_view_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+   "identical_view_sets": true,
+   "common_views": [
+    "00001",
+    "00009",
+    "00017",
+    "00025",
+    "00033",
+    "00041",
+    "00049",
+    "00057",
+    "00065",
+    "00073",
+    "00081",
+    "00089",
+    "00097",
+    "00105",
+    "00113",
+    "00121",
+    "00129",
+    "00137",
+    "00145",
+    "00153",
+    "00161",
+    "00169",
+    "00177",
+    "00185",
+    "00193",
+    "00201",
+    "00209",
+    "00217",
+    "00225",
+    "00233",
+    "00241",
+    "00249",
+    "00257",
+    "00265",
+    "00273",
+    "00281",
+    "00289",
+    "00297"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-174944-661ad91c",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1815",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.29590909129626,
+        "lpips_vgg": 0.19824147851843582,
+        "ssim": 0.8300377183052894
+       }
+      },
+      {
+       "run": "pair-20261008-174944-b0cc73a5",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1804",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.282472619527184,
+        "lpips_vgg": 0.1984948555105611,
+        "ssim": 0.8308223354490958
+       }
+      },
+      {
+       "run": "pair-20261008-174944-d4d461cc",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1818",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 20.287708428128937,
+        "lpips_vgg": 0.19953523576259613,
+        "ssim": 0.8290053220239874
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 20.288696712984127,
+      "lpips_vgg": 0.19875718993053101,
+      "ssim": 0.8299551252594575
+     }
+    },
+    "ours": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1819",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.58465687285344,
+        "lpips_vgg": 0.21090746357252724,
+        "ssim": 0.8409908312361027
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1814",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.464777155050033,
+        "lpips_vgg": 0.21090585111003174,
+        "ssim": 0.8402764215934121
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1805",
+       "format": "splat-perf Row per_image",
+       "n_scored": 38,
+       "views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "normalised_views_hash": "e13c01c3d50e6d6929aeb0c83e12e09bde8dd0eb46d906f32e9d65c1f4b4197b",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.660229867157927,
+        "lpips_vgg": 0.2105001873875919,
+        "ssim": 0.8426608139376399
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.569887965020467,
+      "lpips_vgg": 0.21077116735671697,
+      "ssim": 0.8413093555890515
+     }
+    }
+   }
+  },
+  "truck-full": {
+   "n_expected": 32,
+   "n_common": 32,
+   "common_view_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+   "identical_view_sets": true,
+   "common_views": [
+    "000001",
+    "000009",
+    "000017",
+    "000025",
+    "000033",
+    "000041",
+    "000049",
+    "000057",
+    "000065",
+    "000073",
+    "000081",
+    "000089",
+    "000097",
+    "000105",
+    "000113",
+    "000121",
+    "000129",
+    "000137",
+    "000145",
+    "000153",
+    "000161",
+    "000169",
+    "000177",
+    "000185",
+    "000193",
+    "000201",
+    "000209",
+    "000217",
+    "000225",
+    "000233",
+    "000241",
+    "000249"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-174943-7a79bd14",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1786",
+       "format": "splat-perf Row per_image",
+       "n_scored": 32,
+       "views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "normalised_views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.279585043787087,
+        "lpips_vgg": 0.15478794649243355,
+        "ssim": 0.8914359064804843
+       }
+      },
+      {
+       "run": "pair-20261008-174944-4dd48e5e",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1780",
+       "format": "splat-perf Row per_image",
+       "n_scored": 32,
+       "views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "normalised_views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.214925010840613,
+        "lpips_vgg": 0.1555526873562485,
+        "ssim": 0.8903516739608286
+       }
+      },
+      {
+       "run": "pair-20261008-174944-5c9cbbdc",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1803",
+       "format": "splat-perf Row per_image",
+       "n_scored": 32,
+       "views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "normalised_views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.279993804870323,
+        "lpips_vgg": 0.15510316379368305,
+        "ssim": 0.8914020853460414
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 25.25816795316601,
+      "lpips_vgg": 0.15514793254745504,
+      "ssim": 0.891063221929118
+     }
+    },
+    "ours": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1781",
+       "format": "splat-perf Row per_image",
+       "n_scored": 32,
+       "views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "normalised_views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.976621263749795,
+        "lpips_vgg": 0.145700205815956,
+        "ssim": 0.8895832089099681
+       }
+      },
+      {
+       "run": 2,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1802",
+       "format": "splat-perf Row per_image",
+       "n_scored": 32,
+       "views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "normalised_views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 26.12838811922306,
+        "lpips_vgg": 0.14393155509606004,
+        "ssim": 0.8905805378074896
+       }
+      },
+      {
+       "run": 3,
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1787",
+       "format": "splat-perf Row per_image",
+       "n_scored": 32,
+       "views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "normalised_views_hash": "2f9857b61b7edcd817e9ba3fd6c6a6b1d03f7a4d9d3bf8ad9591f1e52d149d7a",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 26.15291988464865,
+        "lpips_vgg": 0.1443912808317691,
+        "ssim": 0.8906768841424699
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 26.0859764225405,
+      "lpips_vgg": 0.14467434724792838,
+      "ssim": 0.8902802102866425
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "spirula": {
+   "psnr": {
+    "mean_over_scenes": 26.26794747337484,
+    "per_scene": {
+     "bicycle": 24.713374144505366,
+     "counter": 28.61844335270611,
+     "drjohnson": 28.95401749512906,
+     "garden": 26.410315973752244,
+     "playroom": 29.63261668138095,
+     "train": 20.288696712984127,
+     "truck-full": 25.25816795316601
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.23586159612603633,
+    "per_scene": {
+     "bicycle": 0.2798061085783917,
+     "counter": 0.23184635010030533,
+     "drjohnson": 0.3178163045885587,
+     "garden": 0.16236818649552084,
+     "playroom": 0.3052891006414918,
+     "train": 0.19875718993053101,
+     "truck-full": 0.15514793254745504
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.863886981634589,
+    "per_scene": {
+     "bicycle": 0.7470786400921051,
+     "counter": 0.9155652798459419,
+     "drjohnson": 0.9039708372311349,
+     "garden": 0.8506668959212781,
+     "playroom": 0.9089088711630887,
+     "train": 0.8299551252594575,
+     "truck-full": 0.891063221929118
+    }
+   }
+  },
+  "ours": {
+   "psnr": {
+    "mean_over_scenes": 27.30694062996923,
+    "per_scene": {
+     "bicycle": 25.188058001404276,
+     "counter": 29.54725935139396,
+     "drjohnson": 29.869374252557737,
+     "garden": 27.237853142771765,
+     "playroom": 30.650175274095904,
+     "train": 22.569887965020467,
+     "truck-full": 26.0859764225405
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.22618189164241304,
+    "per_scene": {
+     "bicycle": 0.25129839864330017,
+     "counter": 0.23251587202151616,
+     "drjohnson": 0.3009093549817499,
+     "garden": 0.15281240822690909,
+     "playroom": 0.2902916930187708,
+     "train": 0.21077116735671697,
+     "truck-full": 0.14467434724792838
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8706930201429169,
+    "per_scene": {
+     "bicycle": 0.7669619906020722,
+     "counter": 0.9163095823618645,
+     "drjohnson": 0.9123295087330966,
+     "garden": 0.8531546676769851,
+     "playroom": 0.9145058257507056,
+     "train": 0.8413093555890515,
+     "truck-full": 0.8902802102866425
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "ours": {
+   "a": "spirula",
+   "b": "ours",
+   "metrics": {
+    "psnr": {
+     "mean_delta": 1.0389931565943924,
+     "ci95": [
+      0.728551549612651,
+      1.4902233491845276
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 7,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 7,
+     "positive_scenes": 7,
+     "scenes": [
+      {
+       "scene": "bicycle",
+       "delta": 0.4746838568989098,
+       "a": 24.713374144505366,
+       "b": 25.188058001404276,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 23,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "counter",
+       "delta": 0.9288159986878526,
+       "a": 28.61844335270611,
+       "b": 29.54725935139396,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "drjohnson",
+       "delta": 0.9153567574286754,
+       "a": 28.95401749512906,
+       "b": 29.869374252557737,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 33,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "garden",
+       "delta": 0.8275371690195215,
+       "a": 26.410315973752244,
+       "b": 27.237853142771765,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 22,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "playroom",
+       "delta": 1.0175585927149555,
+       "a": 29.63261668138095,
+       "b": 30.650175274095904,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 29,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "train",
+       "delta": 2.28119125203634,
+       "a": 20.288696712984127,
+       "b": 22.569887965020467,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 38,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "truck-full",
+       "delta": 0.8278084693744923,
+       "a": 25.25816795316601,
+       "b": 26.0859764225405,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 32,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "lpips_vgg": {
+     "mean_delta": -0.00967970448362328,
+     "ci95": [
+      -0.01825223317982112,
+      -0.0006783830426246902
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 5,
+      "=": 0,
+      "L": 2
+     },
+     "n_scenes": 7,
+     "positive_scenes": 5,
+     "scenes": [
+      {
+       "scene": "bicycle",
+       "delta": -0.028507709935091552,
+       "a": 0.2798061085783917,
+       "b": 0.25129839864330017,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 23,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "counter",
+       "delta": 0.0006695219212108361,
+       "a": 0.23184635010030533,
+       "b": 0.23251587202151616,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "drjohnson",
+       "delta": -0.016906949606808774,
+       "a": 0.3178163045885587,
+       "b": 0.3009093549817499,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 33,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "garden",
+       "delta": -0.009555778268611759,
+       "a": 0.16236818649552084,
+       "b": 0.15281240822690909,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 22,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "playroom",
+       "delta": -0.014997407622721004,
+       "a": 0.3052891006414918,
+       "b": 0.2902916930187708,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 29,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "train",
+       "delta": 0.012013977426185957,
+       "a": 0.19875718993053101,
+       "b": 0.21077116735671697,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 38,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "truck-full",
+       "delta": -0.010473585299526661,
+       "a": 0.15514793254745504,
+       "b": 0.14467434724792838,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 32,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": 0.00680603850832768,
+     "ci95": [
+      0.0023295585861451257,
+      0.01204835669612441
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 5,
+      "=": 2,
+      "L": 0
+     },
+     "n_scenes": 7,
+     "positive_scenes": 6,
+     "scenes": [
+      {
+       "scene": "bicycle",
+       "delta": 0.019883350509967035,
+       "a": 0.7470786400921051,
+       "b": 0.7669619906020722,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 23,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "counter",
+       "delta": 0.0007443025159226124,
+       "a": 0.9155652798459419,
+       "b": 0.9163095823618645,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "drjohnson",
+       "delta": 0.008358671501961679,
+       "a": 0.9039708372311349,
+       "b": 0.9123295087330966,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 33,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "garden",
+       "delta": 0.0024877717557070245,
+       "a": 0.8506668959212781,
+       "b": 0.8531546676769851,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 22,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "playroom",
+       "delta": 0.005596954587616887,
+       "a": 0.9089088711630887,
+       "b": 0.9145058257507056,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 29,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "train",
+       "delta": 0.01135423032959404,
+       "a": 0.8299551252594575,
+       "b": 0.8413093555890515,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 38,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "truck-full",
+       "delta": -0.0007830116424755174,
+       "a": 0.891063221929118,
+       "b": 0.8902802102866425,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 32,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    }
+   }
+  }
+ }
+}

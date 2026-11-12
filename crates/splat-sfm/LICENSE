@@ -1,0 +1,64 @@
+# Vauss Preview License
+
+Copyright © 2026 Nullframe, Inc. All rights reserved except as granted below.
+
+Vauss is source-available. It is free to use during the research preview, including for commercial work. It is not open source.
+
+"Vauss" means the software and source code this license comes with, in this version. "You" means the person or organization using Vauss, including any AI agents acting for you.
+
+## What you may do
+
+You may, free of charge:
+
+- use Vauss for any purpose, including commercial work and use inside a company of any size;
+- use your AI agents to operate Vauss for you;
+- modify Vauss for your own use;
+- share unmodified copies of Vauss with this license and all notices intact.
+
+If your use of Vauss would otherwise infringe a patent we own or control, we license that patent to you for the use this license allows. This patent license ends if you bring a patent claim alleging that Vauss infringes a patent.
+
+## What you make is yours
+
+We claim no rights in the scenes, code or media you create with Vauss. Any assets you use keep their own terms.
+
+## What you may not do
+
+Without our prior written permission, you may not:
+
+- sell, rent, license, relicense or sublicense Vauss or a modified version of it, or distribute a modified version;
+- offer Vauss or a modified version as a hosted or managed service in which other people submit scenes, code or jobs to be rendered;
+- remove or change this license or any copyright notices.
+
+Rendering for your own organization, and delivering the finished media to a client, is allowed and isn't a hosted service.
+
+## This version only
+
+This license covers this version of Vauss only. Later versions may come under different terms, including paid terms. A change in later versions doesn't take away your rights under this license to the version you already have.
+
+## Contributions
+
+If you send us a contribution, you confirm you have the right to do so, and you grant us a perpetual, irrevocable, worldwide, royalty-free right to use, modify, distribute and license it under any terms, including commercial terms. We don't have to accept contributions.
+
+## Third-party components
+
+This license applies only to original Vauss code that is not separately licensed. It does not replace, restrict or relicense third-party code or the rights granted under its licenses.
+
+The Brush-derived crates in `crates/splat-train*` remain under Apache-2.0, including their modifications. The Depth Anything 3 / DINOv2 port in `crates/splat-sfm-learned` remains under Apache-2.0, with its JPEG implementation under the Independent JPEG Group license. The camp_zipnerf-derived `crates/splat-eval/src/color.rs` remains under Apache-2.0. Code and per-scene configurations derived from nerficg-project/efficient-gaussian-appearance (Compact Neural Appearance Models), identified by upstream attribution headers or NOTICE, also remain Apache-2.0. These components are excluded from this Preview License; their local license files and notices apply.
+
+Vendored CubeCL components in `vendor/cubecl-common` and `vendor/cubecl-wgpu` remain MIT OR Apache-2.0. Burn, wgpu, other dependencies, bundled runtime tools, model weights, examples and any other separately licensed components retain their own terms. See NOTICE, per-component license files, and the release archive's THIRD_PARTY_LICENSES.txt and tools/ notices.
+
+## Ending this license
+
+If you break these terms, your rights under this license end automatically. They come back if you fix the breach within 30 days of learning about it, unless you've already broken these terms before.
+
+## No warranty
+
+VAUSS IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+
+## No liability
+
+TO THE MAXIMUM EXTENT THE LAW ALLOWS, THE COPYRIGHT HOLDERS AND CONTRIBUTORS ARE NOT LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM OR CONNECTED WITH VAUSS OR ITS USE.
+
+## Questions and permissions
+
+Contact support@voyager.so for permissions, including hosted services and other uses this license doesn't cover.

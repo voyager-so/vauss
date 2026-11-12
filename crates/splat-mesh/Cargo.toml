@@ -1,0 +1,20 @@
+[package]
+name = "splat-mesh"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+description = "Mesh extraction from rendered splat views: sparse TSDF fusion, marching cubes, cleanup, decimation, GLB/PLY export."
+
+# Licenses: glam MIT/Apache-2.0, rayon MIT/Apache-2.0, hashbrown MIT/Apache-2.0, image MIT/Apache-2.0,
+# anyhow MIT/Apache-2.0, serde_json MIT/Apache-2.0.
+[dependencies]
+anyhow.workspace = true
+glam.workspace = true
+rayon.workspace = true
+hashbrown.workspace = true
+image.workspace = true
+serde_json.workspace = true
+gltf.workspace = true
+
+[dev-dependencies]
+splat-brush.workspace = true

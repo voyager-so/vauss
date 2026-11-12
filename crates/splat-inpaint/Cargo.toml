@@ -1,0 +1,27 @@
+[package]
+name = "splat-inpaint"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+image.workspace = true
+glam.workspace = true
+# half (MIT/Apache-2.0): fp16 tensors for the SD-1.5 ONNX export; ort's `half` feature.
+ort = { workspace = true, features = ["half"] }
+half = "2"
+regex.workspace = true
+libc.workspace = true
+burn.workspace = true
+burn-wgpu.workspace = true
+brush-train.workspace = true
+brush-dataset.workspace = true
+brush-render.workspace = true
+brush-serde.workspace = true
+brush-vfs.workspace = true
+splat-eval.workspace = true
+splat-fetch.workspace = true

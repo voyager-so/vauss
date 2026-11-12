@@ -1,0 +1,624 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "X5 DEV kitchen+room: neural+tail vs SH3, seeds 1/2/3",
+ "argv": [
+  "--arm",
+  "sh=runs/capacity-*-s[123]-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+  "--arm",
+  "neural_tail=runs/capacity-*-s[123]-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+  "--label",
+  "X5 DEV kitchen+room: neural+tail vs SH3, seeds 1/2/3",
+  "--json",
+  "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools/verified/x5-dev-kitchen-room.json"
+ ],
+ "cwd": "$SPLAT_DATA/research/x5b",
+ "generated_at": "2026-10-08T22:05:07-07:00",
+ "verifier_sha256": "3c70e4841f9909188590fe4a19827f4e4d9f12cc45b03719f7c9088e54930b7d",
+ "verifier_git_head": "historical-build-002",
+ "options": {
+  "common_views": false,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "sh": {
+   "specs": [
+    {
+     "glob": "runs/capacity-*-s[123]-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-kitchen-s1-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+     "sha256": "d9daed82377c525f046dbc1807a7867cfca5ba270a9533f743a3d7338622fa51"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-kitchen-s2-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+     "sha256": "4ac127a2cb63f6fd4fd7d006cb13b217410a8710f7451fe58f0c64a056a07b9b"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-kitchen-s3-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+     "sha256": "5aade3baef4c8e3938d2de92d6c22f2dc0c9eb9050365f604c2a65698073a2ff"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-room-s1-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+     "sha256": "f3f8cae57db159316e9a1872a3cb2ba7383b1320bfafdbdc312cf653675ceb9d"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-room-s2-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+     "sha256": "87733f1b8269fe2478872c23b0a0d6e7448ed85113149b3a119752fa6dc19a26"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-room-s3-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+     "sha256": "cb6799234435b854693c3661e4b2b6cc38167a76b3bb7a7ee7489312f6534e3a"
+    }
+   ]
+  },
+  "neural_tail": {
+   "specs": [
+    {
+     "glob": "runs/capacity-*-s[123]-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-kitchen-s1-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+     "sha256": "5c854fe8b8b0690b4cafb0335cbead024812366ff79b6f1a7bd3f61a78ab2989"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-kitchen-s2-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+     "sha256": "9a6940867226e19f6ccb66fb42e750793b6a5b3733d94c22f9d0d4f6c1db74f5"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-kitchen-s3-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+     "sha256": "d9673ae7cdfa3b08301814e484cc20749c9100e5ed70a2252321b007b34ec1d9"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-room-s1-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+     "sha256": "2cc960371a56efb6c2a5ae8f9a9c3d32bfa40fe6c95ae323eba33da1e1e9816e"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-room-s2-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+     "sha256": "0dc4d7132a428fb599d16308e6b1c78d89da0ad2f34ee699bed52a010993991c"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-room-s3-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+     "sha256": "c268cf1335fcf71246c179dd20fccc2408d79657b432acd3fa13b400c076e0f1"
+    }
+   ]
+  }
+ },
+ "notes": [
+  "metric lpips_alex absent from some views in 2 scene(s) (kitchen, room); not reported for those"
+ ],
+ "per_scene": {
+  "kitchen": {
+   "n_expected": 35,
+   "n_common": 35,
+   "common_view_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF0656",
+    "DSCF0664",
+    "DSCF0672",
+    "DSCF0680",
+    "DSCF0688",
+    "DSCF0696",
+    "DSCF0704",
+    "DSCF0712",
+    "DSCF0720",
+    "DSCF0728",
+    "DSCF0736",
+    "DSCF0744",
+    "DSCF0752",
+    "DSCF0760",
+    "DSCF0768",
+    "DSCF0776",
+    "DSCF0784",
+    "DSCF0792",
+    "DSCF0800",
+    "DSCF0808",
+    "DSCF0816",
+    "DSCF0824",
+    "DSCF0832",
+    "DSCF0840",
+    "DSCF0848",
+    "DSCF0856",
+    "DSCF0864",
+    "DSCF0872",
+    "DSCF0880",
+    "DSCF0888",
+    "DSCF0896",
+    "DSCF0904",
+    "DSCF0912",
+    "DSCF0920",
+    "DSCF0928"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "sh": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "runs/capacity-kitchen-s1-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.30778530665806,
+        "ssim": 0.934343445301056,
+        "lpips_vgg": 0.15194584897586277
+       }
+      },
+      {
+       "run": 2,
+       "source": "runs/capacity-kitchen-s2-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.41323149544852,
+        "ssim": 0.9346768634659903,
+        "lpips_vgg": 0.15059724662985122
+       }
+      },
+      {
+       "run": 3,
+       "source": "runs/capacity-kitchen-s3-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.256725093296595,
+        "ssim": 0.9340841106006077,
+        "lpips_vgg": 0.15193544647523335
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.3259139651344,
+      "ssim": 0.934368139789218,
+      "lpips_vgg": 0.1514928473603158
+     }
+    },
+    "neural_tail": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "runs/capacity-kitchen-s1-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.11518434797014,
+        "ssim": 0.937575592313494,
+        "lpips_vgg": 0.14603532126971652
+       }
+      },
+      {
+       "run": 2,
+       "source": "runs/capacity-kitchen-s2-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.18575581141881,
+        "ssim": 0.9379322988646371,
+        "lpips_vgg": 0.14512965146984372
+       }
+      },
+      {
+       "run": 3,
+       "source": "runs/capacity-kitchen-s3-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.90040501185826,
+        "ssim": 0.9380294510296413,
+        "lpips_vgg": 0.14487209639378956
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 33.0671150570824,
+      "ssim": 0.9378457807359242,
+      "lpips_vgg": 0.14534568971111658
+     }
+    }
+   }
+  },
+  "room": {
+   "n_expected": 39,
+   "n_common": 39,
+   "common_view_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF4667",
+    "DSCF4675",
+    "DSCF4683",
+    "DSCF4691",
+    "DSCF4699",
+    "DSCF4707",
+    "DSCF4715",
+    "DSCF4723",
+    "DSCF4731",
+    "DSCF4739",
+    "DSCF4747",
+    "DSCF4755",
+    "DSCF4763",
+    "DSCF4771",
+    "DSCF4779",
+    "DSCF4787",
+    "DSCF4795",
+    "DSCF4803",
+    "DSCF4811",
+    "DSCF4819",
+    "DSCF4827",
+    "DSCF4835",
+    "DSCF4843",
+    "DSCF4851",
+    "DSCF4859",
+    "DSCF4867",
+    "DSCF4875",
+    "DSCF4883",
+    "DSCF4891",
+    "DSCF4899",
+    "DSCF4907",
+    "DSCF4915",
+    "DSCF4923",
+    "DSCF4931",
+    "DSCF4939",
+    "DSCF4947",
+    "DSCF4955",
+    "DSCF4963",
+    "DSCF4971"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "sh": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "runs/capacity-room-s1-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.07658351996006,
+        "ssim": 0.9334682485996149,
+        "lpips_vgg": 0.26647463555519396
+       }
+      },
+      {
+       "run": 2,
+       "source": "runs/capacity-room-s2-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.066619481795875,
+        "ssim": 0.9340087954814618,
+        "lpips_vgg": 0.265951068737568
+       }
+      },
+      {
+       "run": 3,
+       "source": "runs/capacity-room-s3-cap2500000-aa0-tail0-d0-t1/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.99108940515763,
+        "ssim": 0.9340087526883835,
+        "lpips_vgg": 0.2659951906937819
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 33.044764135637855,
+      "ssim": 0.9338285989231534,
+      "lpips_vgg": 0.26614029832884795
+     }
+    },
+    "neural_tail": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 1,
+       "source": "runs/capacity-room-s1-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.602434598482574,
+        "ssim": 0.9371243913968405,
+        "lpips_vgg": 0.2590792706379524
+       }
+      },
+      {
+       "run": 2,
+       "source": "runs/capacity-room-s2-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.41399041200295,
+        "ssim": 0.9370422653662853,
+        "lpips_vgg": 0.2591288085931387
+       }
+      },
+      {
+       "run": 3,
+       "source": "runs/capacity-room-s3-cap2500000-aa0-tail0-d0-t1/neural_tail/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.43165969848633,
+        "ssim": 0.936908197708619,
+        "lpips_vgg": 0.2586013777897908
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 33.48269490299062,
+      "ssim": 0.9370249514905816,
+      "lpips_vgg": 0.2589364856736273
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "sh": {
+   "psnr": {
+    "mean_over_scenes": 32.685339050386126,
+    "per_scene": {
+     "kitchen": 32.3259139651344,
+     "room": 33.044764135637855
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.9340983693561857,
+    "per_scene": {
+     "kitchen": 0.934368139789218,
+     "room": 0.9338285989231534
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.20881657284458188,
+    "per_scene": {
+     "kitchen": 0.1514928473603158,
+     "room": 0.26614029832884795
+    }
+   }
+  },
+  "neural_tail": {
+   "psnr": {
+    "mean_over_scenes": 33.27490498003651,
+    "per_scene": {
+     "kitchen": 33.0671150570824,
+     "room": 33.48269490299062
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.9374353661132528,
+    "per_scene": {
+     "kitchen": 0.9378457807359242,
+     "room": 0.9370249514905816
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.20214108769237193,
+    "per_scene": {
+     "kitchen": 0.14534568971111658,
+     "room": 0.2589364856736273
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "neural_tail": {
+   "a": "sh",
+   "b": "neural_tail",
+   "metrics": {
+    "psnr": {
+     "mean_delta": 0.5895659296503837,
+     "ci95": [
+      0.4379307673527677,
+      0.7412010919479997
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 2,
+     "positive_scenes": 2,
+     "scenes": [
+      {
+       "scene": "kitchen",
+       "delta": 0.7412010919479997,
+       "a": 32.3259139651344,
+       "b": 33.0671150570824,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 35,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": 0.8073990413120811,
+        "2": 0.772524315970287,
+        "3": 0.6436799185616664
+       },
+       "seed_sd": 0.08623715012048798
+      },
+      {
+       "scene": "room",
+       "delta": 0.4379307673527677,
+       "a": 33.044764135637855,
+       "b": 33.48269490299062,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 39,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": 0.5258510785225141,
+        "2": 0.3473709302070773,
+        "3": 0.44057029332869746
+       },
+       "seed_sd": 0.08926934613129137
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": 0.003336996757067223,
+     "ci95": [
+      0.003196352567428229,
+      0.0034776409467062175
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 2,
+     "positive_scenes": 2,
+     "scenes": [
+      {
+       "scene": "kitchen",
+       "delta": 0.0034776409467062175,
+       "a": 0.934368139789218,
+       "b": 0.9378457807359242,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 35,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": 0.0032321470124380136,
+        "2": 0.003255435398646811,
+        "3": 0.003945340429033606
+       },
+       "seed_sd": 0.00040520697373081416
+      },
+      {
+       "scene": "room",
+       "delta": 0.003196352567428229,
+       "a": 0.9338285989231534,
+       "b": 0.9370249514905816,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 39,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": 0.003656142797225592,
+        "2": 0.0030334698848235586,
+        "3": 0.002899445020235536
+       },
+       "seed_sd": 0.00040378949669944806
+      }
+     ]
+    },
+    "lpips_vgg": {
+     "mean_delta": -0.00667548515220992,
+     "ci95": [
+      -0.007203812655220632,
+      -0.006147157649199209
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 2,
+     "positive_scenes": 2,
+     "scenes": [
+      {
+       "scene": "kitchen",
+       "delta": -0.006147157649199209,
+       "a": 0.1514928473603158,
+       "b": 0.14534568971111658,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 35,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": -0.005910527706146251,
+        "2": -0.005467595160007499,
+        "3": -0.007063350081443792
+       },
+       "seed_sd": 0.0008237740829766145
+      },
+      {
+       "scene": "room",
+       "delta": -0.007203812655220632,
+       "a": 0.26614029832884795,
+       "b": 0.2589364856736273,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 39,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "1": -0.007395364917241576,
+        "2": -0.006822260144429326,
+        "3": -0.007393812903991104
+       },
+       "seed_sd": 0.0003304350784264066
+      }
+     ]
+    }
+   }
+  }
+ }
+}

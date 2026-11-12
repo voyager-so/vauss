@@ -1,0 +1,50 @@
+{
+ "claim_group": "q1-heldout-historical-build-096",
+ "overall": "MATCH",
+ "ab": {
+  "match": true,
+  "checks_issues": 0,
+  "primary": "PARITY F3/S1 (horse SLOWER)",
+  "robust": "PARITY F3/S1",
+  "readings": {
+   "i_as_reported": "PARITY/PARITY",
+   "ii_flagged_excluded_both_arms": "PARITY/PARITY (london gsplat*=600k FASTER 0.174 3/3)",
+   "iii_london_excluded": "PARITY F2/S1",
+   "iv_median": "PARITY/PARITY"
+  },
+  "registered_reading": "(i) disclosed-not-excluded per rule:competitor-recipe-source(3); collapse rule v2 bound to CoMo/b1c groups; all readings agree",
+  "collapse": {
+   "trigger": "GT-free gsplat log Relocated/cap>0.5 after 5k",
+   "flagged": [
+    "london s1/s2/s3 A 3M (0.995-0.996)",
+    "london s2 C (0.986)"
+   ],
+   "others_max": 0.223
+  }
+ },
+ "d": {
+  "match": true,
+  "primary_R1": "PARITY F3/S1 (london cap3m SLOWER: ours best DEV 0.2968 > Spirula 0.2823)",
+  "robust_R1": "PARITY F2/T1/S1",
+  "R2": "m60 dropped; PARITY on 3 present scenes (pending 3/4)",
+  "literal_590_rule": "PARITY (m60 TIE)",
+  "unhealthy_R1": 0,
+  "drivers": {
+   "590.48.01": "tnt-m60 seed1 group (L40S, EPYC 9354)",
+   "610.57.04": "other 11 groups"
+  },
+  "rtx_pro_spirula_arms": 0
+ },
+ "c_rerun": {
+  "affects_ABD": false,
+  "note": "report Part C table stale: tnt-family n=2 vs 3 now"
+ },
+ "gaps": [
+  "Part D rows lack splat_perf git sha (binding only in launch log)",
+  "no health metric for our arm",
+  "no documented gsplat london recipe re-check",
+  "Part C table stale",
+  "partD_verdict R1 lacks amendment-2 <15dB floor (no effect)",
+  "Spirula has no seed arg; seed variance = nondeterminism"
+ ]
+}

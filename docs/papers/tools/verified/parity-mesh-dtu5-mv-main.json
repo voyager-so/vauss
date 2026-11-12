@@ -1,0 +1,378 @@
+{
+ "claim": "parity-mesh-dtu5-mv-main-v1",
+ "verified_at": "2026-10-24",
+ "verifier": "parity-mesh lane recompute from raw per-run rows (CPU only), plus an independent Codex recompute (see independent_recompute). Not yet a publications pass.",
+ "class": "PROVISIONAL (3 seeds 42/7/43, reused from earlier DTU work: dev-only; DTU is non-commercial research data)",
+ "sources": {
+  "evidence_root": "$SPLAT_DATA/research/parity-mesh-dtu5",
+  "rows": "$SPLAT_DATA/research/parity-mesh-dtu5/runs/s<seed>-scan<scan>/{train/<on|off>/train/metrics.json, score/<on|off>/score/g1result.json}; no-harm $SPLAT_DATA/research/parity-mesh-dtu5/runs/nh-{kitchen,room}/g1nh.json",
+  "registry": "archived study registry (not distributed) parity-mesh-dtu5-mv-main-v1 (registration + launch amendment, both before any row; provenance amendment 2026-10-24)",
+  "analysis": "$SPLAT_DATA/research/parity-mesh-dtu5/analyze.py -> $SPLAT_DATA/research/parity-mesh-dtu5/analysis.json",
+  "inputs_sha256_keys": "each key is a path relative to evidence_root ('runs/...')"
+ },
+ "binary": {
+  "build": "historical source archive historical-build-006, cargo build --release -p splat-cli, per-worktree target dir (oss-target-parity-mesh, built only from this worktree)",
+  "sha256": "65ef40c8d5c55242b442ea1abeabb97891d040f44461c362147225b9630ae496",
+  "frames_hash": "65ef40c8d5c5"
+ },
+ "protocol": "DTU 24/37/40/55/63, 49 views, 800x600, 30k, 3M max splats, surfel mesh-goal (apply_surfel_defaults). ON = main defaults (MV geo .03 ncc .15, every 3rd step x3). OFF = config_overrides surfel-mv-geo-weight 0, surfel-mv-ncc-weight 0. Both arms trained back to back in ONE fal exec per (scan, seed) on the same RTX PRO 6000 runner, order rotated by seed. Arm A = product TSDF mesh (no mask); arm C = official 2DGS extraction (object mask, keep-1, per-scan unit-converted voxel/trunc/cut). Each scored with the B15 scorer and the official 2DGS scorer (hbb1 f3e3b9f scripts/eval_dtu). Harness = G1's catchup.py (sha256 146755c2...) + run_dtu_g1.py (f74c7dd4...), recovered from fal /data blobs by hash.",
+ "statistics_verdict": "Registered MV gate (per-seed 5-scan ON-OFF means, n=3, mean beyond 2*SD, all seeds < 0) PASSES on arm C and arm A, on both scorers. Row 5: ON arm C 3-seed mean 0.5893 (B15) / 0.5882 (official) vs official 2DGS 0.6020 / 0.6017 = -0.013 / -0.014 mm: PARITY under the g1-mesh-catchup band rule (within +/-0.05; band-based, not a statistical equivalence claim); 4/5 scans better by point estimate (scan 37 only by 0.0003 / 0.0006 mm); scan 40 worse by +0.043 (B15) / +0.045 (official). Default decision: KEEP as a PROVISIONAL default on the registered dev pass, pending the internal held-out-scene (sealed generalisation) gate; generalisation beyond the dev scenes is NOT verified, and the garden-1M landing-memory condition is not established.",
+ "gate_recompute": {
+  "A_b15": {
+   "d_seeds_42_7_43": [
+    -0.1135,
+    -0.0886,
+    -0.0964
+   ],
+   "mean": -0.0995,
+   "two_sd": 0.0254,
+   "all_seeds_negative": true,
+   "registered_rule_pass": true,
+   "per_scan_3seed_delta": {
+    "24": -0.0686,
+    "37": -0.0646,
+    "40": -0.0872,
+    "55": -0.0894,
+    "63": -0.1878
+   }
+  },
+  "A_off": {
+   "d_seeds_42_7_43": [
+    -0.1058,
+    -0.0788,
+    -0.0865
+   ],
+   "mean": -0.0904,
+   "two_sd": 0.0278,
+   "all_seeds_negative": true,
+   "registered_rule_pass": true,
+   "per_scan_3seed_delta": {
+    "24": -0.0648,
+    "37": -0.045,
+    "40": -0.0729,
+    "55": -0.0879,
+    "63": -0.1811
+   }
+  },
+  "C_b15": {
+   "d_seeds_42_7_43": [
+    -0.0798,
+    -0.0641,
+    -0.0681
+   ],
+   "mean": -0.0707,
+   "two_sd": 0.0164,
+   "all_seeds_negative": true,
+   "registered_rule_pass": true,
+   "per_scan_3seed_delta": {
+    "24": -0.0629,
+    "37": -0.0054,
+    "40": -0.0488,
+    "55": -0.0639,
+    "63": -0.1723
+   }
+  },
+  "C_off": {
+   "d_seeds_42_7_43": [
+    -0.0802,
+    -0.0635,
+    -0.0668
+   ],
+   "mean": -0.0702,
+   "two_sd": 0.0176,
+   "all_seeds_negative": true,
+   "registered_rule_pass": true,
+   "per_scan_3seed_delta": {
+    "24": -0.0629,
+    "37": -0.0055,
+    "40": -0.0484,
+    "55": -0.0631,
+    "63": -0.1709
+   }
+  }
+ },
+ "three_seed_means_mm": {
+  "A_b15": {
+   "on": 0.6669,
+   "off": 0.7664,
+   "on_per_seed": {
+    "42": 0.6634,
+    "7": 0.6699,
+    "43": 0.6674
+   },
+   "off_per_seed": {
+    "42": 0.7769,
+    "7": 0.7585,
+    "43": 0.7637
+   },
+   "on_per_scan": {
+    "24": 0.52,
+    "37": 0.9969,
+    "40": 0.4497,
+    "55": 0.4379,
+    "63": 0.9299
+   },
+   "off_per_scan": {
+    "24": 0.5886,
+    "37": 1.0615,
+    "40": 0.5368,
+    "55": 0.5273,
+    "63": 1.1176
+   }
+  },
+  "A_official": {
+   "on": 0.5948,
+   "off": 0.6851,
+   "on_per_seed": {
+    "42": 0.5903,
+    "7": 0.5987,
+    "43": 0.5953
+   },
+   "off_per_seed": {
+    "42": 0.6961,
+    "7": 0.6775,
+    "43": 0.6818
+   },
+   "on_per_scan": {
+    "24": 0.462,
+    "37": 0.847,
+    "40": 0.3706,
+    "55": 0.3809,
+    "63": 0.9134
+   },
+   "off_per_scan": {
+    "24": 0.5269,
+    "37": 0.8921,
+    "40": 0.4435,
+    "55": 0.4688,
+    "63": 1.0945
+   }
+  },
+  "C_b15": {
+   "on": 0.5893,
+   "off": 0.6599,
+   "on_per_seed": {
+    "42": 0.5863,
+    "7": 0.592,
+    "43": 0.5895
+   },
+   "off_per_seed": {
+    "42": 0.6661,
+    "7": 0.6561,
+    "43": 0.6575
+   },
+   "on_per_scan": {
+    "24": 0.4611,
+    "37": 0.8035,
+    "40": 0.3983,
+    "55": 0.3972,
+    "63": 0.8862
+   },
+   "off_per_scan": {
+    "24": 0.524,
+    "37": 0.8089,
+    "40": 0.447,
+    "55": 0.4611,
+    "63": 1.0585
+   }
+  },
+  "C_official": {
+   "on": 0.5882,
+   "off": 0.6583,
+   "on_per_seed": {
+    "42": 0.5852,
+    "7": 0.591,
+    "43": 0.5884
+   },
+   "off_per_seed": {
+    "42": 0.6653,
+    "7": 0.6545,
+    "43": 0.6552
+   },
+   "on_per_scan": {
+    "24": 0.4611,
+    "37": 0.8032,
+    "40": 0.3983,
+    "55": 0.3923,
+    "63": 0.886
+   },
+   "off_per_scan": {
+    "24": 0.5241,
+    "37": 0.8087,
+    "40": 0.4466,
+    "55": 0.4554,
+    "63": 1.0569
+   }
+  }
+ },
+ "parity_vs_official_2dgs": {
+  "rule": "g1-dtu5-mesh-catchup-v1: arm C 5-scan mean (here 3 seeds) minus official; BEHIND > +0.05, PARITY within +/-0.05, AHEAD < -0.05 and better on >= 3/5; less favourable scorer quoted",
+  "result": "PARITY",
+  "quoted": "b15: -0.0127 mm (less favourable)",
+  "per_scorer": {
+   "b15": {
+    "ours_C_on_3seed": 0.5893,
+    "official_2dgs": 0.602,
+    "delta_mm": -0.0127,
+    "scans_better": 4,
+    "per_scan_delta": {
+     "24": -0.0383,
+     "37": -0.0003,
+     "40": 0.0434,
+     "55": -0.0091,
+     "63": -0.0593
+    }
+   },
+   "official": {
+    "ours_C_on_3seed": 0.5882,
+    "official_2dgs": 0.6017,
+    "delta_mm": -0.0136,
+    "scans_better": 4,
+    "per_scan_delta": {
+     "24": -0.0383,
+     "37": -0.0006,
+     "40": 0.0445,
+     "55": -0.0139,
+     "63": -0.0595
+    }
+   }
+  },
+  "official_reference": "research/vmesh/official-v6-results.json (official 2DGS hbb1 f3e3b9f, run by us, single seed 0)"
+ },
+ "no_harm": {
+  "rule": "M360 kitchen + room, seed 42, 30k, 800 px, every-8th held out, MV on vs off same runner; held-out PSNR on-off >= -0.3 dB on both",
+  "result": "PASS",
+  "kitchen": {
+   "heldout_psnr_on": 30.9339,
+   "heldout_psnr_off": 31.107,
+   "d_db": -0.1731,
+   "training_s": [
+    429,
+    354
+   ],
+   "peak_vram_gb": [
+    4.01,
+    3.08
+   ],
+   "triangles": [
+    1499999,
+    1500000
+   ],
+   "n_views": 279,
+   "n_held": 35
+  },
+  "room": {
+   "heldout_psnr_on": 31.2129,
+   "heldout_psnr_off": 30.9587,
+   "d_db": 0.2542,
+   "training_s": [
+    325,
+    246
+   ],
+   "peak_vram_gb": [
+    4.09,
+    3.14
+   ],
+   "triangles": [
+    1500000,
+    1500000
+   ],
+   "n_views": 311,
+   "n_held": 39
+  },
+  "garden_1m_memory_line": "NOT RUN (disclosed per registration)"
+ },
+ "cost": {
+  "dtu_train_s_mean_on": 473,
+  "dtu_train_s_mean_off": 413,
+  "dtu_train_ratio": 1.143,
+  "dtu_peak_vram_gb_on": 3.76,
+  "dtu_peak_vram_gb_off": 2.73,
+  "note": "paired same-runner; peak VRAM = nvidia-smi peak during the exec step"
+ },
+ "identity": "30/30 trainings exit 0 (15 execs x 2 arms); every g1result.json scan/seed/tag/frames hash matches its path (asserted in analyze.py); all 15 ON train logs print 'Multi-view on at 7002: geo 0.03 ncc 0.15 samples 102400 every 3', all 15 OFF logs print both 'config override applied: surfel-mv-*-weight = 0.0' and no multi-view line. GPUs: RTX PRO 6000 Blackwell on every run; runner drivers mixed across execs (580.126 x5, 590.48 x1, 610.43 x5, 610.57 x3, 615.71 x1); both arms of a pair share one runner.",
+ "deviations": [
+  "seeds 42/7/43 reused from earlier DTU work (dev-only, never a held-out claim)",
+  "official 2DGS reference is a single seed (seed 0) against our 3-seed mean",
+  "garden-1M mesh-mode memory line not run",
+  "inputs differ from official 2DGS (ours 800x600 full frame; official 777x581 author crops), as in row 5",
+  "M360 licence marked 'unstated -> dev-only until confirmed' in the fairness checklist (historical-build-026); the no-harm scenes are the registered ones but are not a confirmed commercial-data pass",
+  "first scoring round (5 execs) failed in the wrapper (missing output dir), no rows produced; rescored, ~$0.05 lost",
+  "registered pm_pair.sh pin (v1) never ran; v2/v3 mapping in harness_versions",
+  "spend ($27.07) is from the fal spend ledger, not derivable from the rows"
+ ],
+ "cost_usd": 27.07,
+ "inputs_sha256": {
+  "runs/s42-scan24/score/off/score/g1result.json": "a7388ee44492a069594b5725fdc95b80bde2b2f1e49d47af482dbf65af7286bc",
+  "runs/s42-scan24/score/on/score/g1result.json": "6bc9bc4dfbb7a679ede04d037694d7e7b3da46abe4c6006aa90659c63676d682",
+  "runs/s42-scan37/score/off/score/g1result.json": "e419171a62be03b56bd4e9123c06e859d58e4a6752b5a4ed4fa92d2f8c295fd6",
+  "runs/s42-scan37/score/on/score/g1result.json": "3673e680703f8538e59599380d358906f2267da763353f818cfcb714c82b839b",
+  "runs/s42-scan40/score/off/score/g1result.json": "77a10ece307b6ae3574b98c34a82def5488d3f7e045ffe11179d920a8adbf17e",
+  "runs/s42-scan40/score/on/score/g1result.json": "5b419996e6be7a6bdb426f63415ffe7c0dfd34a0a79db7010a613115790d5b88",
+  "runs/s42-scan55/score/off/score/g1result.json": "79533c6cf94ba26a8e2368c3ec93601b10effb69c694195af32af1845f0f7776",
+  "runs/s42-scan55/score/on/score/g1result.json": "a2a5554d1fc96fe0e3f8a48a631ee537f7494cebad2418cfa4bf5db6beebb649",
+  "runs/s42-scan63/score/off/score/g1result.json": "eba55997d17a3325ccca9f3b13042f2d0000fcdaea6e455046d77dd2bfeb0ce9",
+  "runs/s42-scan63/score/on/score/g1result.json": "051ab10691c81ed123984e9f6acd0ae5e5e05f216b2ab96ea3f45a0d9f050d0b",
+  "runs/s43-scan24/score/off/score/g1result.json": "5d20efde7cb3aefdc27591f74bbba0658983e71c5e82112d207a9e29dccec2fd",
+  "runs/s43-scan24/score/on/score/g1result.json": "088cfbf84f4a4b6fae2202fd0c1fd6d01e4911ca7b2f57cda260bab70bf4a813",
+  "runs/s43-scan37/score/off/score/g1result.json": "ba6c5a6ea62e6fb41df15bc4abca88bd59c4ae135b6fd8ae4eaf5f64586cd832",
+  "runs/s43-scan37/score/on/score/g1result.json": "44f8f358e29f876513f5f27647f0f5fb5694a89557e033bf91419160504187b9",
+  "runs/s43-scan40/score/off/score/g1result.json": "4d494327fb7e916051c87d919a08ce6c8530f087038b6e775ee92bbb69529f2d",
+  "runs/s43-scan40/score/on/score/g1result.json": "71d3586c556f96493a7d9b8eedc6f52a542572effba6f796eb0e47af761c9ec3",
+  "runs/s43-scan55/score/off/score/g1result.json": "c272cee32c6c7a8d4e33e95cdcc86a84e0aeabb261d941ac43e618fa022571fd",
+  "runs/s43-scan55/score/on/score/g1result.json": "cc981c426de33945fa376a8bcec3a50e376a5b45d60e11ff34001de0a1b1da87",
+  "runs/s43-scan63/score/off/score/g1result.json": "77dbbdd066d7647d888cfd655cd2cb96970baef31df458b26e7720da841821a3",
+  "runs/s43-scan63/score/on/score/g1result.json": "a92adac150d8dd243782c0c7785a362e307fde4afe2ba6aa04fc4d6bbd3bbfc9",
+  "runs/s7-scan24/score/off/score/g1result.json": "eb3aa5d4c7538b41d3123788ec5a23038a0c6e69027902ff0333b4b642ba434a",
+  "runs/s7-scan24/score/on/score/g1result.json": "b9ca650dfb9be5a35946736518c8ac886356e8620deeca22f015ae3013f53a98",
+  "runs/s7-scan37/score/off/score/g1result.json": "cb220f2779ba0340280387ac99f844ddaa13f2fac4b83c8596a67dbe65aef1d7",
+  "runs/s7-scan37/score/on/score/g1result.json": "8c328aa2d97f511fc11ba9aeaab5c13678935f4f275af299ed5ea511173facc0",
+  "runs/s7-scan40/score/off/score/g1result.json": "eaaa4471d2b7d74d6863c9533f1097bd162457ff01b72bbc9438104165368714",
+  "runs/s7-scan40/score/on/score/g1result.json": "32f93989aa60f3fae962756daeaa2bad67a868d0ea0a4ea6d5f95e0d2a685be0",
+  "runs/s7-scan55/score/off/score/g1result.json": "5d9524ffb3c6acca2a2eee322763227cc116b1b089e58c97b3a4fcaef0ee9a98",
+  "runs/s7-scan55/score/on/score/g1result.json": "fe57bfea1e4da890db2da0e4b57b3325ad4aa6323bcf5da34f587d2ef082371c",
+  "runs/s7-scan63/score/off/score/g1result.json": "ef502e7a6e9f3dd51e1387d9f074dd9bfae3b980b73ef0b265c8a8c7af9c2a86",
+  "runs/s7-scan63/score/on/score/g1result.json": "19c38f448a872d04913106bcfbf74e7c1a5298cdc4db951032a2dd2815292545",
+  "runs/s42-scan24/train/off/train/metrics.json": "8d587c496aac7ed88e25120f393dfdc360ee78622e8a90719b297839568f426d",
+  "runs/s42-scan24/train/on/train/metrics.json": "a95c90e07cb5808fc10c392a4e92db0a67921856b187f93001ee49cc9dd4b2aa",
+  "runs/s42-scan37/train/off/train/metrics.json": "1b2e2e402146f0184d4f8c545d0247838716800d7f057f3b130a855f062ed1fe",
+  "runs/s42-scan37/train/on/train/metrics.json": "f747acf360d9f093df5cbc13d0eb170e2a2876c2645cebf5903931a19d911e4e",
+  "runs/s42-scan40/train/off/train/metrics.json": "cbc8e0abd24fa367a42b593ec1495539e16d286ee87b273c40e377fbf886a23f",
+  "runs/s42-scan40/train/on/train/metrics.json": "3c06fd2b7c873c1711dde8f55482ad162ab33c0d97539c2beeb0da0cad224d07",
+  "runs/s42-scan55/train/off/train/metrics.json": "458324eaa9e118319231f28a52c6891e65f70d05ee398f651a80ed096db6f66f",
+  "runs/s42-scan55/train/on/train/metrics.json": "3b638f6c5bbda152665382cf67247d1af0736b041bc99e843643235878739b90",
+  "runs/s42-scan63/train/off/train/metrics.json": "9a762252c4493cd8693b0cc3af60a2617131cac82c9577fd85d10adda20cf194",
+  "runs/s42-scan63/train/on/train/metrics.json": "3de38b77c9f82492982d93a0024f0163fd181ae85f9a34cc7d63cef5ab6e83d5",
+  "runs/s43-scan24/train/off/train/metrics.json": "8feb4983ee1280e4733f3a3491a6358c0f6bb99506dae49e57f2055bd6474eb9",
+  "runs/s43-scan24/train/on/train/metrics.json": "55c22a4e7dbecd311d9f5be7e0203ac5938047f4e5bc59ef331d8318df66965e",
+  "runs/s43-scan37/train/off/train/metrics.json": "69e1bf74c5c155f85a6946868aac581d4286566da036b802c011432a37faafc2",
+  "runs/s43-scan37/train/on/train/metrics.json": "b69c95f0bc1bdd90c35daf11e67b154ce9293894d9da1719d27396be40c3e89f",
+  "runs/s43-scan40/train/off/train/metrics.json": "ed17db433d404fcb81e05a5069f24a0c4daab03309e0cc10c59b8d120527ae04",
+  "runs/s43-scan40/train/on/train/metrics.json": "428675efab72426f249ed1ca54fa33d0cde31ddffb6d71687b35860ef86e9336",
+  "runs/s43-scan55/train/off/train/metrics.json": "bfab283d1ebaaa88b6f5c6cab788a2c83d3a3012afde87b5b6389152c97cf9fa",
+  "runs/s43-scan55/train/on/train/metrics.json": "f4189491e99760bb939b6ab32f9d156ff31d7620fa862411f45c22d558e33956",
+  "runs/s43-scan63/train/off/train/metrics.json": "d9acb36a9a615e0379bc4c0f8fbd4e9a592bbe4579030370a149252eb350c789",
+  "runs/s43-scan63/train/on/train/metrics.json": "8212892cc8119c752022b9f662b9dc73bf3e92454d226d32f7b564dd0c2f0695",
+  "runs/s7-scan24/train/off/train/metrics.json": "0934656043443bd869ad86c5f94282caec7390d1393302dab5183aab23d3d113",
+  "runs/s7-scan24/train/on/train/metrics.json": "fbc8b4be157aa761b7601c335c593849e5cadb8656884f0c62c15f68d6f5ed81",
+  "runs/s7-scan37/train/off/train/metrics.json": "72ea62557ea06889395e439fbbc04342508837da5e9f9357b31c96ee95c6eabb",
+  "runs/s7-scan37/train/on/train/metrics.json": "0c9dedb1c96b704e749503d1b4ca83297f11ed3218106ca08bfd4479b14d5039",
+  "runs/s7-scan40/train/off/train/metrics.json": "51754501db1b5079741fa82a6bc694f7c844a460d2942282b5ba8e15a5501ce1",
+  "runs/s7-scan40/train/on/train/metrics.json": "3c66d081a6253a107c1e54c0cb0855b3c7798f6e8a811bb5bcec865f7be8fc9d",
+  "runs/s7-scan55/train/off/train/metrics.json": "4298ba7e16e99b6a3241940b5033947cd38d01c84f896a134c41909153a434f3",
+  "runs/s7-scan55/train/on/train/metrics.json": "76d25324322ab6a4f0b88d504c58eddb0a6d52ef9f51623507091383d62f61bb",
+  "runs/s7-scan63/train/off/train/metrics.json": "8b6a64309e783f0f6e111ca767fd627e73ea792b47cbaf9a5325c5f0596e2a84",
+  "runs/s7-scan63/train/on/train/metrics.json": "bd3870856173a67bf279cd0f5d8ac2f794598c7cf1fde6dd84691d46fc5f9102",
+  "runs/nh-kitchen/g1nh.json": "ef9a0cdd1d4ff1955f5045c75f44696a3269fc6d5cb645ef4dab18e7dcdd1bb6",
+  "runs/nh-room/g1nh.json": "7c9534c7a7c712effd0302d54c65b71571d35927041daadc71d4ac83be5da1d2"
+ },
+ "verdict": "Multi-view stays the PROVISIONAL default mesh path (already on in main historical-build-006; no code change), pending the sealed held-out-scene gate (revert on HARM). Row 5 moves from BEHIND (+0.11 mm, 0.714) to PARITY (-0.013 mm, 0.589 / 0.588 mm vs 0.602) under official 2DGS extraction; training inputs differ. PROVISIONAL. Not AHEAD: within the +/-0.05 band; scan 40 still worse than official.",
+ "harness_versions": {
+  "pm_pair.sh v1 (registered pin) 80b23167f83054d0a3ec77cc97984a6a84869f05cfafcacb36329cbe1ee280e6": "never ran (the first launch was refused before upload: the binary needs the engine image, glibc 2.43)",
+  "pm_pair.sh v2 8b661f6bf11a77de8a495f483c59b39b9445c79dc2f8b74e707b875ed80eebcc": "adds MODE train|score (train on the engine image, score on the py image); ran all 15 train execs and the 5 failed seed-42 score execs (no rows). Copy: $SPLAT_DATA/research/parity-mesh-dtu5/inputs/g1-v2-train/pm_pair.sh",
+  "pm_pair.sh v3 acdecd85e7256bae0689452b9508a5cf8a0ac418e11ab5220ce6131211642768": "v2 + one line (mkdir -p \"$OUT/$arm\" before each score); produced all 15 score execs (all 30 g1result.json rows). Copy: $SPLAT_DATA/research/parity-mesh-dtu5/inputs/g1/pm_pair.sh",
+  "unchanged across versions": "catchup.py 146755c2..., run_dtu_g1.py f74c7dd4..., official_score.py b88a179a...; training/scoring logic, decision rules and protocol unchanged",
+  "staging evidence": "v2 and v3 hashes appear in the fal staging ledger (runs/fal/staged.json); v1 does not"
+ },
+ "independent_recompute": "Codex review of PR #23 at b5add370 (internal review file pr23.md): separate CPU script over all 120 metric files; 62/62 input hashes, 165/165 record fields match at displayed precision; reference read from research/vmesh/official-v6-results.json gives -0.012718 / -0.013555 mm."
+}

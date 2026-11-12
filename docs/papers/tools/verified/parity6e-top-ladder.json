@@ -1,0 +1,707 @@
+{
+ "claim": "parity-ladder:6e-top (row 6e, our ladder above 4M vs gsplat-MCMC 8M)",
+ "class": "DESCRIPTIVE: reported by the run, not yet independently verified (no pubs recompute)",
+ "verifier": "none yet; numbers computed by oss/parity-ladder/verdict.py from rows.jsonl per_image (splat-perf), 2026-10-24",
+ "relation": "Extension of pubs:p0:GS-EQ-SWEEP-v2 in the spirit of the cancelled GS-EQ-SWEEP-v3-top (all 6 v2 scenes, seeds 11-13, gsplat 8M in the same runner). Differences from the v3-top registration: ours ladder 3M/4M/5M/6M/8M (not 6M/8M), ours = main historical-build-006 (not the post-port sha bound on 10-09), runner pinned per (scene, seed) as v2. Never pooled with v2; v2 stays as verified.",
+ "rule_as_applied": "DEV=H[1::2], TEST=H[0::2] of every8_idx0_sorted. target = gsplat-8M 3-seed mean DEV LPIPS-VGG from THIS batch; ours* = smallest ours cap with 3-seed mean DEV LPIPS <= target (no tolerance); ratio = mean over 3 seeds of same-runner train_s ours*/gsplat; FASTER if ratio<0.95 and TEST hold>=2/3; SLOWER if ratio>1.05 or not reached; else TIE. Row: AHEAD only if FASTER 6/6; PARITY if FASTER>=SLOWER; else BEHIND. gsplat has only the 8M rung here, so the v2 truncation question (is gsplat better above 8M?) is unresolved and not tested.",
+ "setup": {
+  "runner": "fal py-v2 image, RTX PRO 6000 (96 GB), one runner per (scene, seed), `--no-spill`, SPLAT_THREAD_CAP=0, GS_PRELOAD=0",
+  "gsplat": "1.5.3 source build of tag v1.5.3 (937e299), torch 2.7.1+cu128, simple_trainer MCMC, cap_max 8,000,000 (research/gseq-sweep/gs_run.py @ historical source archive)",
+  "ours": "brush-cli from main historical-build-006 (prebuilt 2026-10-13, sha256 e74762a26ba69c369a3fcf05649360064ed594cb9610f0febdf4f748881e96d3), --max-splats 3M/4M/5M/6M/8M, 30k",
+  "harness": "research/gseq-sweep/run.py @ historical source archive unchanged (warm-ups: ours 30k at 1.2M, gsplat 2k; order odd seeds gsplat then ours ascending, seed 12 reverse; NVML peak minus idle every 100 ms)",
+  "scorer": "splat-perf from historical-build-006 (sha256 e5fe0ce9a57cc0164a7458f6065f896ee76bb595b8af2d76f9efa1f87b5223dd), full-res LPIPS-VGG ONNX c8e7e547, per view",
+  "data": "perf scene registry files (bicycle/garden/counter/kitchen/room images_4-sized, truck-full tandt_db), same as v2"
+ },
+ "per_scene": {
+  "bicycle": {
+   "gsplat_target": "gsplat-mcmc8000k",
+   "gsplat_dev_lpips": 0.17968,
+   "gsplat_test_lpips": 0.18636,
+   "gsplat_test_psnr": 25.841,
+   "gsplat_train_s": 1513.3,
+   "gsplat_peak_mib": 13823,
+   "ours_cap": "ours-5000k",
+   "ratio_train_s": 0.1466,
+   "wall_ratio": 0.1477,
+   "test_hold": "1/3",
+   "class": "TIE",
+   "ours_rungs": {
+    "ours-3000k": {
+     "dev_lpips": 0.18909,
+     "test_lpips": 0.19669,
+     "dev_psnr": 25.594,
+     "test_psnr": 25.844,
+     "train_s": 193.3,
+     "splats": 2874186,
+     "peak_mib": 1911,
+     "ratio_train_s_vs_gs": 0.1278,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.1294,
+     "ratio_per_seed": [
+      0.0977,
+      0.105,
+      0.1806
+     ]
+    },
+    "ours-4000k": {
+     "dev_lpips": 0.18261,
+     "test_lpips": 0.18953,
+     "dev_psnr": 25.586,
+     "test_psnr": 25.858,
+     "train_s": 194.4,
+     "splats": 3812727,
+     "peak_mib": 2357,
+     "ratio_train_s_vs_gs": 0.1285,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.1302,
+     "ratio_per_seed": [
+      0.117,
+      0.1266,
+      0.1419
+     ]
+    },
+    "ours-5000k": {
+     "dev_lpips": 0.17948,
+     "test_lpips": 0.18668,
+     "dev_psnr": 25.561,
+     "test_psnr": 25.819,
+     "train_s": 221.9,
+     "splats": 4733165,
+     "peak_mib": 3088,
+     "ratio_train_s_vs_gs": 0.1466,
+     "test_hold": "1/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1477,
+     "ratio_per_seed": [
+      0.1369,
+      0.1481,
+      0.1548
+     ]
+    },
+    "ours-6000k": {
+     "dev_lpips": 0.178,
+     "test_lpips": 0.18571,
+     "dev_psnr": 25.539,
+     "test_psnr": 25.82,
+     "train_s": 261.4,
+     "splats": 5655924,
+     "peak_mib": 3442,
+     "ratio_train_s_vs_gs": 0.1727,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1741,
+     "ratio_per_seed": [
+      0.1565,
+      0.1683,
+      0.1934
+     ]
+    },
+    "ours-8000k": {
+     "dev_lpips": 0.17637,
+     "test_lpips": 0.1843,
+     "dev_psnr": 25.525,
+     "test_psnr": 25.769,
+     "train_s": 325.7,
+     "splats": 7490837,
+     "peak_mib": 4834,
+     "ratio_train_s_vs_gs": 0.2153,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.2168,
+     "ratio_per_seed": [
+      0.1976,
+      0.2053,
+      0.2429
+     ]
+    }
+   },
+   "first_rung_holding_test_3of3": "ours-6000k",
+   "historical-record": [
+    "oss/parity-ladder/runs/bicycle-s11-C",
+    "oss/parity-ladder/runs/bicycle-s12-C",
+    "oss/parity-ladder/runs/bicycle-s13-C"
+   ]
+  },
+  "counter": {
+   "gsplat_target": "gsplat-mcmc8000k",
+   "gsplat_dev_lpips": 0.21892,
+   "gsplat_test_lpips": 0.20392,
+   "gsplat_test_psnr": 29.958,
+   "gsplat_train_s": 2046.2,
+   "gsplat_peak_mib": 14249,
+   "ours_cap": "ours-3000k",
+   "ratio_train_s": 0.1067,
+   "wall_ratio": 0.1075,
+   "test_hold": "3/3",
+   "class": "FASTER",
+   "ours_rungs": {
+    "ours-3000k": {
+     "dev_lpips": 0.21832,
+     "test_lpips": 0.20257,
+     "dev_psnr": 29.755,
+     "test_psnr": 30.171,
+     "train_s": 218.3,
+     "splats": 2885211,
+     "peak_mib": 1834,
+     "ratio_train_s_vs_gs": 0.1067,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1075,
+     "ratio_per_seed": [
+      0.1062,
+      0.1064,
+      0.1075
+     ]
+    },
+    "ours-4000k": {
+     "dev_lpips": 0.21603,
+     "test_lpips": 0.19982,
+     "dev_psnr": 29.761,
+     "test_psnr": 30.227,
+     "train_s": 257.7,
+     "splats": 3827736,
+     "peak_mib": 2419,
+     "ratio_train_s_vs_gs": 0.1259,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1267,
+     "ratio_per_seed": [
+      0.126,
+      0.1243,
+      0.1275
+     ]
+    },
+    "ours-5000k": {
+     "dev_lpips": 0.21455,
+     "test_lpips": 0.19847,
+     "dev_psnr": 29.729,
+     "test_psnr": 30.25,
+     "train_s": 297.5,
+     "splats": 4766466,
+     "peak_mib": 3123,
+     "ratio_train_s_vs_gs": 0.1454,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1462,
+     "ratio_per_seed": [
+      0.1453,
+      0.1441,
+      0.1468
+     ]
+    },
+    "ours-6000k": {
+     "dev_lpips": 0.21368,
+     "test_lpips": 0.1976,
+     "dev_psnr": 29.722,
+     "test_psnr": 30.177,
+     "train_s": 336.4,
+     "splats": 5701927,
+     "peak_mib": 3446,
+     "ratio_train_s_vs_gs": 0.1644,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1653,
+     "ratio_per_seed": [
+      0.1649,
+      0.1626,
+      0.1657
+     ]
+    },
+    "ours-8000k": {
+     "dev_lpips": 0.21233,
+     "test_lpips": 0.19586,
+     "dev_psnr": 29.677,
+     "test_psnr": 30.17,
+     "train_s": 412.3,
+     "splats": 7567861,
+     "peak_mib": 4876,
+     "ratio_train_s_vs_gs": 0.2015,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.2023,
+     "ratio_per_seed": [
+      0.2006,
+      0.2005,
+      0.2034
+     ]
+    }
+   },
+   "first_rung_holding_test_3of3": "ours-3000k",
+   "historical-record": [
+    "oss/parity-ladder/runs/counter-s11-C",
+    "oss/parity-ladder/runs/counter-s12-C",
+    "oss/parity-ladder/runs/counter-s13-C"
+   ]
+  },
+  "garden": {
+   "gsplat_target": "gsplat-mcmc8000k",
+   "gsplat_dev_lpips": 0.10557,
+   "gsplat_test_lpips": 0.10628,
+   "gsplat_test_psnr": 27.849,
+   "gsplat_train_s": 1606.5,
+   "gsplat_peak_mib": 14127,
+   "ours_cap": "ours-3000k",
+   "ratio_train_s": 0.0966,
+   "wall_ratio": 0.0975,
+   "test_hold": "1/3",
+   "class": "TIE",
+   "ours_rungs": {
+    "ours-3000k": {
+     "dev_lpips": 0.10467,
+     "test_lpips": 0.10677,
+     "dev_psnr": 28.225,
+     "test_psnr": 27.705,
+     "train_s": 155.1,
+     "splats": 2909261,
+     "peak_mib": 1894,
+     "ratio_train_s_vs_gs": 0.0966,
+     "test_hold": "1/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.0975,
+     "ratio_per_seed": [
+      0.0972,
+      0.0951,
+      0.0975
+     ]
+    },
+    "ours-4000k": {
+     "dev_lpips": 0.10003,
+     "test_lpips": 0.10304,
+     "dev_psnr": 28.247,
+     "test_psnr": 27.697,
+     "train_s": 183.4,
+     "splats": 3841346,
+     "peak_mib": 2389,
+     "ratio_train_s_vs_gs": 0.1142,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1151,
+     "ratio_per_seed": [
+      0.1141,
+      0.1133,
+      0.1151
+     ]
+    },
+    "ours-5000k": {
+     "dev_lpips": 0.09772,
+     "test_lpips": 0.10105,
+     "dev_psnr": 28.257,
+     "test_psnr": 27.713,
+     "train_s": 211.5,
+     "splats": 4778926,
+     "peak_mib": 3102,
+     "ratio_train_s_vs_gs": 0.1317,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1327,
+     "ratio_per_seed": [
+      0.1313,
+      0.1316,
+      0.1322
+     ]
+    },
+    "ours-6000k": {
+     "dev_lpips": 0.09629,
+     "test_lpips": 0.09967,
+     "dev_psnr": 28.268,
+     "test_psnr": 27.751,
+     "train_s": 240.8,
+     "splats": 5713563,
+     "peak_mib": 3428,
+     "ratio_train_s_vs_gs": 0.1499,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1509,
+     "ratio_per_seed": [
+      0.1484,
+      0.1497,
+      0.1515
+     ]
+    },
+    "ours-8000k": {
+     "dev_lpips": 0.09505,
+     "test_lpips": 0.09851,
+     "dev_psnr": 28.279,
+     "test_psnr": 27.711,
+     "train_s": 299.7,
+     "splats": 7582870,
+     "peak_mib": 4832,
+     "ratio_train_s_vs_gs": 0.1866,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1878,
+     "ratio_per_seed": [
+      0.1844,
+      0.1863,
+      0.1889
+     ]
+    }
+   },
+   "first_rung_holding_test_3of3": "ours-4000k",
+   "historical-record": [
+    "oss/parity-ladder/runs/garden-s11-C",
+    "oss/parity-ladder/runs/garden-s12-C",
+    "oss/parity-ladder/runs/garden-s13-C"
+   ]
+  },
+  "kitchen": {
+   "gsplat_target": "gsplat-mcmc8000k",
+   "gsplat_dev_lpips": 0.14044,
+   "gsplat_test_lpips": 0.13237,
+   "gsplat_test_psnr": 32.615,
+   "gsplat_train_s": 2048.8,
+   "gsplat_peak_mib": 15377,
+   "ours_cap": null,
+   "ratio_train_s": null,
+   "wall_ratio": null,
+   "test_hold": null,
+   "class": "SLOWER",
+   "ours_rungs": {
+    "ours-3000k": {
+     "dev_lpips": 0.14886,
+     "test_lpips": 0.13908,
+     "dev_psnr": 30.149,
+     "test_psnr": 30.964,
+     "train_s": 578.2,
+     "splats": 2904416,
+     "peak_mib": 5647,
+     "ratio_train_s_vs_gs": 0.2821,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.2819,
+     "ratio_per_seed": [
+      0.2634,
+      0.2617,
+      0.3211
+     ]
+    },
+    "ours-4000k": {
+     "dev_lpips": 0.14874,
+     "test_lpips": 0.13862,
+     "dev_psnr": 30.09,
+     "test_psnr": 30.899,
+     "train_s": 618.7,
+     "splats": 3851317,
+     "peak_mib": 6417,
+     "ratio_train_s_vs_gs": 0.3019,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.3018,
+     "ratio_per_seed": [
+      0.2983,
+      0.2955,
+      0.312
+     ]
+    },
+    "ours-5000k": {
+     "dev_lpips": 0.14867,
+     "test_lpips": 0.13825,
+     "dev_psnr": 29.95,
+     "test_psnr": 30.922,
+     "train_s": 674.9,
+     "splats": 4797271,
+     "peak_mib": 8140,
+     "ratio_train_s_vs_gs": 0.3294,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.329,
+     "ratio_per_seed": [
+      0.3291,
+      0.3231,
+      0.336
+     ]
+    },
+    "ours-6000k": {
+     "dev_lpips": 0.14878,
+     "test_lpips": 0.13819,
+     "dev_psnr": 30.032,
+     "test_psnr": 30.758,
+     "train_s": 741.6,
+     "splats": 5740299,
+     "peak_mib": 9607,
+     "ratio_train_s_vs_gs": 0.3619,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.3614,
+     "ratio_per_seed": [
+      0.3643,
+      0.3548,
+      0.3666
+     ]
+    },
+    "ours-8000k": {
+     "dev_lpips": 0.14909,
+     "test_lpips": 0.13837,
+     "dev_psnr": 29.98,
+     "test_psnr": 30.672,
+     "train_s": 850.5,
+     "splats": 7620632,
+     "peak_mib": 12310,
+     "ratio_train_s_vs_gs": 0.4151,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.4144,
+     "ratio_per_seed": [
+      0.4151,
+      0.4149,
+      0.4153
+     ]
+    }
+   },
+   "first_rung_holding_test_3of3": null,
+   "historical-record": [
+    "oss/parity-ladder/runs/kitchen-s11-C",
+    "oss/parity-ladder/runs/kitchen-s12-C",
+    "oss/parity-ladder/runs/kitchen-s13-C"
+   ]
+  },
+  "room": {
+   "gsplat_target": "gsplat-mcmc8000k",
+   "gsplat_dev_lpips": 0.24382,
+   "gsplat_test_lpips": 0.24418,
+   "gsplat_test_psnr": 31.879,
+   "gsplat_train_s": 1832.5,
+   "gsplat_peak_mib": 13973,
+   "ours_cap": "ours-3000k",
+   "ratio_train_s": 0.1078,
+   "wall_ratio": 0.109,
+   "test_hold": "3/3",
+   "class": "FASTER",
+   "ours_rungs": {
+    "ours-3000k": {
+     "dev_lpips": 0.23607,
+     "test_lpips": 0.2376,
+     "dev_psnr": 33.426,
+     "test_psnr": 32.739,
+     "train_s": 197.7,
+     "splats": 2938616,
+     "peak_mib": 2364,
+     "ratio_train_s_vs_gs": 0.1078,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.109,
+     "ratio_per_seed": [
+      0.1049,
+      0.1107,
+      0.108
+     ]
+    },
+    "ours-4000k": {
+     "dev_lpips": 0.23401,
+     "test_lpips": 0.23519,
+     "dev_psnr": 33.467,
+     "test_psnr": 32.813,
+     "train_s": 235.4,
+     "splats": 3900222,
+     "peak_mib": 3050,
+     "ratio_train_s_vs_gs": 0.1284,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1296,
+     "ratio_per_seed": [
+      0.1232,
+      0.1365,
+      0.1256
+     ]
+    },
+    "ours-5000k": {
+     "dev_lpips": 0.23257,
+     "test_lpips": 0.23377,
+     "dev_psnr": 33.465,
+     "test_psnr": 32.723,
+     "train_s": 263.3,
+     "splats": 4807754,
+     "peak_mib": 3248,
+     "ratio_train_s_vs_gs": 0.1437,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1448,
+     "ratio_per_seed": [
+      0.1399,
+      0.1502,
+      0.1409
+     ]
+    },
+    "ours-6000k": {
+     "dev_lpips": 0.23178,
+     "test_lpips": 0.23282,
+     "dev_psnr": 33.44,
+     "test_psnr": 32.748,
+     "train_s": 295.2,
+     "splats": 5741014,
+     "peak_mib": 3820,
+     "ratio_train_s_vs_gs": 0.1611,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1622,
+     "ratio_per_seed": [
+      0.1541,
+      0.1677,
+      0.1614
+     ]
+    },
+    "ours-8000k": {
+     "dev_lpips": 0.23048,
+     "test_lpips": 0.23119,
+     "dev_psnr": 33.418,
+     "test_psnr": 32.682,
+     "train_s": 359.1,
+     "splats": 7584592,
+     "peak_mib": 5179,
+     "ratio_train_s_vs_gs": 0.1959,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1969,
+     "ratio_per_seed": [
+      0.1874,
+      0.2058,
+      0.1946
+     ]
+    }
+   },
+   "first_rung_holding_test_3of3": "ours-3000k",
+   "historical-record": [
+    "oss/parity-ladder/runs/room-s11-C",
+    "oss/parity-ladder/runs/room-s12-C",
+    "oss/parity-ladder/runs/room-s13-C"
+   ]
+  },
+  "truck-full": {
+   "gsplat_target": "gsplat-mcmc8000k",
+   "gsplat_dev_lpips": 0.11038,
+   "gsplat_test_lpips": 0.10507,
+   "gsplat_test_psnr": 26.889,
+   "gsplat_train_s": 1741.0,
+   "gsplat_peak_mib": 13249,
+   "ours_cap": "ours-5000k",
+   "ratio_train_s": 0.1684,
+   "wall_ratio": 0.1694,
+   "test_hold": "3/3",
+   "class": "FASTER",
+   "ours_rungs": {
+    "ours-3000k": {
+     "dev_lpips": 0.11438,
+     "test_lpips": 0.10893,
+     "dev_psnr": 26.07,
+     "test_psnr": 26.765,
+     "train_s": 212.9,
+     "splats": 2920892,
+     "peak_mib": 1980,
+     "ratio_train_s_vs_gs": 0.1223,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.1231,
+     "ratio_per_seed": [
+      0.1262,
+      0.1209,
+      0.1198
+     ]
+    },
+    "ours-4000k": {
+     "dev_lpips": 0.11091,
+     "test_lpips": 0.1057,
+     "dev_psnr": 26.146,
+     "test_psnr": 26.801,
+     "train_s": 253.7,
+     "splats": 3870264,
+     "peak_mib": 2425,
+     "ratio_train_s_vs_gs": 0.1457,
+     "test_hold": "0/3",
+     "reaches_target_on_dev": false,
+     "wall_ratio_vs_gs": 0.1466,
+     "ratio_per_seed": [
+      0.1461,
+      0.1457,
+      0.1453
+     ]
+    },
+    "ours-5000k": {
+     "dev_lpips": 0.10891,
+     "test_lpips": 0.10406,
+     "dev_psnr": 26.182,
+     "test_psnr": 26.824,
+     "train_s": 293.2,
+     "splats": 4798411,
+     "peak_mib": 3143,
+     "ratio_train_s_vs_gs": 0.1684,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1694,
+     "ratio_per_seed": [
+      0.1693,
+      0.1682,
+      0.1678
+     ]
+    },
+    "ours-6000k": {
+     "dev_lpips": 0.10843,
+     "test_lpips": 0.10319,
+     "dev_psnr": 26.127,
+     "test_psnr": 26.774,
+     "train_s": 329.9,
+     "splats": 5728768,
+     "peak_mib": 3498,
+     "ratio_train_s_vs_gs": 0.1895,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.1904,
+     "ratio_per_seed": [
+      0.1874,
+      0.191,
+      0.1901
+     ]
+    },
+    "ours-8000k": {
+     "dev_lpips": 0.10738,
+     "test_lpips": 0.10196,
+     "dev_psnr": 26.106,
+     "test_psnr": 26.75,
+     "train_s": 405.4,
+     "splats": 7594799,
+     "peak_mib": 4887,
+     "ratio_train_s_vs_gs": 0.2329,
+     "test_hold": "3/3",
+     "reaches_target_on_dev": true,
+     "wall_ratio_vs_gs": 0.2339,
+     "ratio_per_seed": [
+      0.2299,
+      0.2352,
+      0.2335
+     ]
+    }
+   },
+   "first_rung_holding_test_3of3": "ours-5000k",
+   "historical-record": [
+    "oss/parity-ladder/runs/truck-full-s11-C",
+    "oss/parity-ladder/runs/truck-full-s12-C",
+    "oss/parity-ladder/runs/truck-full-s13-C"
+   ]
+  }
+ },
+ "primary_row": {
+  "verdict": "PARITY",
+  "tally": {
+   "TIE": 2,
+   "FASTER": 3,
+   "SLOWER": 1
+  }
+ },
+ "health": {
+  "blur_mode_autofire_ours_runs": {
+   "bicycle": "0/15",
+   "counter": "0/15",
+   "garden": "0/15",
+   "kitchen": "15/15",
+   "room": "0/15",
+   "truck-full": "0/15"
+  },
+  "note": "Our trainer's automatic camera-motion blur mode (splat-train BLUR_MIN_GAIN 0.095) switched on in every kitchen run (median blend-over-sharp reduction 0.12-0.16) and in no other scene. Kitchen is the only SLOWER scene; ours TEST PSNR there is 1.6 dB below gsplat while it is level or ahead elsewhere. Cause not isolated in this record (see the blur-off probe in RESULT.md)."
+ },
+ "integrity": {
+  "exit_codes": "18/18 runners summary ok, every run rc 0",
+  "rows": "18 x 6 arms scored, lpips_scale full, n_scored == every-8 held-out count"
+ },
+ "spend": "about $61 on fal (75,646 runner-seconds at $0.0008/s, incl. 2 screen runners and a memory probe) + $1.59 Voyager, research budget"
+}

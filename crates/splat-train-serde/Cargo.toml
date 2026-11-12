@@ -1,0 +1,45 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-serde"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "brush_serde"
+
+[dependencies]
+brush-render = { path = "../splat-train-render", package = "splat-train-render" }
+brush-serde-macros = { path = "../splat-train-serde-macros", package = "splat-train-serde-macros" }
+
+burn.workspace = true
+glam.workspace = true
+serde.workspace = true
+serde-ply.workspace = true
+tokio-stream.workspace = true
+async-fn-stream.workspace = true
+web-time.workspace = true
+brush-async = { path = "../splat-train-async", package = "splat-train-async" }
+thiserror.workspace = true
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+tokio = { version = "1", features = ["io-util", "macros", "rt"] }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["io-util", "fs", "macros", "rt"] }
+tokio-util = { workspace = true, features = ["io", "io-util"] }
+zstd = "0.13"
+
+[dev-dependencies]
+brush-cube = { path = "../splat-train-cube", package = "splat-train-cube" }
+wasm-bindgen-test = "0.3"
+
+[target.'cfg(target_family = "wasm")'.dev-dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+[lints]
+workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["getrandom"]

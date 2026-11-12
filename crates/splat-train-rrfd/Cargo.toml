@@ -1,0 +1,59 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-rrfd"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "rrfd"
+
+[dependencies]
+thiserror.workspace = true
+tokio = { version = "1", features = ["sync", "io-util"] }
+
+[target.'cfg(all(not(target_family = "wasm"), not(target_os = "android")))'.dependencies]
+tokio = { workspace = true, features = ["fs", "sync", "io-util"] }
+rfd = "0.17"
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.22"
+lazy_static = "1.5.0"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
+    "File",
+    "FileList",
+    "HtmlInputElement",
+    "Blob",
+    "ReadableStream",
+    "Window",
+    "Event",
+    "Document",
+    "Element",
+    "EventTarget",
+    "Url",
+    "HtmlAnchorElement",
+    "FileSystemHandle",
+    "FileSystemHandleKind",
+    "FileSystemDirectoryHandle",
+    "FileSystemFileHandle",
+    "FileSystemGetFileOptions",
+] }
+js-sys = "0.3"
+wasm-streams.workspace = true
+futures-util = "0.3"
+futures-channel = "0.3"
+tokio-util = { version = "0.7", features = ["io"] }
+bytes = "1.0"
+
+# The workspace tokio is "full"; its net half (mio) can't build for wasm. Wasm gets only the
+# features listed above, native keeps exactly the workspace features it had.
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio.workspace = true
+
+[lints]
+workspace = true

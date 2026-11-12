@@ -1,0 +1,6 @@
+splat-eval
+
+Original Voyager code is under the Vauss Preview License (LICENSE).
+src/color.rs is a reimplementation of camp_zipnerf color correction
+(https://github.com/jonbarron/camp_zipnerf), Copyright 2023 The Google Research Authors,
+and remains Apache-2.0 (LICENSE-APACHE), excluded from the Preview License.

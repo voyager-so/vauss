@@ -1,0 +1,45 @@
+{
+ "claim": "vram-vs-spirula-r6",
+ "class": "HEADLINE (BEHIND; within the <=1.5x target on 3/3)",
+ "verified_by": "publications",
+ "verified_at": "2026-10-09T07:35:00-07:00",
+ "source": "runs/perf/results.jsonl rows (labels main-historical-build-096-sN / -cap1m-sN / spirula-v2026.10.6, paired by pair_id), main historical-build-096, L40S, board NVML peak, idle 0 MiB on all rows, sampler 19.55-19.94 Hz, max gap <= 0.161 s",
+ "per_scene": {
+  "garden": {
+   "equal_count_M1_over_S": [
+    1.245,
+    1.199,
+    1.277
+   ],
+   "mean": 1.24,
+   "verdict": "BEHIND",
+   "default_M_over_S_mean": 1.728
+  },
+  "truck-full": {
+   "equal_count_M1_over_S": [
+    1.23,
+    1.22,
+    1.246
+   ],
+   "mean": 1.232,
+   "verdict": "BEHIND",
+   "default_M_over_S_mean": 1.831
+  },
+  "onthego-corner": {
+   "equal_count_M1_over_S": [
+    1.332,
+    1.331,
+    1.291
+   ],
+   "mean": 1.318,
+   "verdict": "BEHIND",
+   "default_M_over_S_mean": 0.985
+  }
+ },
+ "splat_counts": "equal-count arm: ours 1.00M / 1.00M / 0.98M vs Spirula 0.999M / 0.997M / 0.965M (garden / truck / corner). Default arm now trains ~1.96M splats on garden/truck (auto cap) vs Spirula ~1.0M; corner default 0.64M.",
+ "comparison": "r5 (historical-build-008) equal-count means 1.22 / 1.18 / 1.36: r6 on the v1-mem landing is 1.240 / 1.232 / 1.318, so no improvement at equal count (garden/truck slightly worse, corner slightly better; within run-to-run peak variance).",
+ "disclosures": [
+  "Single GPU type L40S",
+  "Default-vs-default memory is 1.73x / 1.83x Spirula on garden/truck because our auto cap trains ~2x the splats; corner default 0.985x"
+ ]
+}

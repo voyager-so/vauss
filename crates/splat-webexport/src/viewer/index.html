@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0c10; color: #d8dae0; overflow: hidden;
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  canvas { display: block; width: 100vw; height: 100vh; outline: none; }
+  #ui { position: fixed; top: 12px; left: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    background: rgba(16,18,24,.78); padding: 8px 10px; border-radius: 8px; backdrop-filter: blur(6px); max-width: calc(100vw - 48px); }
+  #ui h1 { font-size: 14px; font-weight: 600; margin: 0 6px 0 0; }
+  button, select { background: #1a1d25; color: #d8dae0; border: 1px solid #3a3e4a; border-radius: 6px;
+    padding: 4px 10px; font: inherit; cursor: pointer; }
+  button.on { background: #3b4252; color: #fff; }
+  button:disabled { opacity: .6; cursor: default; }
+  #status, #help, #fps { position: fixed; color: #aab0bc; font-size: 12px; background: rgba(16,18,24,.7);
+    padding: 4px 8px; border-radius: 6px; }
+  #status { left: 12px; bottom: 12px; }
+  #help { right: 12px; bottom: 12px; text-align: right; }
+  #fps { left: 12px; bottom: 40px; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+  #pivot { position: fixed; width: 18px; height: 18px; border: 2px solid #fff; border-radius: 50%;
+    box-shadow: 0 0 0 2px #18212baa; transform: translate(-50%, -50%); pointer-events: none; z-index: 2; }
+  #ui, #status, #help, #fps { z-index: 2; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "__THREE__", "three/addons/": "__THREE_ADDONS__" } }
+</script>
+</head>
+<body>
+<div id="ui">
+  <h1>__TITLE__</h1>
+  <button id="bInteractive" class="on" title="The light model (at most 1M splats): smooth on most GPUs">Interactive</button>
+  <button id="bFull" title="Loads the full model (heavier on the GPU)">Load full quality</button>
+  <select id="budget" title="Interactive detail: most splats drawn at once"></select>
+  <select id="cams" title="Jump to a named view"></select>
+  <button id="bMode" title="Walk: look around from inside the room (O)  ·  Orbit: turn around a point (O)">Walk</button>
+</div>
+<div id="status">Loading…</div>
+<div id="fps"></div>
+<div id="pivot" hidden></div>
+<div id="help"></div>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const CFG = __CFG__;
+const Q = new URLSearchParams(location.search);
+const BENCH = Q.get("bench") === "1";
+const THROTTLE = Q.get("throttle") !== "0";
+const FAST = Q.get("fast") !== "0", EXACT = Q.get("exact") !== "0", IDLE = Q.get("idle") !== "0" && !BENCH;
+const statusEl = document.getElementById("status");
+const setStatus = (t) => { statusEl.textContent = t; };
+const state = window.__viewer = { ready: false, variant: null, error: null, CFG };
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = () => { s.remove(); res(); }; s.onerror = () => rej(new Error("could not load " + src));
+    document.head.appendChild(s);
+  });
+}
+function b64ToBytes(b64) {
+  if (Uint8Array.fromBase64) return Uint8Array.fromBase64(b64);
+  const bin = atob(b64), n = bin.length, out = new Uint8Array(n);
+  for (let i = 0; i < n; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+// FAST OPEN: model data comes as data/<key>-NN.js parts, loaded and decoded one at a time with a yield
+// in between, so the first picture keeps drawing and the page never blocks on one huge parse.
+const yieldTask = () => new Promise((r) => setTimeout(r, 0));
+async function dataBytes(v, progress) {
+  window.__SPLAT_DATA = window.__SPLAT_DATA || {};
+  if (v.parts) {
+    const out = new Uint8Array(v.bytes);
+    let at = 0;
+    for (let i = 0; i < v.parts; i++) {
+      const k = `${v.key}-${String(i).padStart(2, "0")}`;
+      progress?.(i / v.parts);
+      await loadScript(`data/${k}.js`);
+      const b = b64ToBytes(window.__SPLAT_DATA[k]);
+      delete window.__SPLAT_DATA[k];
+      out.set(b, at); at += b.length;
+      await yieldTask();
+    }
+    if (at !== v.bytes) throw new Error(`${v.key}: got ${at} of ${v.bytes} bytes`);
+    progress?.(1);
+    return out;
+  }
+  if (!window.__SPLAT_DATA[v.key]) await loadScript(v.src);
+  const bytes = b64ToBytes(window.__SPLAT_DATA[v.key]);
+  delete window.__SPLAT_DATA[v.key];
+  return bytes;
+}
+
+// Patched Spark 2.2.0 (see splat-webexport/src/viewer.rs), imported from a blob: URL so it works over file://.
+setStatus("Loading renderer…");
+await loadScript("data/spark.js");
+const sparkUrl = URL.createObjectURL(new Blob([window.__SPARK_SRC], { type: "text/javascript" }));
+delete window.__SPARK_SRC;
+const { SparkRenderer, SplatMesh, PagedSplats } = await import(sparkUrl);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+const DPR = Math.min(window.devicePixelRatio, 2);
+renderer.setPixelRatio(DPR);
+renderer.setSize(innerWidth, innerHeight);
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0c10);
+// Ordinary projection near plane only; do not hide near-camera model defects.
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.01 / (CFG.metersPerUnit || 1), 500);
+camera.up.set(...CFG.up).normalize();
+const budgetQ = Number(Q.get("budget"));
+// MOTION LOD: two renderers, each drawing only the splat meshes on its layer. `spark` (layer 1) has the
+// interactive model (and the first paint / LoD stream), `sparkF` (layer 2) the full model. The canvas shows
+// `spark` while the camera moves; once the camera has been still for SETTLE_MS, the full model is sorted
+// for the view off screen and swapped in on one frame (see the animation loop). ?motionlod=0: the full
+// model while moving too.
+const MLOD = Q.get("motionlod") !== "0";
+const LAYER_I = 1, LAYER_F = 2;
+// SPLAT CAP: the largest on-screen splat radius (px). ?maxpx= overrides it (A/B checks).
+const maxPxQ = Number(Q.get("maxpx"));
+const MAX_PX = maxPxQ > 0 ? maxPxQ : 4096;
+function makeSpark(options, layer) {
+  const s = new SparkRenderer({ renderer, accumExtSplats: true, ...options });
+  // Render settings as in the exported viewer template (match the trainer's rasterizer).
+  s.blurAmount = CFG.mip ? 0.1 : 0;
+  s.preBlurAmount = CFG.mip ? 0 : 0.3;
+  s.minAlpha = 1 / 255;
+  s.sortRadial = false;
+  s.clipXY = 3;
+  s.maxPixelRadius = MAX_PX;
+  matchTrainerRaster(s.material);
+  // SORT UPLOAD (Spark 2.2): driveSort creates the ordering texture with that sort's array and leaves the GPU
+  // upload to the first draw. A later sort that finishes before the texture was ever drawn only sets
+  // needsUpdate again, without its array, so the first draw uploads the older sort's order while Spark
+  // records the newer view and count. The full model's renderer is not drawn while the camera moves, so a
+  // named-view pick soon after the full model appears could settle on the start view's order (black region,
+  // purple haze) for good. Upload the texture as soon as Spark creates it: later sorts then write in place.
+  let ordering = null;
+  Object.defineProperty(s, "orderingTexture", { configurable: true, get: () => ordering,
+    set: (t) => { ordering = t; if (t) renderer.initTexture(t); } });
+  s.layers.set(layer);
+  scene.add(s);
+  return s;
+}
+function matchTrainerRaster(m) {
+  const edits = [
+    ["vec2 J2 = -(J1 * viewCenter.xy) * invZ;",
+     `vec2 pOff = vec2(projectionMatrix[2][0], projectionMatrix[2][1]);
+        vec2 pScale = vec2(projectionMatrix[0][0], projectionMatrix[1][1]);
+        vec2 tA = -(vec2(1.3) + pOff) / pScale, tB = -(vec2(-1.3) + pOff) / pScale;
+        vec2 J2 = -J1 * clamp(viewCenter.xy * invZ, min(tA, tB), max(tA, tB));`],
+    ["vec2 eigenVec1 = (abs(b) > 0.001)",
+     "adjustedStdDev = footprintScale * sqrt(max(0.0, 2.0 * log(255.0 * min(rgba.a, 1.0))));\n    vec2 eigenVec1 = (abs(b) > 0.001)"],
+    ["vec2 pixelOffset = position.x", "vSplatUv = position.xy * adjustedStdDev;\n    vec2 pixelOffset = position.x"],
+    ["uniform float clipXY;", "uniform float clipXY;\nuniform float footprintScale;"],
+  ];
+  for (const [from, to] of edits) {
+    if (m.vertexShader.includes(from)) m.vertexShader = m.vertexShader.replace(from, to);
+    else console.warn("matchTrainerRaster: Spark shader changed, edit skipped:", from);
+  }
+  m.uniforms.footprintScale = { value: 1 };
+  m.needsUpdate = true;
+}
+const spark = makeSpark({ pagedExtSplats: true, lodSplatCount: budgetQ > 0 ? budgetQ : CFG.budget }, LAYER_I);
+const sparkF = makeSpark({}, LAYER_F);
+// Per-renderer cameras: copies of `camera` that see one layer each (synced before every render).
+const camI = camera.clone(), camF = camera.clone();
+function syncCams() {
+  for (const [c, layer] of [[camI, LAYER_I], [camF, LAYER_F]]) { c.copy(camera); c.layers.set(layer); c.updateMatrixWorld(); }
+}
+let presented = "I";  // the renderer on the canvas: "I" (spark) or "F" (sparkF)
+const shown = () => (presented === "F" ? sparkF : spark);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.zoomSpeed = 0.6;
+controls.screenSpacePanning = true;
+controls.touches.ONE = THREE.TOUCH.ROTATE;
+controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+// FRAME-TIME DAMPING: OrbitControls calls update() from input handlers as well as the loop.
+// Queue those deltas, then consume them once per animation frame, including dolly, with the
+// SuperSplat 0.95-per-ms response (~19.5 ms). Event frequency must not add extra damping steps.
+const orbitUpdate = controls.update.bind(controls);
+const damp = (d, dt) => 1 - Math.pow(d, dt * 1000);
+let zoomDelta = 0, pivotTween = null, lastTickAt = null;
+const velocity = new THREE.Vector3();
+controls.update = (dt = null) => {
+  if (dt === null) return false;
+  const a = damp(0.95, dt);
+  controls.dampingFactor = a;
+  zoomDelta += Math.log(controls._scale);
+  controls._scale = Math.exp(zoomDelta * a);
+  zoomDelta *= 1 - a;
+  if (Math.abs(zoomDelta) < 1e-4) zoomDelta = 0;
+  return orbitUpdate(dt);
+};
+function clearNavigation() {
+  walk.dYaw = walk.dPitch = walk.wheel = 0; walk.pan.set(0, 0, 0); walk.goal = null;
+  controls._sphericalDelta.set(0, 0, 0);
+  controls._panOffset.set(0, 0, 0);
+  controls._scale = 1; zoomDelta = 0; pivotTween = null;
+  velocity.set(0, 0, 0);
+}
+// Capture poses are named views only; navigation has no position or heading leash.
+const MPU = CFG.metersPerUnit || 1;  // scene units -> meters
+controls.minDistance = 0.01 / MPU;
+let capVfov = null;
+function setCaptureFov(vfov) {
+  // Fit the original capture field of view to the viewport without cropping a wide lens.
+  capVfov = vfov;
+  const W = innerWidth, H = innerHeight;
+  const capF = CFG.capFocal && CFG.capHeight ? CFG.capFocal : CFG.capHeight ? CFG.capHeight / (2 * Math.tan(THREE.MathUtils.degToRad(vfov) / 2)) : null;
+  let f;
+  if (capF && CFG.capHeight) {
+    const capW = CFG.capHeight * (CFG.capAspect || W / H);
+    f = capF * Math.min(1, W / capW, H / CFG.capHeight);
+  } else {
+    f = H / (2 * Math.tan(THREE.MathUtils.degToRad(vfov) / 2));
+  }
+  // Preserve the filmed lens angle, including wide GoPro footage.
+  f = Math.max(f, H / (2 * Math.tan(THREE.MathUtils.degToRad(87.5))));
+  camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(H / (2 * f)));
+}
+addEventListener("resize", () => { if (capVfov) { setCaptureFov(capVfov); camera.updateProjectionMatrix(); } });
+const _a = new THREE.Vector3(), _ab = new THREE.Vector3(), _dir = new THREE.Vector3();
+// WALK: first-person mode, the default for rooms (a package with a collision grid; ?mode=orbit opens in orbit).
+// Drag looks around; WASD/arrows, scroll and right-drag move along the floor.
+// Shift x3, Ctrl x0.25; double-click walks toward the selected spot. Pitch and yaw
+// are unrestricted about CFG.up. A standing capsule slides along walls and steps
+// over small obstacles. An occupied spawn searches for clear space; movement never
+// bypasses collision. O toggles orbit/fly (with Q/E), R resets, H hides help.
+const WALK_OK = !!CFG.collide && !BENCH;
+let mode = WALK_OK && Q.get("mode") !== "orbit" ? "walk" : "orbit";
+// Level walking basis about any up vector: forward is the reference axis least aligned with up (-Z first, so a
+// y-up room keeps -Z ahead), minus its up part; right = forward x up. Z-up and X-up sources stay orthonormal.
+function levelBasis(u) {
+  let ref = [0, 0, -1];
+  for (const r of [[1, 0, 0], [0, 1, 0]]) {
+    if (Math.abs(u.x * r[0] + u.y * r[1] + u.z * r[2]) < Math.abs(u.x * ref[0] + u.y * ref[1] + u.z * ref[2]) - 1e-9) ref = r;
+  }
+  const f = new THREE.Vector3(...ref).addScaledVector(u, -(u.x * ref[0] + u.y * ref[1] + u.z * ref[2])).normalize();
+  return { f, r: new THREE.Vector3().crossVectors(f, u).normalize() };
+}
+const LVL_U = camera.up.clone();
+const { f: LVL_F, r: LVL_R } = levelBasis(LVL_U);
+// Resolve walk slides in the levelled room axes, so a blocked horizontal step cannot climb a tilted wall.
+const WALK_AXES = [LVL_R.toArray(), LVL_U.toArray(), LVL_F.toArray()];
+const walk = { yaw: 0, pitch: 0, sync: true, dYaw: 0, dPitch: 0, wheel: 0, pan: new THREE.Vector3(), goal: null };
+const EYE = (CFG.eyeHeightM || 1.5) / MPU;
+let floorHeight = null;
+function walkDir(out) {
+  const cp = Math.cos(walk.pitch);
+  return out.copy(LVL_F).multiplyScalar(Math.cos(walk.yaw) * cp).addScaledVector(LVL_R, Math.sin(walk.yaw) * cp)
+    .addScaledVector(LVL_U, Math.sin(walk.pitch)).normalize();
+}
+function walkFrom(d) {  // yaw / pitch of the unit direction d
+  walk.pitch = Math.asin(THREE.MathUtils.clamp(d.dot(LVL_U), -1, 1));
+  walk.yaw = Math.atan2(d.dot(LVL_R), d.dot(LVL_F));
+}
+// COLLIDE: soft camera collision against the room's voxel occupancy (CFG.collide, data/collide-NN.js: "VXO1",
+// 32^3 chunk bit masks). Orbit / fly: the camera is a sphere (radiusM); walk: a standing capsule of those spheres from
+// the eye down to the feet (see penetration). Every frame's move is resolved from the last
+// resolved position in sub-steps of under half a cell, axis by axis, so it stops at a wall and slides along it.
+// The penetration measure is the summed depth of the solid cells inside the sphere: a step is taken when it
+// leaves the sphere clear, or when the camera is already inside solid (a named view in a wall) and the step
+// does not deepen it. Orbit / dolly / pivot turns are a third-person boom: the pivot -> camera ray is marched
+// through the grid (DDA) and the radius cut before a wall at once, then eased back out (the requested radius is
+// kept). Named-view jumps search for a clear spawn. No artificial grid boundary. ?collide=0: off.
+const COLLIDE_ON = !!CFG.collide && Q.get("collide") !== "0" && !BENCH;
+const CO = { grid: null, o: CFG.collide?.origin ?? [0, 0, 0], e: CFG.collide?.edge ?? 1, n: CFG.collide?.dims ?? [0, 0, 0],
+  r: (CFG.collide?.radiusM ?? 0.25) / MPU,
+  // STOP DISTANCE: the camera keeps this far (m) from what is in front of it; the hard radius only in narrow spots.
+  soft: (Number(Q.get("stopm")) > 0 ? Number(Q.get("stopm")) : CFG.collide?.stopM ?? 0.7) / MPU, prev: new THREE.Vector3(), jump: true, want: 0, blocks: 0, softBlocks: 0, booms: 0, frames: 0, lastBoom: null };
+function decodeVXO1(b) {
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength), n = CO.n, C = CFG.collide.chunk || 32;
+  if (String.fromCharCode(b[0], b[1], b[2], b[3]) !== "VXO1") throw new Error("collide: not a VXO1 file");
+  const grid = new Uint8Array(n[0] * n[1] * n[2]);
+  let at = 8, cells = 0;
+  for (let k = dv.getUint32(4, true); k > 0; k--) {
+    const cx = dv.getInt32(at, true) * C, cy = dv.getInt32(at + 4, true) * C, cz = dv.getInt32(at + 8, true) * C;
+    at += 12;
+    for (let i = 0; i < C * C * C; i++) {
+      if (!(b[at + (i >> 3)] & (1 << (i & 7)))) continue;
+      const x = cx + i % C, y = cy + ((i / C) | 0) % C, z = cz + ((i / (C * C)) | 0);
+      if (x < n[0] && y < n[1] && z < n[2]) { grid[(z * n[1] + y) * n[0] + x] = 1; cells++; }
+    }
+    at += C * C * C / 8;
+  }
+  return { grid, cells };
+}
+if (CFG.collide && !BENCH) {  // loaded with ?collide=0 too: state.collide.isSolid for scripted checks
+  dataBytes(CFG.collide).then((b) => {
+    const { grid, cells } = decodeVXO1(b);
+    CO.removed = cleanCollision(grid); CO.grid = grid; CO.cells = cells - CO.removed; CO.jump = true;
+  }).catch((e) => { console.warn("collision grid failed to load; no collision", e); CO.error = String(e); });
+}
+const solidAt = (x, y, z) => x >= 0 && y >= 0 && z >= 0 && x < CO.n[0] && y < CO.n[1] && z < CO.n[2] && CO.grid[(z * CO.n[1] + y) * CO.n[0] + x] === 1;
+// Summed depth (scene units) of the solid cells overlapping the camera sphere at (px, py, pz); `any`: 1 at the first.
+function spherePenetration(px, py, pz, any = false, r = CO.r) {
+  const { e, o, n, grid } = CO, r2 = r * r;
+  const x0 = Math.max(0, Math.floor((px - r - o[0]) / e)), x1 = Math.min(n[0] - 1, Math.floor((px + r - o[0]) / e));
+  const y0 = Math.max(0, Math.floor((py - r - o[1]) / e)), y1 = Math.min(n[1] - 1, Math.floor((py + r - o[1]) / e));
+  const z0 = Math.max(0, Math.floor((pz - r - o[2]) / e)), z1 = Math.min(n[2] - 1, Math.floor((pz + r - o[2]) / e));
+  let s = 0;
+  for (let z = z0; z <= z1; z++) {
+    const c = o[2] + z * e, dz = pz < c ? c - pz : pz > c + e ? pz - c - e : 0;
+    for (let y = y0; y <= y1; y++) {
+      const cy = o[1] + y * e, dy = py < cy ? cy - py : py > cy + e ? py - cy - e : 0, dzy = dz * dz + dy * dy;
+      if (dzy >= r2) continue;
+      const row = (z * n[1] + y) * n[0];
+      for (let x = x0; x <= x1; x++) {
+        if (grid[row + x] !== 1) continue;
+        const cx = o[0] + x * e, dx = px < cx ? cx - px : px > cx + e ? px - cx - e : 0, d2 = dzy + dx * dx;
+        if (d2 < r2) { if (any) return 1; s += r - Math.sqrt(d2); }
+      }
+    }
+  }
+  return s;
+}
+// A standing capsule catches furniture below eye level. Feet rest at floorHeight;
+// the lowest sphere starts one radius above the floor (no floor penetration).
+function penetration(x, y, z, any = false, r = CO.r) {
+  if (mode !== "walk" || Q.get("body") === "0") return spherePenetration(x, y, z, any, r);
+  let total = 0;
+  const n = Math.ceil(Math.max(0, EYE - r) / r);
+  for (let i = 0; i <= n; i++) {
+    const h = (EYE - r) * i / Math.max(1, n);
+    const v = spherePenetration(x - LVL_U.x*h, y - LVL_U.y*h, z - LVL_U.z*h, any, r);
+    if (any && v) return 1;
+    total += v;
+  }
+  return total;
+}
+// Only tiny disconnected components are removed; connected walls/furniture remain.
+function cleanCollision(grid) {
+  const [nx,ny,nz] = CO.n, plane = nx*ny, seen = new Uint8Array(grid.length);
+  let removed = 0;
+  for (let seed=0; seed<grid.length; seed++) {
+    if (!grid[seed] || seen[seed]) continue;
+    const queue=[seed]; seen[seed]=1;
+    for (let j=0;j<queue.length;j++) {
+      const i=queue[j], x=i%nx,y=Math.floor(i/nx)%ny,z=Math.floor(i/plane);
+      for (const k of [x>0?i-1:-1,x+1<nx?i+1:-1,y>0?i-nx:-1,y+1<ny?i+nx:-1,z>0?i-plane:-1,z+1<nz?i+plane:-1]) {
+        if(k>=0 && grid[k] && !seen[k]) {seen[k]=1;queue.push(k);}
+      }
+    }
+    // At 5 cm, 8 voxels is a 10 cm cube. Never discard larger components.
+    if(queue.length<=8) {for(const i of queue) grid[i]=0; removed+=queue.length;}
+  }
+  return removed;
+}
+// Soft-zone push at (px, py, pz): sum over the solid cells within the stop distance of (soft - distance) times the
+// unit vector from the cell's nearest point to the camera (into `out`); returns its length.
+function softPush(px, py, pz, out, r = CO.soft) {
+  const { e, o, n, grid } = CO, r2 = r * r;
+  out[0] = out[1] = out[2] = 0;
+  const x0 = Math.max(0, Math.floor((px - r - o[0]) / e)), x1 = Math.min(n[0] - 1, Math.floor((px + r - o[0]) / e));
+  const y0 = Math.max(0, Math.floor((py - r - o[1]) / e)), y1 = Math.min(n[1] - 1, Math.floor((py + r - o[1]) / e));
+  const z0 = Math.max(0, Math.floor((pz - r - o[2]) / e)), z1 = Math.min(n[2] - 1, Math.floor((pz + r - o[2]) / e));
+  for (let z = z0; z <= z1; z++) {
+    const c = o[2] + z * e, dz = pz < c ? c - pz : pz > c + e ? pz - c - e : 0, sz = pz < c ? -1 : pz > c + e ? 1 : 0;
+    for (let y = y0; y <= y1; y++) {
+      const cy = o[1] + y * e, dy = py < cy ? cy - py : py > cy + e ? py - cy - e : 0, sy = py < cy ? -1 : py > cy + e ? 1 : 0, dzy = dz * dz + dy * dy;
+      if (dzy >= r2) continue;
+      const row = (z * n[1] + y) * n[0];
+      for (let x = x0; x <= x1; x++) {
+        if (grid[row + x] !== 1) continue;
+        const cx = o[0] + x * e, dx = px < cx ? cx - px : px > cx + e ? px - cx - e : 0, d2 = dzy + dx * dx;
+        if (d2 >= r2 || d2 === 0) continue;
+        const d = Math.sqrt(d2), w = (r - d) / d, sx = px < cx ? -1 : px > cx + e ? 1 : 0;
+        out[0] += w * sx * dx; out[1] += w * sy * dy; out[2] += w * sz * dz;
+      }
+    }
+  }
+  return Math.hypot(out[0], out[1], out[2]);
+}
+// Is the line from p along unit d free of solid for `len`? (Nothing straight ahead: what the soft zone feels is beside
+// the camera, e.g. a doorway's jambs or the sides of a gap between furniture, so it does not stop the move.)
+const _ahO = new THREE.Vector3(), _ahD = new THREE.Vector3();
+function aheadClear(p, d, len) {
+  return march(_ahO.set(p[0], p[1], p[2]), _ahD.set(d[0], d[1], d[2]), len) === Infinity;
+}
+// Move the sphere from `from` toward `to` (Vector3s, `to` is overwritten with the result): sub-steps under half
+// a cell, each axis taken only when it keeps the sphere clear (or, inside solid, does not deepen it).
+const _slideP = new THREE.Vector3();
+function slide(from, to, translate, axes = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
+  const d = _slideP.subVectors(to, from), len = d.length();
+  if (len === 0) return false;
+  // Keep the sweep below half a voxel even after a long frame / large wheel event.
+  const steps = Math.ceil(len / (0.45 * CO.e));
+  const p = [from.x, from.y, from.z], step = axes.map((v) => (d.x * v[0] + d.y * v[1] + d.z * v[2]) / steps);
+  let pen = penetration(p[0], p[1], p[2]), blocked = false;
+  // STOP DISTANCE: unless the way ahead is open for the stop distance (narrow spots: the hard radius only), an axis
+  // step against the soft zone's push (a solid within the stop distance on that side) is not taken.
+  // Fly / pan only: an orbit keeps the stop distance through the boom. A wall met at an angle is "ahead" up to 1.5x the
+  // stop distance along the line, so a slide along it keeps about the stop distance too.
+  const soft = translate && CO.soft > CO.r && !aheadClear(p, [d.x / len, d.y / len, d.z / len], 1.5 * CO.soft);
+  const push = [0, 0, 0];
+  for (let s = 0; s < steps; s++) {
+    const pl = soft ? softPush(p[0], p[1], p[2], push) : 0;
+    for (let a = 0; a < 3; a++) {
+      if (step[a] === 0) continue;
+      const v = axes[a], alongPush = push[0] * v[0] + push[1] * v[1] + push[2] * v[2];
+      if (pl > 0 && step[a] * alongPush < 0 && Math.abs(alongPush) > 0.35 * pl) { step[a] = 0; blocked = true; CO.softBlocks++; continue; }
+      for (let k = 0; k < 3; k++) p[k] += v[k] * step[a];
+      const q = pen > 0 ? penetration(p[0], p[1], p[2]) : penetration(p[0], p[1], p[2], true);
+      if (q === 0 || (pen > 0 && q <= pen)) pen = pen > 0 ? q : 0;
+      else {
+        // A voxel corner can block both room axes by a fraction of a millimetre. For a horizontal
+        // walk step, project onto the contact tangent (at fixed height) before giving up that axis.
+        const normal = [0, 0, 0], trial = [...p];
+        for (let k = 0; k < 3; k++) p[k] -= v[k] * step[a];
+        let slid = false;
+        if (axes === WALK_AXES && a !== 1 && pen === 0) {
+          softPush(...trial, normal, CO.r);
+          const vertical = normal.reduce((s, x, k) => s + x * WALK_AXES[1][k], 0);
+          for (let k = 0; k < 3; k++) normal[k] -= vertical * WALK_AXES[1][k];
+          const nl = Math.hypot(...normal);
+          if (nl > 1e-9) {
+            for (let k = 0; k < 3; k++) normal[k] /= nl;
+            const into = step[a] * normal.reduce((s, x, k) => s + x * v[k], 0);
+            const tangent = v.map((x, k) => x * step[a] - normal[k] * Math.min(0, into));
+            if (Math.hypot(...tangent) > Math.abs(step[a]) * 0.05) {
+              const next = p.map((x, k) => x + tangent[k] + normal[k] * Math.min(0.002 / MPU, 0.05 * CO.e));
+              if (penetration(...next, true) === 0) { p.splice(0, 3, ...next); slid = true; }
+            }
+          }
+        }
+        if (!slid) step[a] = 0;
+        blocked = true;
+      }
+    }
+  }
+  to.set(p[0], p[1], p[2]);
+  return blocked;
+}
+// DDA from o along unit d up to maxT (scene units): distance to the first solid cell after leaving any solid the
+// ray starts in (a pivot on a surface sits in its cell; at most 0.5 m of it), else Infinity. 0: starts deep in solid.
+function march(o, d, maxT) {
+  const e = CO.e, g = CO.o;
+  let x = Math.floor((o.x - g[0]) / e), y = Math.floor((o.y - g[1]) / e), z = Math.floor((o.z - g[2]) / e);
+  const sx = Math.sign(d.x), sy = Math.sign(d.y), sz = Math.sign(d.z);
+  const tdx = sx ? e / Math.abs(d.x) : Infinity, tdy = sy ? e / Math.abs(d.y) : Infinity, tdz = sz ? e / Math.abs(d.z) : Infinity;
+  let tx = sx ? ((g[0] + (x + (sx > 0 ? 1 : 0)) * e) - o.x) / d.x : Infinity;
+  let ty = sy ? ((g[1] + (y + (sy > 0 ? 1 : 0)) * e) - o.y) / d.y : Infinity;
+  let tz = sz ? ((g[2] + (z + (sz > 0 ? 1 : 0)) * e) - o.z) / d.z : Infinity;
+  let t = 0, leading = true;
+  const lead = 0.5 / MPU;
+  while (t <= maxT) {
+    const s = solidAt(x, y, z);
+    if (s && !leading) return t;
+    if (!s) leading = false;
+    else if (t > lead) return 0;
+    if (tx < ty && tx < tz) { x += sx; t = tx; tx += tdx; } else if (ty < tz) { y += sy; t = ty; ty += tdy; } else { z += sz; t = tz; tz += tdz; }
+  }
+  return Infinity;
+}
+// Farthest distance along the ray (<= `upTo`, the ray's first solid cell or the requested radius) at which the camera
+// sphere is clear: a wall met at a grazing angle needs more than one radius of the ray. From `upTo` back in
+// half-cell steps; none clear (a pivot on a surface with the camera close in): `upTo` less the sphere radius.
+function boomReach(o, d, upTo, soft) {
+  if (!Number.isFinite(upTo)) return Infinity;
+  // the stop distance where the boom has room for it (at least 0.3 m from the pivot), else the hard radius
+  if (soft && CO.soft > CO.r) for (let s = upTo; s >= 0.3 / MPU; s -= CO.e) {
+    if (penetration(o.x + d.x * s, o.y + d.y * s, o.z + d.z * s, true, CO.soft) === 0) return s;
+  }
+  for (let s = upTo; s > 0; s -= 0.5 * CO.e) {
+    if (penetration(o.x + d.x * s, o.y + d.y * s, o.z + d.z * s, true) === 0) return s;
+  }
+  return upTo - CO.r;
+}
+const _boomD = new THREE.Vector3();
+// Before OrbitControls' update: put the camera back at the boom's requested radius, so orbit / dolly work on it.
+function boomRestore(flying, panning) {
+  if (!CO.grid || !COLLIDE_ON || CO.jump) return;
+  if (flying || panning) { CO.want = 0; return; }
+  if (CO.want > 0) {
+    _boomD.subVectors(camera.position, controls.target);
+    const r = _boomD.length();
+    if (r > 1e-6) camera.position.copy(controls.target).addScaledVector(_boomD, CO.want / r);
+  }
+}
+// After all of this frame's navigation: boom (orbit / dolly / pivot), then slide from the last resolved position.
+function collide(dt, flying, panning) {
+  if (!COLLIDE_ON || !CO.grid || CO.jump) { CO.jump = false; CO.want = 0; CO.prev.copy(camera.position); return; }
+  CO.frames++;
+  const T = controls.target;
+  if (!flying && !panning) {
+    const prevR = CO.prev.distanceTo(T);
+    // the boom keeps the stop distance only from a camera outside it (a named view nearer a wall stays where it is)
+    const softClear = penetration(CO.prev.x, CO.prev.y, CO.prev.z, true, CO.soft) === 0;
+    _boomD.subVectors(CO.prev, T).normalize();
+    // Only while the pivot sees the camera: a pivot behind a wall would pull the camera through it.
+    if (prevR > 1e-6 && march(T, _boomD, prevR) >= prevR - CO.r) {
+      _boomD.subVectors(camera.position, T);
+      const R = _boomD.length();
+      if (R > 1e-6) {
+        _boomD.divideScalar(R);
+        const h = march(T, _boomD, R + CO.r), allowed = Math.max(0.05 / MPU, boomReach(T, _boomD, Math.min(R, h), softClear));
+        const ease = (goal) => goal <= prevR ? goal : prevR + (goal - prevR) * damp(0.99, dt);
+        let r = R;
+        if (allowed < R) { r = CO.want > 0 ? Math.min(allowed, ease(allowed)) : allowed; CO.want = R; CO.booms++; }
+        else if (CO.want > 0) { r = ease(R); if (R - r < 1e-3 * R) { r = R; CO.want = 0; } else CO.want = R; }
+        if (r !== R) camera.position.copy(T).addScaledVector(_boomD, r);
+        CO.lastBoom = CO.want > 0 ? { want: R, r, hit: Number.isFinite(h) ? h : null } : null;
+      }
+    } else CO.want = 0;
+  }
+  const before = _a.copy(camera.position);
+  if (slide(CO.prev, camera.position, flying || panning)) CO.blocks++;
+  // A fly / pan move carries the pivot with it (the view direction stays); an orbit keeps its pivot.
+  if (flying || panning) T.add(before.sub(camera.position).negate());
+  CO.prev.copy(camera.position);
+}
+// Highest support under the capsule's footprint: rays down from `lift` above `base` for `reach`;
+// a probe that starts inside solid (a wall side) is not a support surface. -Infinity: none.
+function footSupport(base, lift, reach) {
+  const down = LVL_U.clone().negate();
+  let support = -Infinity;
+  for (const [x,z] of [[0,0],[CO.r,0],[-CO.r,0],[0,CO.r],[0,-CO.r]]) {
+    const origin = base.clone().addScaledVector(LVL_R,x).addScaledVector(LVL_F,z).addScaledVector(LVL_U, lift);
+    const cell=origin.toArray().map((v,i)=>Math.floor((v-CO.o[i])/CO.e));
+    if(solidAt(...cell)) continue;
+    const hit = march(origin, down, reach);
+    if(Number.isFinite(hit)) support=Math.max(support,origin.dot(LVL_U)-hit);
+  }
+  return support;
+}
+// Floor support is measured near the current foot, never at arbitrary furniture height.
+// A step can rise at most 20 cm, and only with clear space for the entire capsule.
+function floorSupport(p, previousFloor) {
+  const foot = p.clone().addScaledVector(LVL_U, -p.dot(LVL_U) + previousFloor);
+  let support = footSupport(foot, 0.201 / MPU, 0.45 / MPU);
+  const extent=CFG.floorExtent;
+  if(!Number.isFinite(support) && Number.isFinite(CFG.floorHeight) && extent && p.x>=extent.min[0] && p.x<=extent.max[0] && p.z>=extent.min[1] && p.z<=extent.max[1]) support=CFG.floorHeight;
+  return support;
+}
+function groundPosition(p, previousFloor, requireSupport = false) {
+  const support = floorSupport(p, previousFloor);
+  if(requireSupport && !Number.isFinite(support)) return null;
+  const h=Number.isFinite(support)?support+1e-4/MPU:previousFloor;
+  return p.addScaledVector(LVL_U,h+EYE-p.dot(LVL_U));
+}
+// The floor a spawn (named view, reset, orbit -> walk) stands on: the exported floor where it supports this spot,
+// else the first support below the eye within 3 m under the feet, so a capture camera held high or low,
+// or an orbit view above the room, lands on the floor. Packages without floor metadata use the same search.
+function spawnFloor(p) {
+  const known = Number.isFinite(CFG.floorHeight) ? CFG.floorHeight : null;
+  if (known !== null && Number.isFinite(floorSupport(p, known))) return known;
+  const below = footSupport(p, 0, EYE + 3 / MPU);
+  if (Number.isFinite(below)) return below;
+  return known ?? p.dot(LVL_U) - EYE;
+}
+function escapeSpawn() {
+  if (!penetration(...camera.position.toArray(), true)) return;
+  const source=camera.position.clone();
+  // This correction runs only for explicit spawns; movement never ghosts through a wall.
+  for(let r=CO.e; r<=2/MPU; r+=CO.e) for(let k=0;k<32;k++) {
+    const p=source.clone().addScaledVector(LVL_R,r*Math.cos(k*Math.PI/16)).addScaledVector(LVL_F,r*Math.sin(k*Math.PI/16));
+    groundPosition(p,floorHeight);
+    if(!penetration(...p.toArray(),true)) {camera.position.copy(p);return;}
+  }
+}
+function resolveWalk(from,desired) {
+  const wanted=groundPosition(desired.clone(),from.dot(LVL_U)-EYE);
+  // Sweep upward before stepping forward, so a low ceiling cannot be crossed.
+  const rise=wanted.dot(LVL_U)-from.dot(LVL_U);
+  const start=from.clone();
+  if(rise>0 && rise<=0.201/MPU) {
+    const raised=start.clone().addScaledVector(LVL_U,rise);
+    slide(start,raised,false,WALK_AXES);
+    if(raised.distanceTo(start)>=rise-1e-6) start.copy(raised);
+    else wanted.addScaledVector(LVL_U,-rise);
+  }
+  slide(start,wanted,false,WALK_AXES);
+  return wanted;
+}
+function walkCollide(dt) {
+  if (!COLLIDE_ON || !CO.grid) {CO.prev.copy(camera.position);return;}
+  if (CO.jump) {
+    floorHeight = spawnFloor(camera.position);
+    groundPosition(camera.position,floorHeight); escapeSpawn();
+    floorHeight=camera.position.dot(LVL_U)-EYE;
+    CO.jump=false;CO.prev.copy(camera.position);return;
+  }
+  CO.frames++;
+  const resolved=resolveWalk(CO.prev,camera.position);
+  if(resolved.distanceTo(camera.position)>1e-6) CO.blocks++;
+  camera.position.copy(resolved);
+  floorHeight=camera.position.dot(LVL_U)-EYE;
+  CO.prev.copy(camera.position);
+}
+state.canWalk = (a,b) => {
+  let p=new THREE.Vector3(...a), target=new THREE.Vector3(...b);
+  const n=Math.ceil(p.distanceTo(target)/(0.04/MPU));
+  for(let i=1;i<=n;i++) p=resolveWalk(p,new THREE.Vector3(...a).lerp(target,i/n));
+  const delta=p.sub(target);delta.addScaledVector(LVL_U,-delta.dot(LVL_U));
+  return delta.length()<0.01/MPU;
+};
+state.projectFloor = (p) => groundPosition(new THREE.Vector3(...p),floorHeight,true)?.toArray() ?? null;
+state.walkBasis = { up: LVL_U.toArray(), forward: LVL_F.toArray(), right: LVL_R.toArray() };  // capture.mjs plans on it
+state.collide = { on: COLLIDE_ON, get ready() { return !!CO.grid; }, get error() { return CO.error ?? null; }, get removedCells() { return CO.removed ?? 0; },
+  cfg: CFG.collide ?? null, radius: CO.r, get floorHeight() {return floorHeight;},
+  isSolid: (x, y, z) => !!CO.grid && solidAt(Math.floor((x - CO.o[0]) / CO.e), Math.floor((y - CO.o[1]) / CO.e), Math.floor((z - CO.o[2]) / CO.e)),
+  penetration: (x, y, z) => CO.grid ? penetration(x, y, z) * MPU : null,  // meters, summed over cells
+  stats: () => ({ mode, frames: CO.frames, blocks: CO.blocks, softBlocks: CO.softBlocks, booms: CO.booms, stopM: CO.soft * MPU, want: CO.want, boom: CO.lastBoom }) };
+function applyCamera(c) {
+  // Exact pose: drop any orbit-damping momentum first, so the view lands where it was asked.
+  clearNavigation();
+  camera.position.set(...c.position);
+  const dir = new THREE.Vector3(...c.look_at).sub(camera.position);
+  const d = Math.max(dir.length(), 0.5 * CFG.radius);
+  controls.target.copy(camera.position).add(dir.normalize().multiplyScalar(d));
+  if (c.vfov_deg) setCaptureFov(c.vfov_deg);
+  camera.updateProjectionMatrix();
+  orbitUpdate();
+  CO.jump = true;  // COLLIDE: named-view jumps are exempt
+  walk.sync = true; walk.goal = null; walk.wheel = 0; walk.pan.set(0, 0, 0);  // WALK: look from the new pose
+}
+// VIEW PICKER: named views plus a disabled "Jump to view…" placeholder, shown whenever the camera is not
+// at a named view (after any drag, wheel, key move, or a scripted camera that is not a named view).
+const camSel = document.getElementById("cams");
+const placeholder = new Option("Jump to view…", "");
+placeholder.disabled = true;
+camSel.add(placeholder);
+CFG.cameras.forEach((c, i) => camSel.add(new Option(c.label, i)));
+const showNamedView = (i) => { camSel.value = i >= 0 ? String(i) : ""; };
+camSel.onchange = () => {
+  if (camSel.value === "") return;
+  applyCamera(CFG.cameras[+camSel.value]); renderer.domElement.focus();
+};
+controls.addEventListener("start", () => { pivotTween = null; showNamedView(-1); });
+applyCamera(CFG.cameras[0]);
+showNamedView(0);
+
+// SCRIPT HOOKS: for scripted screenshots and checks.
+state.setCamera = (c) => {  // {position, look_at, vfov_deg, label?}; the picker shows the named view with that label
+  applyCamera(c);
+  showNamedView(CFG.cameras.findIndex((k) => k.label === c.label));
+  touch();
+};
+state.three = { camera, controls, renderer, get spark() { return shown(); }, sparkI: spark, sparkF };
+state.dbg = () => ({ pos: camera.position.toArray().map((x) => +x.toFixed(4)), tgt: controls.target.toArray().map((x) => +x.toFixed(4)),
+  fov: +camera.fov.toFixed(2), view: camSel.value === "" ? null : CFG.cameras[+camSel.value].label, variant: state.variant,
+  collide: COLLIDE_ON ? { ready: !!CO.grid, ...state.collide.stats(),
+    pen_m: CO.grid ? +(penetration(camera.position.x, camera.position.y, camera.position.z) * MPU).toFixed(4) : null } : null,
+  sort: { sorting: shown().sorting, dirty: shown().sortDirty }, idle: idleNow,
+  presented: presented === "F" ? "full" : (iKey ?? (first ? "first" : null)), moving, fading: !!fade, fades: state.fades ?? 0, lastFade: state.lastFade ?? null,
+  gpu: (() => { const g = renderer.getContext(), e = g.getExtension("WEBGL_debug_renderer_info"); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : ""; })() });
+
+// ------------------------------------------------------------ models
+const V = Object.fromEntries(CFG.variants.map((v) => [v.key, v]));
+const meshes = {};   // key -> Promise<SplatMesh>
+// Render-loop clocks (declared here: model code below sets them before the loop starts).
+let dirtyAt = 0;      // last scene change: keep rendering for a while after it
+let movedAt = -1e9;   // last camera move (or model swap, see meshChanged)
+let busyAt = 0;       // last frame with a sort or LoD streaming in flight
+let idleNow = false;
+let sortSeen = -1, needSettled = false;  // POST-SORT FRAME (see the idle rule)
+let fullKick = -1;    // MOTION LOD: the movedAt the full model's off-screen sort was started for
+let fullSortBase = Infinity;  // sparkF.lastSortTime when this settle's re-sort was requested: a later sort must finish
+const _sc = new THREE.Vector3(), _sd = new THREE.Vector3();
+function fullSorted() {  // sparkF's newest sort is done and was for this camera pose
+  camera.getWorldPosition(_sc); camera.getWorldDirection(_sd);
+  return sparkF.lastSortTime !== fullSortBase && fullSortBase !== Infinity && !sparkF.sorting && !sparkF.sortDirty && sparkF.sortedCenter.distanceTo(_sc) <= 1e-5 && sparkF.sortedDir.dot(_sd) >= 1 - 1e-7;
+}
+const touch = () => { dirtyAt = performance.now(); };
+// RE-SORT AFTER SWAP: a mesh shown, hidden or added with the camera still is no view change to Spark, so the
+// idle rule would keep the old model's sort on screen. Force a re-sort and count it as a move (>= 3 s of
+// drawing; the idle rule then also waits for the sort to finish and 1 s of frames after it).
+const meshChanged = () => { touch(); movedAt = performance.now(); for (const s of [spark, sparkF]) { s.sortDirty = true; s.setDirty(); } };
+const nextFrame = () => new Promise((r) => requestAnimationFrame(r));
+let first = null;
+// Status line: the shown model, plus a short note while the full model streams in behind it.
+let baseStatus = "", bgNote = "";
+const renderStatus = () => setStatus(baseStatus + (bgNote ? ` · ${bgNote}` : ""));
+const setBase = (t) => { baseStatus = t; renderStatus(); };
+
+function radReady(mesh) {
+  return !!(mesh.paged && spark.pager && spark.pager.getSplatsChunk(mesh.paged, 0));
+}
+async function makeMesh(v) {
+  const mb = (v.js_bytes / 1e6).toFixed(0);
+  const what = v.key === "full" ? "full detail" : v.label;
+  const progress = (f) => {
+    const pct = Math.round(100 * f);
+    if (wanted === v.key || !state.ready) setBase(`Loading ${what} ${pct}% (${mb} MB)…`);
+    else { bgNote = `loading ${what} ${pct}%`; renderStatus(); }
+    if (v.key === "full" && wanted !== "full") bF.textContent = `Loading full detail ${pct}%…`;
+  };
+  const bytes = await dataBytes(v, progress);
+  if (wanted === v.key || !state.ready) setBase(`Decoding ${what}…`); else { bgNote = `decoding ${what}`; renderStatus(); }
+  if (v.kind === "rad") {
+    // The whole .rad is in memory: Spark's pager slices 64K-splat chunks out of it in view order.
+    const mesh = new SplatMesh({ paged: new PagedSplats({ fileBytes: bytes, fileType: "rad" }) });
+    mesh.layers.set(LAYER_I);
+    mesh.opacity = 0;
+    scene.add(mesh);
+    meshChanged();
+    const t0 = performance.now();
+    while (!radReady(mesh)) {
+      if (performance.now() - t0 > 30000) throw new Error("LoD root chunk did not load");
+      await nextFrame();
+    }
+    mesh.opacity = 1;
+    return mesh;
+  }
+  const mesh = new SplatMesh({ fileBytes: bytes, fileType: "spz", extSplats: true });
+  mesh.layers.set(v.key === "full" ? LAYER_F : LAYER_I);
+  await mesh.initialized;
+  mesh.visible = false;
+  scene.add(mesh);
+  meshChanged();
+  return mesh;
+}
+function getMesh(v) {
+  if (!meshes[v.key]) {
+    meshes[v.key] = makeMesh(v);
+    meshes[v.key].catch(() => delete meshes[v.key]);
+  }
+  return meshes[v.key];
+}
+const bI = document.getElementById("bInteractive"), bF = document.getElementById("bFull");
+const budgetSel = document.getElementById("budget");
+// Default: the interactive (<= 1M) SPZ, sharp as soon as it is in; LoD streaming stays available as ?variant=lod.
+const defaultKey = V.interactive ? "interactive" : "lod";
+let wanted = null;
+let iKey = null;  // the model on layer 1 once one is up: "interactive" or "lod"
+async function show(key) {
+  const v = V[key];
+  wanted = key;
+  bI.classList.toggle("on", key !== "full");
+  bF.classList.toggle("on", key === "full");
+  budgetSel.style.display = key === "lod" ? "" : "none";
+  try {
+    const mesh = await getMesh(v);
+    if (wanted !== key) return;
+    // MOTION LOD: the full model has its own layer; layer 1 keeps the interactive model for motion.
+    if (key !== "full") {
+      for (const [k, p] of Object.entries(meshes)) {
+        if (k === "full") continue;
+        const m = await p.catch(() => null);
+        if (m) m.visible = k === key;
+      }
+      iKey = key;
+      if (first) first.visible = false;
+    } else if (!iKey && MLOD && V[defaultKey]) {
+      // Opened straight on the full model: load the interactive one for motion.
+      getMesh(V[defaultKey]).then((m) => {
+        if (iKey) return;
+        m.visible = true; iKey = defaultKey;
+        if (first) first.visible = false;
+        meshChanged();
+      }).catch(() => {});
+    }
+    mesh.visible = true;
+    meshChanged();
+    state.variant = key; state.ready = true;
+    state.numSplats = v.kind === "rad" ? CFG.info.interactive.splats : mesh.numSplats;
+    if (key === "full") { bF.textContent = "Full quality"; bgNote = ""; state.fullShownAt ??= performance.now(); }
+    const sh = CFG.info[key === "lod" ? "interactive" : key]?.sh_degree;
+    const motion = key === "full" && MLOD && V[iKey ?? defaultKey] ? ` (${V[iKey ?? defaultKey].note} while moving)` : "";
+    setBase(`${v.label}: ${v.note}${sh != null ? `, SH${sh}` : ""}${motion}`);
+  } catch (e) {
+    console.error(e);
+    if (key === "lod" && V.interactive) {
+      setBase(`LoD failed (${e.message || e}); loading the interactive SPZ`);
+      return show("interactive");
+    }
+    if (key === "full" && state.ready) {  // keep showing what was up
+      bF.textContent = `Load full quality (${(V.full.bytes / 1e6).toFixed(0)} MB)`;
+      bgNote = ""; setBase(`Full detail did not load (${e.message || e})`);
+      return;
+    }
+    state.error = String(e);
+    setBase(`Failed to load ${v.label}: ${e.message || e}`);
+  }
+}
+bI.onclick = () => show(defaultKey);
+if (V.full) {
+  bF.textContent = `Load full quality (${(V.full.bytes / 1e6).toFixed(0)} MB)`;
+  bF.title = `${V.full.note}: sharper, heavier on the GPU`;
+  bF.onclick = () => show("full");
+} else bF.style.display = "none";
+if (!V.lod) budgetSel.remove();
+for (const n of [500000, 750000, 1000000, 1500000, 2500000]) {
+  budgetSel.add(new Option(`Detail ${n >= 1e6 ? n / 1e6 + "M" : n / 1e3 + "K"}`, n));
+}
+if (![...budgetSel.options].some((o) => +o.value === spark.lodSplatCount)) budgetSel.add(new Option(`Detail ${spark.lodSplatCount}`, spark.lodSplatCount));
+budgetSel.value = spark.lodSplatCount;
+budgetSel.onchange = () => { spark.lodSplatCount = +budgetSel.value; touch(); renderer.domElement.focus(); };
+
+const initial = V[Q.get("variant")] && Q.get("variant") !== "first" ? Q.get("variant") : defaultKey;
+// FAST OPEN: the ~40K-splat first picture goes up before any model part is read. Its decode is raced
+// against 3 s, so a slow first paint can never hold up the real model.
+if (initial !== "full" && V.first) {
+  try {
+    setBase("Loading first view…");
+    const bytes = await dataBytes(V.first);
+    first = new SplatMesh({ fileBytes: bytes, fileType: "spz", extSplats: true });
+    first.layers.set(LAYER_I);
+    const ok = await Promise.race([first.initialized.then(() => true), new Promise((r) => setTimeout(() => r(false), 3000))]);
+    scene.add(first); meshChanged();
+    if (ok) state.firstPaintAt = performance.now();
+    else first.initialized.then(() => { state.firstPaintAt ??= performance.now(); meshChanged(); });
+  } catch (e) { console.warn("first paint failed", e); }
+}
+show(initial);
+// AUTO FULL: open on the interactive model, fetch the full model in the background ("loading full detail
+// N%" in the status line and on the button), and swap it in once decoded, unless the visitor picked a model
+// meanwhile. Off with ?autofull=0 or an explicit ?variant=.
+if (V.full && !Q.get("variant") && Q.get("autofull") !== "0" && !BENCH) {
+  (async () => {
+    while (!state.ready && !state.error) await new Promise((r) => setTimeout(r, 250));
+    if (state.error || wanted !== initial) return;
+    state.autoFull = "loading";
+    try { await getMesh(V.full); } catch (e) {
+      state.autoFull = "failed";
+      bF.textContent = `Load full quality (${(V.full.bytes / 1e6).toFixed(0)} MB)`;
+      bgNote = ""; renderStatus();
+      setBase(`Full detail did not load (${e.message || e}); showing ${V[state.variant]?.label ?? "the interactive model"}`);
+      return;
+    }
+    state.autoFull = "ready";
+    if (wanted === initial) await show("full");  // show() -> meshChanged(): re-sort, then the idle rule waits for it
+    else if (wanted !== "full") { bgNote = ""; renderStatus(); bF.textContent = "Full quality (ready)"; }
+  })();
+}
+
+// LoD streaming state (as the decorator's lodState): idle once the view's chunks are all on the GPU.
+function lodIdle() {
+  const p = spark.pager;
+  if (!p || iKey !== "lod" || presented !== "I") return true;
+  const wantedChunks = p.fetchPriority.slice(0, p.maxPages);
+  const missing = wantedChunks.filter(({ splats, chunk }) => !p.getSplatsChunk(splats, chunk)).length;
+  return missing + p.fetched.length + p.newUploads.length + p.readyUploads.length === 0 && !spark.lodDirty;
+}
+
+// ------------------------------------------------------------ input
+const keys = new Set();
+const MOVE_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const isTyping = (e) => e.target instanceof HTMLSelectElement || e.target instanceof HTMLInputElement;
+addEventListener("keydown", (e) => {
+  if (isTyping(e)) return;
+  if (e.code === "KeyF") fpsEl.style.display = fpsEl.style.display === "none" ? "" : "none";
+  if (!e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (e.code === "KeyR") { applyCamera(CFG.cameras[0]); showNamedView(0); touch(); }
+    if (e.code === "KeyO" && WALK_OK) setMode(mode === "walk" ? "orbit" : "walk");
+    if (e.code === "KeyH") helpEl.hidden = !helpEl.hidden;
+  }
+  if (MOVE_KEYS.has(e.code)) { e.preventDefault(); pivotTween = null; showNamedView(-1); }
+  keys.add(e.code);
+});
+addEventListener("keyup", (e) => keys.delete(e.code));
+const stopFlight = () => { keys.clear(); velocity.set(0, 0, 0); lastTickAt = null; };
+addEventListener("blur", stopFlight);
+document.addEventListener("visibilitychange", () => { if (document.hidden) stopFlight(); });
+const up = camera.up.clone();
+const fwd = new THREE.Vector3(), right = new THREE.Vector3(), move = new THREE.Vector3();
+// Room-scale speed in scene units, with a modest increase for larger captures.
+const FLY_SPEED = Math.max(1.5, CFG.radius * MPU * 0.6) / MPU;
+const WALK_SPEED = 1.2 / MPU;  // WALK: a stroll; Shift x3
+// TRACKPAD: capture ahead of OrbitControls' wheel listener, so every delta is consumed exactly once.
+// Browser pinch synthesizes ctrlKey without a physical Control press. Physical Ctrl scroll orbits;
+// Shift scroll pans in screen space at the pivot depth; bare scroll remains dolly (SuperSplat routing).
+renderer.domElement.addEventListener("wheel", (e) => {
+  if (!controls.enabled) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  pivotTween = null; showNamedView(-1);
+  const physicalCtrl = keys.has("ControlLeft") || keys.has("ControlRight");
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? renderer.domElement.clientHeight : 1;
+  const dx = e.deltaX * unit, dy = e.deltaY * unit;
+  if (e.ctrlKey && !physicalCtrl) controls.dollyIn(Math.exp(THREE.MathUtils.clamp(dy * 0.002, -1, 1)));
+  else if (physicalCtrl) {
+    const gain = 2 * Math.PI * 0.75 / renderer.domElement.clientHeight;
+    controls.rotateLeft(dx * gain); controls.rotateUp(dy * gain);
+  } else if (e.shiftKey) controls.pan(dx, dy);
+  else controls.dollyIn(Math.exp(THREE.MathUtils.clamp(dy * 0.001, -1, 1)));
+}, { capture: true, passive: false });
+
+// WALK input. Look: the room follows the pointer (radians per CSS pixel from the vertical field of view).
+// Right / middle drag and two fingers: slide in the view plane; scroll and pinch: step along the view.
+const helpEl = document.getElementById("help"), modeBtn = document.getElementById("bMode");
+const HELP = {
+  walk: "Drag: look · WASD / arrows: move · Shift: faster · Scroll: forward / back · Right-drag: slide<br>Double-click: walk there · R: reset view · O: orbit mode · H: hide help",
+  orbit: "Drag: orbit · Right-drag / Shift-scroll: pan · Scroll: zoom · Double-click: pivot<br>WASD: fly · Q/E: down / up · Shift: faster · R: reset view" + (WALK_OK ? " · O: walk mode" : "") + " · H: hide help",
+};
+// Startup (initial) only sets up the controls and UI: the named view's own look_at stays the orbit pivot.
+function setMode(m, initial = false) {
+  const from = mode;
+  mode = m;
+  clearNavigation();
+  controls.enabled = mode === "orbit";
+  if (mode === "orbit") {
+    if (!initial && from === "walk") {
+      // Leaving walk: pivot on what the view looks at, the first solid along the view (0.6..3 m), else 1.5 m ahead.
+      const d = camera.getWorldDirection(new THREE.Vector3());
+      let r = 1.5 / MPU;
+      if (CO.grid) { const h = march(camera.position, d, 3 / MPU); if (Number.isFinite(h) && h > 0) r = THREE.MathUtils.clamp(h, 0.6 / MPU, 3 / MPU); }
+      controls.target.copy(camera.position).addScaledVector(d, r);
+    }
+    CO.want = 0;
+  } else {
+    walk.sync = true;
+    CO.jump = true;  // stand on the floor below the orbit / fly position (spawnFloor), clear of solid
+  }
+  modeBtn.textContent = mode === "walk" ? "Walk" : "Orbit";
+  modeBtn.classList.toggle("on", mode === "walk");
+  modeBtn.hidden = !WALK_OK;
+  helpEl.innerHTML = HELP[mode];
+  state.mode = mode;
+  touch();
+}
+modeBtn.onclick = () => { setMode(mode === "walk" ? "orbit" : "walk"); renderer.domElement.focus(); };
+setMode(mode, true);
+const lookGain = () => THREE.MathUtils.degToRad(camera.fov) / renderer.domElement.clientHeight;
+const walkPtrs = new Map();  // pointerId -> {x, y, button}
+let pinch = null;
+renderer.domElement.addEventListener("pointerdown", (e) => {
+  if (mode !== "walk") return;
+  renderer.domElement.setPointerCapture?.(e.pointerId);
+  walkPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button });
+  walk.goal = null; pinch = null; showNamedView(-1);
+});
+renderer.domElement.addEventListener("pointermove", (e) => {
+  const p = walkPtrs.get(e.pointerId);
+  if (mode !== "walk" || !p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (walkPtrs.size >= 2) {  // two fingers: pinch steps along the view, the midpoint slides
+    const [a, b] = [...walkPtrs.values()], dist = Math.hypot(a.x - b.x, a.y - b.y), mid = [(a.x + b.x) / 2, (a.y + b.y) / 2];
+    if (pinch) {
+      walk.wheel += (dist - pinch.dist) * 0.006 / MPU;
+      slideBy(mid[0] - pinch.mid[0], mid[1] - pinch.mid[1]);
+    }
+    pinch = { dist, mid };
+    return;
+  }
+  if (p.button === 0) { const g = lookGain(); walk.dYaw += dx * g; walk.dPitch += dy * g; }
+  else slideBy(dx, dy);
+  touch();
+});
+function slideBy(dx, dy) {  // drag the room sideways / up at ~1.5 m depth
+  const k = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * 1.5 / MPU / renderer.domElement.clientHeight;
+  camera.getWorldDirection(_dir);
+  const r = new THREE.Vector3().crossVectors(_dir, LVL_U).normalize(), u = new THREE.Vector3().crossVectors(r, _dir).normalize();
+  walk.pan.addScaledVector(r, -dx * k).addScaledVector(u, dy * k);
+}
+const endWalkPtr = (e) => { walkPtrs.delete(e.pointerId); pinch = null; };
+renderer.domElement.addEventListener("pointerup", endWalkPtr);
+renderer.domElement.addEventListener("pointercancel", endWalkPtr);
+renderer.domElement.addEventListener("contextmenu", (e) => { if (mode === "walk") e.preventDefault(); });
+renderer.domElement.addEventListener("wheel", (e) => {
+  if (mode !== "walk") return;
+  e.preventDefault();
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? renderer.domElement.clientHeight : 1;
+  // ~0.25 m per wheel notch; a trackpad pinch (ctrlKey) steps a little more per pixel
+  walk.wheel += -THREE.MathUtils.clamp(e.deltaY * unit, -400, 400) * (e.ctrlKey ? 0.006 : 0.00125) / MPU;
+  walk.goal = null; showNamedView(-1); touch();
+}, { passive: false });
+// PIVOT PICK: Spark's native WASM raycast intersects the visible Gaussian splats, including paged LoD.
+// Ignore faint floaters without skipping surfaces formed by many translucent splats. This is a nearest
+// splat pick, rather than SuperSplat's stochastic accumulated-opacity depth pass; no proxy mesh is required.
+const pivotEl = document.getElementById("pivot"), pickRay = new THREE.Raycaster();
+let pivotPoint = null, pivotUntil = 0;
+function pickPivot(x, y) {
+  if (mode === "walk" && state.ready) return walkTo(x, y);
+  if (!controls.enabled || !state.ready) return false;
+  const rect = renderer.domElement.getBoundingClientRect();
+  camera.updateMatrixWorld();
+  pickRay.setFromCamera(new THREE.Vector2((x - rect.left) / rect.width * 2 - 1, 1 - (y - rect.top) / rect.height * 2), camera);
+  pickRay.near = camera.near; pickRay.far = camera.far;
+  const layer = presented === "F" ? LAYER_F : LAYER_I;
+  let hit = null;
+  for (const mesh of scene.children) {
+    if (!(mesh instanceof SplatMesh) || !mesh.visible || mesh.opacity <= 0 || !mesh.layers.isEnabled(layer)) continue;
+    const opacity = mesh.minRaycastOpacity, hits = [];
+    mesh.minRaycastOpacity = 0.05;
+    try { mesh.raycast(pickRay, hits); } finally { mesh.minRaycastOpacity = opacity; }
+    for (const h of hits) if (!hit || h.distance < hit.distance) hit = h;
+  }
+  if (!hit) return false;
+  const from = controls.target.clone();
+  clearNavigation();
+  pivotPoint = hit.point.clone(); pivotUntil = performance.now() + 1200;
+  pivotTween = { from, to: pivotPoint.clone(), at: performance.now() };
+  state.lastPivot = { point: pivotPoint.toArray(), distance: hit.distance, method: "splat-raycast", opacity: 0.05 };
+  showPivot(performance.now());
+  showNamedView(-1); touch();
+  return true;
+}
+function splatHit(x, y) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  camera.updateMatrixWorld();
+  pickRay.setFromCamera(new THREE.Vector2((x - rect.left) / rect.width * 2 - 1, 1 - (y - rect.top) / rect.height * 2), camera);
+  pickRay.near = camera.near; pickRay.far = camera.far;
+  const layer = presented === "F" ? LAYER_F : LAYER_I;
+  let hit = null;
+  for (const mesh of scene.children) {
+    if (!(mesh instanceof SplatMesh) || !mesh.visible || mesh.opacity <= 0 || !mesh.layers.isEnabled(layer)) continue;
+    const opacity = mesh.minRaycastOpacity, hits = [];
+    mesh.minRaycastOpacity = 0.05;
+    try { mesh.raycast(pickRay, hits); } finally { mesh.minRaycastOpacity = opacity; }
+    for (const h of hits) if (!hit || h.distance < hit.distance) hit = h;
+  }
+  return hit;
+}
+function walkTo(x, y) {  // WALK: glide toward the clicked surface, stopping 0.8 m short (at most 4 m per click)
+  const hit = splatHit(x, y);
+  if (!hit) return false;
+  const d = hit.point.clone().sub(camera.position), len = d.length();
+  const go = Math.min(4 / MPU, Math.max(0, len - 0.8 / MPU));
+  if (go < 0.05 / MPU) return false;
+  walk.goal = { left: d.normalize().multiplyScalar(go) };
+  pivotPoint = hit.point.clone(); pivotUntil = performance.now() + 900;
+  showPivot(performance.now()); showNamedView(-1); touch();
+  return true;
+}
+renderer.domElement.addEventListener("dblclick", (e) => { e.preventDefault(); pickPivot(e.clientX, e.clientY); });
+// Double-tap fallback: exactly one finger, <15 px total displacement, with no intervening multitouch.
+const fingers = new Set();
+let tap = null, lastTap = null;
+renderer.domElement.addEventListener("pointerdown", (e) => {
+  if (e.pointerType !== "touch") return;
+  fingers.add(e.pointerId);
+  if (fingers.size === 1) tap = { x: e.clientX, y: e.clientY, at: performance.now(), id: e.pointerId };
+  else { tap = null; lastTap = null; }
+});
+renderer.domElement.addEventListener("pointermove", (e) => {
+  if (tap && tap.id === e.pointerId && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 15) tap = null;
+});
+function endTap(e) {
+  fingers.delete(e.pointerId);
+  if (e.type === "pointerup" && tap && tap.id === e.pointerId && performance.now() - tap.at < 350) {
+    const now = performance.now();
+    if (lastTap && now - lastTap.at < 350 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 15) {
+      pickPivot(e.clientX, e.clientY); lastTap = null;
+    } else lastTap = { x: e.clientX, y: e.clientY, at: now };
+  }
+  tap = null;
+}
+renderer.domElement.addEventListener("pointerup", endTap);
+renderer.domElement.addEventListener("pointercancel", endTap);
+function updatePivot(now) {
+  if (pivotTween) {
+    const t = Math.min(1, (now - pivotTween.at) / 600), ease = t * t * (3 - 2 * t);
+    controls.target.lerpVectors(pivotTween.from, pivotTween.to, ease);
+    if (t === 1) pivotTween = null;
+  }
+}
+function showPivot(now) {
+  pivotEl.hidden = !pivotPoint || now > pivotUntil;
+  if (!pivotEl.hidden) {
+    const p = pivotPoint.clone().project(camera);
+    pivotEl.hidden = p.z < -1 || p.z > 1;
+    pivotEl.style.left = `${(p.x + 1) * innerWidth / 2}px`;
+    pivotEl.style.top = `${(1 - p.y) * innerHeight / 2}px`;
+  }
+}
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  const full = innerWidth * innerHeight * DPR * DPR;
+  movingPixels = Math.min(full, movingPixels * full / fullMovingPixels); fullMovingPixels = full;
+  canvasMoving = false;  // the resize cleared the canvas: no moving frame to hold
+  touch();
+});
+
+// ------------------------------------------------------------ rendering (decorator's fast path)
+const SETTLED_FRAME_MS = 100, SETTLE_MS = 200, MOVING_FOOTPRINT = 0.85, REGEN_DEG = 1, SLOW_FRAME_MS = 18, MIN_MOVING_PIXELS = 640 * 360;
+const DEFAULT_MOVING_FLOOR = 0.65;  // fraction of native DPR, even after pace() shrinks the pixel budget
+const floorQ = Q.has("movefloor") ? Number(Q.get("movefloor")) : NaN;
+const MOVING_FLOOR = Number.isFinite(floorQ) ? Math.min(1, Math.max(0, floorQ)) : DEFAULT_MOVING_FLOOR;
+let fullMovingPixels = innerWidth * innerHeight * DPR * DPR, movingPixels = fullMovingPixels;
+let paceGood = 0, lastPaceAt = 0, wasPaceMoving = false;
+let lastExactAt = -1e9, moving = false, regenPos = null, regenDir = null;
+const lastView = new THREE.Matrix4(), lastProj = new THREE.Matrix4(), cssSize = new THREE.Vector2();
+const sameMatrix = (a, b) => a.elements.every((x, i) => Math.abs(x - b.elements[i]) <= 1e-7);
+const setPR = (r) => { if (Math.abs(renderer.getPixelRatio() - r) > 1e-3) renderer.setPixelRatio(r); };
+// SCRIPT HOOK: pin the moving pixel budget (checks on renderers too slow for pace() to adapt, e.g. SwiftShader).
+state.setMovingPixels = (n) => { movingPixels = n; };
+state.isMoving = () => moving;
+function regenDue() {
+  const pos = camera.getWorldPosition(new THREE.Vector3()), dir = camera.getWorldDirection(new THREE.Vector3());
+  const rad = (REGEN_DEG * Math.PI) / 180;
+  const due = !regenPos || dir.angleTo(regenDir) > rad || pos.distanceTo(regenPos) > rad * Math.max(pos.distanceTo(controls.target), 0.1);
+  if (due) { regenPos = pos; regenDir = dir; }
+  return due;
+}
+// Start at native resolution. Shrink immediately on a >18 ms moving frame; probe upwards by only 8%
+// after 60 consecutive clean frames. This avoids oscillating across the 60/30 Hz vsync edge.
+function pace(now) {
+  const dt = now - lastPaceAt; lastPaceAt = now;
+  const consecutive = moving && wasPaceMoving; wasPaceMoving = moving;
+  if (!consecutive) { paceGood = 0; return; }
+  const c = renderer.getSize(cssSize), full = c.x * c.y * DPR * DPR;
+  if (dt > SLOW_FRAME_MS) {
+    movingPixels = Math.max(Math.min(full, MIN_MOVING_PIXELS), full * MOVING_FLOOR * MOVING_FLOOR, movingPixels * 0.8);
+    paceGood = 0;
+  } else if (++paceGood >= 60) {
+    paceGood = 0; movingPixels = Math.min(full, movingPixels * 1.08);
+  }
+}
+// Settled frames: float32 (or half) target, copied once, so hundreds of low-alpha layers don't round to 8 bits.
+let floatTarget = null;
+const copyCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const copyPass = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  glslVersion: THREE.GLSL3, uniforms: { map: { value: null } },
+  vertexShader: "void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }",
+  fragmentShader: "uniform sampler2D map;\nout vec4 color;\nvoid main() { color = texelFetch(map, ivec2(gl_FragCoord.xy), 0); }",
+  depthTest: false, depthWrite: false }));
+const bufSize = new THREE.Vector2();
+function floatTargetFor(t) {  // t, or a new float32 (or half) target, at the drawing-buffer size
+  const size = renderer.getDrawingBufferSize(bufSize);
+  if (!t) {
+    const gl = renderer.getContext();
+    const f32 = !!gl.getExtension("EXT_color_buffer_float") && !!gl.getExtension("EXT_float_blend");
+    t = new THREE.WebGLRenderTarget(size.x, size.y, { type: f32 ? THREE.FloatType : THREE.HalfFloatType });
+    t.texture.colorSpace = THREE.SRGBColorSpace;
+    t.isXRRenderTarget = true;  // three/Spark write display (sRGB) values, as into the canvas
+    t.texture.minFilter = t.texture.magFilter = THREE.NearestFilter;  // read with texelFetch; float32 may not filter
+  } else if (t.width !== size.x || t.height !== size.y) t.setSize(size.x, size.y);
+  return t;
+}
+// MOTION LOD crossfade: when the full model replaces the interactive one on a still view, the canvas blends
+// from the frame it shows to the full model's frame over FADE_MS (?fade=0: cut). After a move that frame is
+// the last moving one (reduced resolution, interactive model): it stays up while the full model sorts, is
+// redrawn once at that resolution and upscaled, so the resolution step and the model swap are one blend.
+// Both sides are drawn once into targets; the last fade frame is the full model's frame exactly. A move
+// cancels the fade (cut to the 1M).
+const FADE_MS = Q.get("fade") === "0" ? 0 : 280;
+const FULL_WAIT_MS = Number(Q.get("fullwait")) || 4000;  // longest hold of the last moving frame for the full sort
+let fade = null, fadeA = null, fadeB = null, fadeLo = null;  // fade: {at, ready, fromMoving, pr} while blending
+let canvasMoving = false, movingPR = 1;  // the canvas's last frame was a moving one, at this pixel ratio
+let settledISinceMove = 0;               // settled interactive frames drawn since the last moving frame
+const blendPass = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  glslVersion: THREE.GLSL3, uniforms: { a: { value: null }, b: { value: null }, t: { value: 0 }, lo: { value: false }, full: { value: new THREE.Vector2() } },
+  vertexShader: "void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }",
+  fragmentShader: "uniform sampler2D a, b;\nuniform float t;\nuniform bool lo;\nuniform vec2 full;\nout vec4 color;\n" +
+    "void main() { ivec2 p = ivec2(gl_FragCoord.xy);\n" +
+    "  vec4 ca = lo ? texture(a, gl_FragCoord.xy / full) : texelFetch(a, p, 0);  // lo: bilinear upscale, as the browser shows a low-res canvas\n" +
+    "  color = mix(ca, texelFetch(b, p, 0), t); }",
+  depthTest: false, depthWrite: false }));
+const footprintOf = (s, v) => { if (s.material.uniforms.footprintScale) s.material.uniforms.footprintScale.value = v; };
+function fadeFrame(now) {  // one crossfade frame; false once it has drawn the last one
+  if (!fade.ready) {
+    const u = blendPass.material.uniforms;
+    if (fade.fromMoving) {
+      // The last moving frame as it was drawn: interactive model, moving footprint, its pixel ratio, 8-bit.
+      const c = renderer.getSize(cssSize), w = Math.max(1, Math.floor(c.x * fade.pr)), h = Math.max(1, Math.floor(c.y * fade.pr));
+      if (!fadeLo) {
+        fadeLo = new THREE.WebGLRenderTarget(w, h);
+        fadeLo.texture.colorSpace = THREE.SRGBColorSpace;
+        fadeLo.texture.internalFormat = "RGBA8";  // display values stored as is, like the canvas
+        fadeLo.isXRRenderTarget = true;
+      } else if (fadeLo.width !== w || fadeLo.height !== h) fadeLo.setSize(w, h);
+      spark.autoUpdate = false; footprintOf(spark, fade.pr >= DPR - 1e-3 ? 1 : MOVING_FOOTPRINT);
+      renderer.setRenderTarget(fadeLo); renderer.render(scene, camI);
+      spark.autoUpdate = true; footprintOf(spark, 1);
+      u.a.value = fadeLo.texture; u.lo.value = true;
+    }
+    setPR(DPR);
+    for (const s of [spark, sparkF]) { s.autoUpdate = true; footprintOf(s, 1); }
+    if (!fade.fromMoving) {
+      fadeA = floatTargetFor(fadeA);
+      renderer.setRenderTarget(fadeA); renderer.render(scene, camI);
+      u.a.value = fadeA.texture; u.lo.value = false;
+    }
+    fadeB = floatTargetFor(fadeB);
+    renderer.setRenderTarget(fadeB); renderer.render(scene, camF);
+    renderer.setRenderTarget(null);
+    u.b.value = fadeB.texture; renderer.getDrawingBufferSize(u.full.value);
+    Object.assign(fade, { ready: true, at: null });
+    state.lastFade = { fromMoving: fade.fromMoving, pr: +fade.pr.toFixed(3), settledIFramesBefore: fade.settledI };
+    // This frame drew both models (a stall): show the source, and start the fade clock on the next frame.
+    u.t.value = 0;
+    renderer.render(blendPass, copyCam);
+    canvasMoving = false;
+    return true;
+  }
+  fade.at ??= now;
+  const k = FADE_MS > 0 ? Math.min(1, (now - fade.at) / FADE_MS) : 1;
+  blendPass.material.uniforms.t.value = k >= 1 ? 1 : k * k * (3 - 2 * k);
+  renderer.render(blendPass, copyCam);
+  canvasMoving = false;
+  state.fades = (state.fades ?? 0) + (k >= 1 ? 1 : 0);
+  return k < 1;
+}
+function renderExact(cam) {
+  floatTarget = floatTargetFor(floatTarget);
+  copyPass.material.uniforms.map.value = floatTarget.texture;
+  renderer.setRenderTarget(floatTarget);
+  renderer.render(scene, cam);
+  renderer.setRenderTarget(null);
+  renderer.render(copyPass, copyCam);
+}
+
+// ------------------------------------------------------------ fps overlay + bench
+const fpsEl = document.getElementById("fps");
+if (Q.get("fps") === "0") fpsEl.style.display = "none";
+const frameDts = [];
+let lastFrameAt = 0, lastOverlay = 0;
+function overlay(now) {
+  if (now - lastOverlay < 250) return;
+  lastOverlay = now;
+  const n = frameDts.length, ms = n ? frameDts.reduce((a, b) => a + b, 0) / n : 0;
+  const pr = renderer.getPixelRatio() / DPR;
+  fpsEl.textContent = idleNow ? "idle (view settled)\n" + `${state.variant ?? "…"}` :
+    `${ms ? (1000 / ms).toFixed(1) : "–"} fps  ${ms.toFixed(1)} ms\n` +
+    `${(shown().activeSplats / 1e6).toFixed(2)}M drawn  res ${(pr * 100).toFixed(0)}% ${moving ? "(moving)" : "(settled)"}`;
+}
+const bench = { phase: BENCH ? "wait" : "off" };
+window.__bench = null;
+function benchStep(now) {
+  if (bench.phase === "wait") {
+    if (!state.ready || (state.variant === "full" && MLOD && V[defaultKey] && !iKey)) return;  // MOTION LOD: both models up
+    bench.readyAt ??= now;
+    if (!lodIdle() && now - bench.readyAt < 20000) return;
+    applyCamera(CFG.cameras[0]);
+    controls.enabled = false;
+    Object.assign(bench, { phase: "hold", t: now, hold: [], orbit: [], loadMs: bench.readyAt });
+    bench.pos = camera.position.clone(); bench.target = controls.target.clone();
+    return;
+  }
+  if (bench.phase === "hold") {
+    if (now - bench.t > 3000) { bench.phase = "orbit"; bench.t = now; }
+    return;
+  }
+  if (bench.phase === "orbit") {
+    const t = (now - bench.t) / 10000;
+    if (t >= 1) { finishBench(); return; }
+    // Out 30 degrees and back about the orbit target, continuously moving.
+    const ang = (30 * Math.PI / 180) * Math.sin(Math.PI * t);
+    const off = bench.pos.clone().sub(bench.target).applyAxisAngle(up, ang);
+    camera.position.copy(bench.target).add(off);
+    camera.lookAt(bench.target);
+  }
+}
+// Bench: GPU time per frame (EXT_disjoint_timer_query_webgl2), independent of the vsync cap.
+const gl = renderer.getContext();
+const tq = BENCH ? gl.getExtension("EXT_disjoint_timer_query_webgl2") : null;
+const queries = [];
+function benchQueryBegin() {
+  if (!tq || (bench.phase !== "hold" && bench.phase !== "orbit")) return null;
+  const q = gl.createQuery();
+  gl.beginQuery(tq.TIME_ELAPSED_EXT, q);
+  return { q, phase: bench.phase };
+}
+function benchQueryEnd(q) {
+  if (q) { gl.endQuery(tq.TIME_ELAPSED_EXT); queries.push(q); }
+  while (queries.length && gl.getQueryParameter(queries[0].q, gl.QUERY_RESULT_AVAILABLE)) {
+    const { q: qq, phase } = queries.shift();
+    if (!gl.getParameter(tq.GPU_DISJOINT_EXT)) (bench[phase + "Gpu"] ??= []).push(gl.getQueryParameter(qq, gl.QUERY_RESULT) / 1e6);
+    gl.deleteQuery(qq);
+  }
+}
+function gpuStats(ms) {
+  if (!ms?.length) return null;
+  const s = [...ms].sort((a, b) => a - b);
+  return { mean_ms: +(ms.reduce((a, b) => a + b, 0) / ms.length).toFixed(2), p95_ms: +s[Math.floor(0.95 * s.length)].toFixed(2), n: ms.length };
+}
+function stats(dts) {
+  if (!dts.length) return {};
+  const s = [...dts].sort((a, b) => a - b), sum = dts.reduce((a, b) => a + b, 0);
+  const pct = (p) => s[Math.min(s.length - 1, Math.floor(p * s.length))];
+  return { fps: +(1000 * dts.length / sum).toFixed(1), frames: dts.length, p95_ms: +pct(0.95).toFixed(1),
+    max_ms: +s[s.length - 1].toFixed(1), median_ms: +pct(0.5).toFixed(1) };
+}
+async function finishBench() {
+  bench.phase = "drain";
+  for (let i = 0; i < 30 && queries.length; i++) { await nextFrame(); benchQueryEnd(null); }
+  bench.phase = "done";
+  controls.enabled = true;
+  const c = renderer.getSize(cssSize);
+  const r = { variant: state.variant, splats: state.numSplats, budget: state.variant === "lod" ? spark.lodSplatCount : null,
+    canvas: `${c.x}x${c.y}@${DPR}`, load_ms: Math.round(bench.loadMs), orbit: stats(bench.orbit), hold: stats(bench.hold),
+    orbit_gpu: gpuStats(bench.orbitGpu), hold_gpu: gpuStats(bench.holdGpu),
+    moving_res_end: +(renderer.getPixelRatio() / DPR).toFixed(2), drawn_end: shown().activeSplats, presented_end: presented,
+    gpu: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : ""; })() };
+  window.__bench = r;
+  document.title = `BENCH ${r.variant} orbit ${r.orbit.fps} fps (hold ${r.hold.fps})`;
+  console.log("BENCH " + JSON.stringify(r));
+}
+
+renderer.setAnimationLoop((now) => {
+  // Navigation uses the animation clock, independently of idle / throttled rendering.
+  const dt = lastTickAt === null ? 1 / 60 : Math.min(0.1, Math.max(0, (now - lastTickAt) / 1000));
+  lastTickAt = now;
+  move.set(0, 0, 0);
+  const walking = mode === "walk";
+  if (walking && walk.sync) { walkFrom(_dir.subVectors(controls.target, camera.position).normalize()); walk.sync = false; }
+  if (walking && (walk.dYaw || walk.dPitch)) {  // the look drag, applied once per frame (no smoothing lag)
+    walk.yaw -= walk.dYaw; walk.pitch += walk.dPitch;
+    walk.dYaw = walk.dPitch = 0;
+  }
+  if (walking) walkDir(fwd); else camera.getWorldDirection(fwd);
+  const look = walking ? fwd.clone() : null;
+  if (walking) fwd.copy(LVL_F).multiplyScalar(Math.cos(walk.yaw)).addScaledVector(LVL_R,Math.sin(walk.yaw));  // WALK: W/S level with the floor
+  right.crossVectors(fwd, up).normalize();
+  if (keys.has("KeyW") || keys.has("ArrowUp")) move.add(fwd);
+  if (keys.has("KeyS") || keys.has("ArrowDown")) move.sub(fwd);
+  if (keys.has("KeyD") || keys.has("ArrowRight")) move.add(right);
+  if (keys.has("KeyA") || keys.has("ArrowLeft")) move.sub(right);
+  if (!walking && keys.has("KeyE")) move.add(up);
+  if (!walking && keys.has("KeyQ")) move.sub(up);
+  const accelerating = move.lengthSq() > 0;
+  if (accelerating) {
+    const speed = (walking ? WALK_SPEED : FLY_SPEED) * (keys.has("ShiftLeft") || keys.has("ShiftRight") ? 3 : 1) * (keys.has("ControlLeft") || keys.has("ControlRight") ? 0.25 : 1);
+    move.normalize().multiplyScalar(speed);
+  }
+  velocity.lerp(move, damp(accelerating ? 0.992 : 0.993, dt));
+  if (velocity.length() < 1e-4 * FLY_SPEED) velocity.set(0, 0, 0);
+  camera.position.addScaledVector(velocity, dt); controls.target.addScaledVector(velocity, dt);
+  if (walking) {
+    // scroll / pinch steps and slides ease in over ~0.15 s; a double-click glide over ~0.5 s
+    const a = damp(0.985, dt);
+    if (walk.wheel) { camera.position.addScaledVector(fwd, walk.wheel * a); walk.wheel *= 1 - a; if (Math.abs(walk.wheel) < 1e-4) walk.wheel = 0; }
+    if (walk.pan.lengthSq()) { walk.pan.addScaledVector(LVL_U,-walk.pan.dot(LVL_U)); camera.position.addScaledVector(walk.pan, a); walk.pan.multiplyScalar(1 - a); if (walk.pan.length() < 1e-4) walk.pan.set(0, 0, 0); }
+    if (walk.goal) {
+      const g = damp(0.993, dt);
+      camera.position.addScaledVector(walk.goal.left, g); walk.goal.left.multiplyScalar(1 - g);
+      if (walk.goal.left.length() < 2e-3) walk.goal = null;
+    }
+    if (state.routeTarget) {
+      const delta = new THREE.Vector3(...state.routeTarget).sub(camera.position);
+      delta.addScaledVector(LVL_U,-delta.dot(LVL_U));
+      const length=delta.length();
+      if(length>0.001/MPU) {camera.position.addScaledVector(delta,Math.min(1,(state.routeSpeed || 0.65)/MPU*dt/length));const yaw=Math.atan2(delta.dot(LVL_R),delta.dot(LVL_F));walk.yaw+=Math.atan2(Math.sin(yaw-walk.yaw),Math.cos(yaw-walk.yaw))*damp(0.99,dt);walk.pitch*=1-damp(0.99,dt);walkDir(look);}
+    }
+    walkCollide(dt);
+    controls.target.copy(camera.position).add(look);
+    camera.lookAt(controls.target);
+  }
+  const flying = velocity.lengthSq() > 0, panning = !!controls._panOffset && controls._panOffset.lengthSq() > 0;
+  if (!BENCH && !walking) boomRestore(flying, panning);  // COLLIDE
+  if (controls.enabled && !walking) {
+    if (pivotTween) updatePivot(now);
+    else controls.update(dt);
+  }
+  // Cut orbit damping's sub-pixel tail (< 1e-4 rad or 1e-4 radius of motion left): it would keep the view
+  // "moving" for another second or so after every gesture, holding the 1M model on screen and the loop awake.
+  const sd = controls._sphericalDelta, po = controls._panOffset;
+  if (sd && Math.abs(sd.theta) + Math.abs(sd.phi) < 1e-4) { sd.theta = 0; sd.phi = 0; }
+  if (po && po.length() < 1e-4 * CFG.radius) po.set(0, 0, 0);
+  if (!BENCH && !walking) { collide(dt, flying, panning); camera.lookAt(controls.target); }  // COLLIDE
+  if (BENCH) benchStep(now);
+  camera.updateMatrixWorld();
+  showPivot(now);
+  if (!sameMatrix(camera.matrixWorld, lastView) || !sameMatrix(camera.projectionMatrix, lastProj)) {
+    lastView.copy(camera.matrixWorld); lastProj.copy(camera.projectionMatrix);
+    movedAt = now;
+  }
+  syncCams();
+  let fullPending = false;
+  // MOTION LOD: the interactive model on the first moving frame; once still, keep it on screen until the
+  // full model's sort for this exact view is done (started once per settle, off screen), then swap.
+  if (state.variant !== "full") presented = "I";
+  else if (!MLOD || !iKey) presented = "F";
+  else if (now - movedAt < SETTLE_MS) { presented = "I"; fade = null; }
+  else if (presented === "I") {
+    if (fullKick !== movedAt && !sparkF.sorting) {
+      // Compare sort stamps, not wall time: the request and the new sort can share one performance.now() tick.
+      fullKick = movedAt; fullSortBase = sparkF.lastSortTime;
+      // The renderer may report this view while still holding another view's order. Request a fresh
+      // sort once per settle and keep the interactive frame until that sort has actually finished.
+      sparkF.sortDirty = true; sparkF.setDirty();
+      sparkF.update({ scene, camera: camF }).catch((e) => console.error("full sort", e));
+    }
+    if (fullKick === movedAt && fullSorted()) {
+      presented = "F";
+      fade = { at: now, ready: false, fromMoving: canvasMoving, pr: movingPR, settledI: settledISinceMove };
+    } else { busyAt = now; fullPending = true; }
+  }
+  const S = shown(), cam = presented === "F" ? camF : camI;
+  // IDLE RULE (stale sort): stop drawing (the canvas keeps the last frame) only when the camera has been
+  // still for 3 s AND nothing changed, sorted or streamed for 1 s. Spark sorts in a worker and a big jump
+  // can leave it a few generations behind; the 3 s keeps drawing until the last frame up is sorted for the
+  // current view. Also idles while model parts are loading once the first picture is up.
+  if (S.sorting || S.sortDirty || !lodIdle()) busyAt = now;
+  // POST-SORT FRAME: on a slow renderer one frame can take > 1 s, so the 1 s rule could go idle before any
+  // frame is drawn with the newest sort's order (a stale-order frame stays up, e.g. after the auto-swap to
+  // full). Never idle until a settled full-res frame was drawn after the latest completed sort.
+  if (!S.sorting && S.lastSortTime !== sortSeen) { sortSeen = S.lastSortTime; needSettled = true; }
+  idleNow = IDLE && (state.ready || !!first) && !needSettled && now - movedAt > 3000 && now - Math.max(dirtyAt, busyAt) > 1000;
+  if (idleNow) { frameDts.length = 0; lastFrameAt = now; overlay(now); return; }
+  moving = FAST && now - movedAt < SETTLE_MS;
+  // MOTION LOD: while the full model sorts for the view the camera stopped at, keep the last moving frame up
+  // (no full-resolution 1M frame in between: the crossfade starts from it). At most FULL_WAIT_MS.
+  if (fullPending && canvasMoving && !moving && now - movedAt < SETTLE_MS + FULL_WAIT_MS) { overlay(now); return; }
+  if (fade && presented === "F") {
+    if (!fadeFrame(now)) fade = null;
+    busyAt = now; overlay(now);
+    return;
+  }
+  // Settled frames (exact, full resolution, ~3x a moving frame's GPU time here) only refine the
+  // still image: at most one per SETTLED_FRAME_MS, so a busy GPU isn't kept full and the next
+  // gesture never queues behind a stack of them. (Not in bench mode, which measures them.)
+  if (!moving && !BENCH && THROTTLE && now - lastExactAt < SETTLED_FRAME_MS) { overlay(now); return; }
+  if (!moving) lastExactAt = now; else lastExactAt = -1e9;
+  const fdt = now - lastFrameAt; lastFrameAt = now;
+  if (fdt < 250) { frameDts.push(fdt); if (frameDts.length > 60) frameDts.shift(); }
+  if (bench.phase === "hold") bench.hold.push(fdt);
+  if (bench.phase === "orbit" && now - bench.t > 0 && fdt < 1000) bench.orbit.push(fdt);
+  if (!moving) regenPos = null;
+  pace(now);
+  const footprint = S.material.uniforms.footprintScale;
+  const q = benchQueryBegin();
+  if (moving) {
+    S.autoUpdate = regenDue();
+    const c = renderer.getSize(cssSize);
+    setPR(Math.min(DPR, Math.max(MOVING_FLOOR * DPR, Math.sqrt(movingPixels / (c.x * c.y)))));
+    if (footprint) footprint.value = renderer.getPixelRatio() >= DPR - 1e-3 ? 1 : MOVING_FOOTPRINT;
+    renderer.render(scene, cam);
+    S.autoUpdate = true;
+    canvasMoving = true; movingPR = renderer.getPixelRatio(); settledISinceMove = 0;
+  } else {
+    setPR(DPR);
+    if (footprint) footprint.value = 1;
+    S.autoUpdate = true;
+    if (EXACT) renderExact(cam); else renderer.render(scene, cam);
+    canvasMoving = false;
+    if (presented === "I") settledISinceMove++;
+    if (!S.sorting && S.lastSortTime === sortSeen) needSettled = false;
+  }
+  benchQueryEnd(q);
+  overlay(now);
+});
+</script>
+</body>
+</html>

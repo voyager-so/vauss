@@ -1,0 +1,71 @@
+name: Rust CI
+# PRs get one fast Linux build; the macOS and Windows builds run on release tags or a manual run.
+on:
+  pull_request:
+  push:
+    tags: ['vauss-v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  CARGO_BUILD_JOBS: '4'
+concurrency:
+  group: rust-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"}]' || '[{"os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"},{"os":"macos-14","target":"aarch64-apple-darwin"},{"os":"windows-2022","target":"x86_64-pc-windows-msvc"}]') }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        shell: bash
+        run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }} && rustup default stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo build --locked --workspace --target ${{ matrix.target }}
+      - name: Check primary command and silent compatibility aliases
+        run: cargo test --locked -p splat-cli --test cli --target ${{ matrix.target }} primary_command_and_compatibility_aliases_are_identical -- --exact
+  # Licence, ban and source policy (deny.toml): no GPL/AGPL/LGPL or non-commercial crates, pinned git sources.
+  deny:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo install cargo-deny --locked --version 0.18.4
+      - run: cargo deny check licenses bans sources
+  # Unit and fixture tests of the crates whose behaviour these jobs can check without a GPU or
+  # COLMAP (fake-COLMAP ladders, fetch pins, viewer templates). The build matrix above compiles
+  # everything; this runs the tests.
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-tests-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+      - run: cargo test --locked -p splat-fetch -p splat-sfm -p splat-webexport
+      # Free-roam packaging and walk checks: generated pages, provenance scrub, raw scenes, the
+      # walk/floor/pivot harness on the viewer template.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          mkdir -p "$RUNNER_TEMP/three" && cd "$RUNNER_TEMP/three"
+          npm pack --silent three@0.180.0 && tar -xzf three-0.180.0.tgz
+          echo "THREE_MODULE=$RUNNER_TEMP/three/package/build/three.module.js" >> "$GITHUB_ENV"
+      - run: python3 -m pip install --quiet numpy
+      - run: python3 -m unittest discover -s dev/free-roam -p 'test_*.py' -v
+      - run: node scripts/accept/viewer-roam.js

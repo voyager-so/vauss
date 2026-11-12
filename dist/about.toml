@@ -1,0 +1,197 @@
+accepted = ["Apache-2.0", "MIT", "CDLA-Permissive-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "Unicode-3.0", "Unicode-DFS-2016", "CC0-1.0", "BSL-1.0", "OpenSSL", "MPL-2.0", "Apache-2.0 WITH LLVM-exception", "IJG"]
+# jpeg-encoder (splat-eval frame JPEGs) is "(MIT OR Apache-2.0) AND IJG": IJG is permissive with attribution, which THIRD_PARTY_LICENSES carries.
+ignore-dev-dependencies = true
+# ring's bundled BoringSSL licenses need cargo-about's audited clarification.
+workarounds = ["ring"]
+
+[splat-agent]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-agent.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-agent.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-assets]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-assets.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-assets.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-brush]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-brush.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-brush.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-cli]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-cli.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-cli.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-contracts]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-contracts.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-contracts.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-core]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-core.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-core.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-effects]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-effects.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-effects.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-eval]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-eval.clarify]
+license = "LicenseRef-Vauss-Preview AND Apache-2.0"
+
+[[splat-eval.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[[splat-eval.clarify.files]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+
+[splat-fetch]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-fetch.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-fetch.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-fill]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-fill.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-fill.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-inpaint]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-inpaint.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-inpaint.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-mcp]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-mcp.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-mcp.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-mesh]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-mesh.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-mesh.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-sfm]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-sfm.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-sfm.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-shots]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-shots.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-shots.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-spirula]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-spirula.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-spirula.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"
+
+[splat-webexport]
+accepted = ["LicenseRef-Vauss-Preview"]
+
+[splat-webexport.clarify]
+license = "LicenseRef-Vauss-Preview"
+
+[[splat-webexport.clarify.files]]
+path = "LICENSE"
+license = "LicenseRef-Vauss-Preview"
+checksum = "3aa2ffeb753f2d25e5254e083cb4477e16942617a34983f50c5288fd9d610b5d"

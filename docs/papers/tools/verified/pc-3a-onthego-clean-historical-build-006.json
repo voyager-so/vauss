@@ -1,0 +1,641 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "parity-casual 3a re-measure: On-the-go clean 7k, native main historical-build-006 (3 seeds) vs Spirula v2026.10.6 (O7-gate, 3 runs), common views",
+ "argv": [
+  "--arm",
+  "spirula=$SPLAT_DATA/runs/perf/results.jsonl::engine.label=spirula-v2026.10.6,steps=7000,notes=O7-gate*,scene=onthego-spot-clean|onthego-mountain-clean",
+  "--arm",
+  "native=$SPLAT_DATA/research/parity-casual/s1-results.jsonl::steps=7000",
+  "--common-views",
+  "--metric",
+  "psnr",
+  "--metric",
+  "lpips_vgg",
+  "--metric",
+  "lpips_alex",
+  "--metric",
+  "ssim",
+  "--label",
+  "parity-casual 3a re-measure: On-the-go clean 7k, native main historical-build-006 (3 seeds) vs Spirula v2026.10.6 (O7-gate, 3 runs), common views",
+  "--json",
+  "$HOME/fast/splat/oss/parity-casual/verified/pc-3a-onthego-clean-historical-build-006.json"
+ ],
+ "cwd": "$HOME/fast/worktrees/splat/main/docs/papers/tools",
+ "generated_at": "2026-10-23T22:56:04-07:00",
+ "verifier_sha256": "f62670c4129df45c64c04fc58d04aa163c29ea61df798f67568d3ed4c10d89b7",
+ "verifier_git_head": "historical-build-006",
+ "options": {
+  "common_views": true,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "spirula": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "filters": [
+      "engine.label=spirula-v2026.10.6",
+      "steps=7000",
+      "notes=O7-gate*",
+      "scene=onthego-spot-clean|onthego-mountain-clean"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/runs/perf/results.jsonl",
+     "sha256": "9de3886709e40bc0afd537bf68b4ad3128167c0645dcfae3679b2d37c5c4aef7"
+    }
+   ],
+   "engine_sha256": [
+    "d68620c134b1b65d5456f6f7728de5ca531012f8af2b2fd7ce3fa0d502d9420a"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  },
+  "native": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl",
+     "filters": [
+      "steps=7000"
+     ],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl",
+     "sha256": "f981e963f2b9a15ca3c1c74d0a99de75060de5bd942ecf90b1dcaada41c2bafc"
+    }
+   ],
+   "engine_sha256": [
+    "e74762a26ba69c369a3fcf05649360064ed594cb9610f0febdf4f748881e96d3"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "onthego-mountain-clean": {
+   "n_expected": 11,
+   "n_common": 8,
+   "common_view_hash": "c6225b15e2b8b62f1a011373c10ab42a27bfa0b2a8055481d0a6c454240b2caf",
+   "identical_view_sets": false,
+   "common_views": [
+    "1extra117",
+    "1extra118",
+    "1extra119",
+    "1extra121",
+    "1extra124",
+    "1extra125",
+    "1extra126",
+    "1extra128"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-170359-39054069",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1652",
+       "format": "splat-perf Row per_image",
+       "n_scored": 9,
+       "views_hash": "915c0bf8da28022abf58eb905fcaeaacabbc822d225f17616f8baac867f68ce4",
+       "normalised_views_hash": "3fc093280e9f0d15bf219bbdad0f8b765d22b2a543edbdaf283c77aca439183c",
+       "dropped_for_common": [
+        "1extra120"
+       ],
+       "mean": {
+        "psnr": 21.044357801925102,
+        "lpips_vgg": 0.2694078963249922,
+        "lpips_alex": 0.22804343700408936,
+        "ssim": 0.699126730699771
+       }
+      },
+      {
+       "run": "pair-20261008-170359-3f4b6d81",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1346",
+       "format": "splat-perf Row per_image",
+       "n_scored": 11,
+       "views_hash": "b7e9a2a64e416ec2e7bc1b06d3a344956a23a3fda86d158f4bceb7c59e6254e2",
+       "normalised_views_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+       "dropped_for_common": [
+        "1extra120",
+        "1extra127",
+        "1extra129"
+       ],
+       "mean": {
+        "psnr": 20.963129409432,
+        "lpips_vgg": 0.2679122928529978,
+        "lpips_alex": 0.2288763588294387,
+        "ssim": 0.6993727482888749
+       }
+      },
+      {
+       "run": "pair-20261008-170400-cce58a58",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1655",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "e3f94d4862cb15e3b502d065bbc477bf07351cc2265bf0a4ee684f3a6c5a3454",
+       "normalised_views_hash": "8e2bf37c9e770b75e487a889190854d88612708d5e0120c24771184559bf3321",
+       "dropped_for_common": [
+        "1extra127",
+        "1extra129"
+       ],
+       "mean": {
+        "psnr": 21.102992261720416,
+        "lpips_vgg": 0.27022424526512623,
+        "lpips_alex": 0.23027848731726408,
+        "ssim": 0.6994259067064652
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 21.03682649102584,
+      "lpips_vgg": 0.2691814781477054,
+      "lpips_alex": 0.22906609438359737,
+      "ssim": 0.6993084618983704
+     }
+    },
+    "native": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "20261024T054325-135-18617882-onthego-mountain-clean-7000-pc-main-historical-build-006-20261024-054254",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:6",
+       "format": "splat-perf Row per_image",
+       "n_scored": 11,
+       "views_hash": "b7e9a2a64e416ec2e7bc1b06d3a344956a23a3fda86d158f4bceb7c59e6254e2",
+       "normalised_views_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+       "dropped_for_common": [
+        "1extra120",
+        "1extra127",
+        "1extra129"
+       ],
+       "mean": {
+        "psnr": 21.142455687146867,
+        "lpips_vgg": 0.2606361974030733,
+        "lpips_alex": 0.22288082353770733,
+        "ssim": 0.7145881916854429
+       }
+      },
+      {
+       "run": "20261024T054441-135-29ac8591-onthego-mountain-clean-7000-pc-main-historical-build-006-20261024-054412",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:8",
+       "format": "splat-perf Row per_image",
+       "n_scored": 11,
+       "views_hash": "b7e9a2a64e416ec2e7bc1b06d3a344956a23a3fda86d158f4bceb7c59e6254e2",
+       "normalised_views_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+       "dropped_for_common": [
+        "1extra120",
+        "1extra127",
+        "1extra129"
+       ],
+       "mean": {
+        "psnr": 21.139297394317694,
+        "lpips_vgg": 0.25824231561273336,
+        "lpips_alex": 0.22009824495762587,
+        "ssim": 0.7153200450649762
+       }
+      },
+      {
+       "run": "20261024T054814-135-256d80d4-onthego-mountain-clean-7000-pc-main-historical-build-006-20261024-054745",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:14",
+       "format": "splat-perf Row per_image",
+       "n_scored": 11,
+       "views_hash": "b7e9a2a64e416ec2e7bc1b06d3a344956a23a3fda86d158f4bceb7c59e6254e2",
+       "normalised_views_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+       "dropped_for_common": [
+        "1extra120",
+        "1extra127",
+        "1extra129"
+       ],
+       "mean": {
+        "psnr": 21.035358175496917,
+        "lpips_vgg": 0.25978174060583115,
+        "lpips_alex": 0.22101711854338646,
+        "ssim": 0.714769362812712
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 21.10570375232049,
+      "lpips_vgg": 0.25955341787387926,
+      "lpips_alex": 0.2213320623462399,
+      "ssim": 0.7148925331877103
+     }
+    }
+   }
+  },
+  "onthego-spot-clean": {
+   "n_expected": 10,
+   "n_common": 7,
+   "common_view_hash": "7a36ae904b98ad6f0dbc6f8d998c267a8675267f2420358f01f95a5071256358",
+   "identical_view_sets": false,
+   "common_views": [
+    "1extra169",
+    "1extra170",
+    "1extra171",
+    "1extra172",
+    "1extra173",
+    "1extra175",
+    "1extra177"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_vgg",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "spirula": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "pair-20261008-170400-5b04145e",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1658",
+       "format": "splat-perf Row per_image",
+       "n_scored": 8,
+       "views_hash": "7d1f90c96e53a9c4894b20ae11a19d813db916acda4ae11699307fed3ff3399e",
+       "normalised_views_hash": "97739b278806d54423f8f7e5f856d756cf1f01a9abb335d3314dd12bd267c78d",
+       "dropped_for_common": [
+        "1extra168"
+       ],
+       "mean": {
+        "psnr": 24.713185810502615,
+        "lpips_vgg": 0.14952544548681804,
+        "lpips_alex": 0.11060673637049538,
+        "ssim": 0.8648706873061839
+       }
+      },
+      {
+       "run": "pair-20261008-170400-6e272bce",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1362",
+       "format": "splat-perf Row per_image",
+       "n_scored": 8,
+       "views_hash": "d590d42e9159e6540a9f74bbb836587dd16a5cd95e01bc46cff72bbce58a73d9",
+       "normalised_views_hash": "d7b2cd7e5db0fba4a09aeb8cede87dec5ee0bada6fcda2bf16b6c069d0fffe62",
+       "dropped_for_common": [
+        "1extra176"
+       ],
+       "mean": {
+        "psnr": 24.95829401365864,
+        "lpips_vgg": 0.15002209161009109,
+        "lpips_alex": 0.11104743608406611,
+        "ssim": 0.8625316338585635
+       }
+      },
+      {
+       "run": "pair-20261008-170400-c43cf4b9",
+       "source": "$SPLAT_DATA/runs/perf/results.jsonl:1353",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [
+        "1extra168",
+        "1extra174",
+        "1extra176"
+       ],
+       "mean": {
+        "psnr": 24.75680859606005,
+        "lpips_vgg": 0.14808100994144166,
+        "lpips_alex": 0.10792257530348641,
+        "ssim": 0.8615513023924134
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 24.809429473407103,
+      "lpips_vgg": 0.14920951567945026,
+      "lpips_alex": 0.1098589159193493,
+      "ssim": 0.8629845411857202
+     }
+    },
+    "native": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": "20261024T054032-134-30640056-onthego-spot-clean-7000-pc-main-historical-build-006-20261024-053956",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:1",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [
+        "1extra168",
+        "1extra174",
+        "1extra176"
+       ],
+       "mean": {
+        "psnr": 24.098807030781405,
+        "lpips_vgg": 0.1796872881906373,
+        "lpips_alex": 0.1541283598967961,
+        "ssim": 0.8588772096467828
+       }
+      },
+      {
+       "run": "20261024T054059-135-d1bad10-onthego-spot-clean-7000-pc-main-historical-build-006-20261024-054024",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:3",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [
+        "1extra168",
+        "1extra174",
+        "1extra176"
+       ],
+       "mean": {
+        "psnr": 24.2520135359731,
+        "lpips_vgg": 0.17611496150493622,
+        "lpips_alex": 0.14890996473176138,
+        "ssim": 0.8626274834603923
+       }
+      },
+      {
+       "run": "20261024T054600-135-2e5241e7-onthego-spot-clean-7000-pc-main-historical-build-006-20261024-054528",
+       "source": "$SPLAT_DATA/research/parity-casual/s1-results.jsonl:10",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [
+        "1extra168",
+        "1extra174",
+        "1extra176"
+       ],
+       "mean": {
+        "psnr": 24.386517921260474,
+        "lpips_vgg": 0.17410855101687567,
+        "lpips_alex": 0.14759417197534017,
+        "ssim": 0.863365379464893
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 24.245779496004996,
+      "lpips_vgg": 0.17663693357081636,
+      "lpips_alex": 0.15021083220129924,
+      "ssim": 0.8616233575240226
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "spirula": {
+   "psnr": {
+    "mean_over_scenes": 22.92312798221647,
+    "per_scene": {
+     "onthego-mountain-clean": 21.03682649102584,
+     "onthego-spot-clean": 24.809429473407103
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.2091954969135778,
+    "per_scene": {
+     "onthego-mountain-clean": 0.2691814781477054,
+     "onthego-spot-clean": 0.14920951567945026
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.16946250515147335,
+    "per_scene": {
+     "onthego-mountain-clean": 0.22906609438359737,
+     "onthego-spot-clean": 0.1098589159193493
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.7811465015420453,
+    "per_scene": {
+     "onthego-mountain-clean": 0.6993084618983704,
+     "onthego-spot-clean": 0.8629845411857202
+    }
+   }
+  },
+  "native": {
+   "psnr": {
+    "mean_over_scenes": 22.675741624162743,
+    "per_scene": {
+     "onthego-mountain-clean": 21.10570375232049,
+     "onthego-spot-clean": 24.245779496004996
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.21809517572234782,
+    "per_scene": {
+     "onthego-mountain-clean": 0.25955341787387926,
+     "onthego-spot-clean": 0.17663693357081636
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.18577144727376957,
+    "per_scene": {
+     "onthego-mountain-clean": 0.2213320623462399,
+     "onthego-spot-clean": 0.15021083220129924
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.7882579453558665,
+    "per_scene": {
+     "onthego-mountain-clean": 0.7148925331877103,
+     "onthego-spot-clean": 0.8616233575240226
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "native": {
+   "a": "spirula",
+   "b": "native",
+   "metrics": {
+    "psnr": {
+     "mean_delta": -0.24738635805372766,
+     "ci95": [
+      -0.5636499774021075,
+      0.06887726129465221
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 0,
+      "=": 1,
+      "L": 1
+     },
+     "n_scenes": 2,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "onthego-mountain-clean",
+       "delta": 0.06887726129465221,
+       "a": 21.03682649102584,
+       "b": 21.10570375232049,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 8,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": -0.5636499774021075,
+       "a": 24.809429473407103,
+       "b": 24.245779496004996,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "lpips_vgg": {
+     "mean_delta": 0.00889967880876999,
+     "ci95": [
+      -0.009628060273826122,
+      0.0274274178913661
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 1,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 2,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "onthego-mountain-clean",
+       "delta": -0.009628060273826122,
+       "a": 0.2691814781477054,
+       "b": 0.25955341787387926,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 8,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": 0.0274274178913661,
+       "a": 0.14920951567945026,
+       "b": 0.17663693357081636,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "lpips_alex": {
+     "mean_delta": 0.01630894212229623,
+     "ci95": [
+      -0.00773403203735748,
+      0.04035191628194994
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 1,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 2,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "onthego-mountain-clean",
+       "delta": -0.00773403203735748,
+       "a": 0.22906609438359737,
+       "b": 0.2213320623462399,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 8,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": 0.04035191628194994,
+       "a": 0.1098589159193493,
+       "b": 0.15021083220129924,
+       "call": "L",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": 0.007111443813821172,
+     "ci95": [
+      -0.0013611836616975737,
+      0.015584071289339918
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 1,
+      "=": 1,
+      "L": 0
+     },
+     "n_scenes": 2,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "onthego-mountain-clean",
+       "delta": 0.015584071289339918,
+       "a": 0.6993084618983704,
+       "b": 0.7148925331877103,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 8,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-spot-clean",
+       "delta": -0.0013611836616975737,
+       "a": 0.8629845411857202,
+       "b": 0.8616233575240226,
+       "call": "=",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 7,
+       "paired_by_seed": false,
+       "per_seed_delta": null,
+       "seed_sd": null
+      }
+     ]
+    }
+   }
+  }
+ }
+}

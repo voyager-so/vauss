@@ -1,0 +1,29 @@
+# FFmpeg configure flags for every target (one per line; # comments). LGPL-2.1-or-later only.
+--disable-gpl
+--disable-nonfree
+--disable-version3
+--disable-autodetect
+--enable-static
+--disable-shared
+--enable-ffmpeg
+--enable-ffprobe
+--disable-ffplay
+--disable-doc
+--disable-debug
+--enable-runtime-cpudetect
+--pkg-config-flags=--static
+# zlib: PNG, TIFF, EXR and compressed mov headers.
+--enable-zlib
+# Opus encode (splat's WebM audio).
+--enable-libopus
+# VP9 encode (splat's browser video when no H.264 encoder works) and VP8/VP9 decode.
+--enable-libvpx
+# AV1 decode (phone and camera AV1). FFmpeg's own decoders cover H.264, HEVC (8/10-bit), VP9, ProRes,
+# MJPEG, PNG and WebP; its own encoders cover MPEG-4 part 2, AAC, MJPEG and PNG.
+--enable-libdav1d
+# drawtext (splat ad's title cards; font files only, no fontconfig): FreeType renders the glyphs
+# (under the FTL), HarfBuzz shapes the text.
+--enable-libfreetype
+--enable-libharfbuzz
+--disable-libx264
+--disable-libx265

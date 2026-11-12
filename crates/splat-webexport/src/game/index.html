@@ -1,0 +1,1813 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0c10; color: #d8dae0; overflow: hidden;
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100vw; height: 100vh; outline: none; cursor: crosshair; }
+  .panel { position: fixed; background: rgba(16,18,24,.72); border-radius: 8px; padding: 6px 10px; z-index: 3;
+    pointer-events: none; }  /* no backdrop-filter: a blur over the WebGL canvas re-composites every frame */
+  #stats { top: 12px; left: 12px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+  #stats b { color: #fff; font-weight: 600; }
+  /* CONTROLS CARD: bottom-left corner, never over the centre / crosshair */
+  #hint { left: 12px; bottom: 12px; color: #c4c9d4; font-size: 12px; line-height: 1.55;
+    transition: opacity 1.2s; max-width: min(260px, calc(50vw - 40px)); }
+  #hint b { color: #fff; font-weight: 600; display: inline-block; min-width: 74px; }
+  #hint .t { color: #fff; font-weight: 600; margin-bottom: 2px; }
+  #hint.fade { opacity: 0; }
+  #play { top: 26%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; color: #fff; white-space: nowrap; }
+  #cross { position: fixed; left: 50%; top: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%);
+    pointer-events: none; z-index: 3; }
+  #cross::before, #cross::after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.55); }
+  #cross::before { left: 10px; top: 0; width: 2px; height: 22px; }
+  #cross::after { top: 10px; left: 0; height: 2px; width: 22px; }
+  #cross.hit::before, #cross.hit::after { background: #ffcf5a; }
+  #flash { position: fixed; left: 50%; top: 50%; width: 140px; height: 140px; transform: translate(-50%, -50%);
+    pointer-events: none; z-index: 2; opacity: 0;
+    background: radial-gradient(circle, rgba(255,240,190,.85) 0%, rgba(255,190,90,.35) 22%, rgba(255,160,60,0) 60%); }
+  #load { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; background: #0b0c10; z-index: 5; }
+  #load h1 { font-size: 18px; font-weight: 600; margin: 0; }
+  #bar { width: min(420px, 70vw); height: 6px; background: #22252e; border-radius: 3px; overflow: hidden; }
+  #bar > div { height: 100%; width: 0; background: #7aa2ff; transition: width .15s; }
+  #loadText { color: #aab0bc; font-size: 12px; }
+  .hidden { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "__THREE__", "three/addons/": "__THREE_ADDONS__" } }
+</script>
+</head>
+<body>
+<div id="load"><h1>__TITLE__</h1><div id="bar"><div></div></div><div id="loadText">Loading…</div></div>
+<div id="cross"></div>
+<div id="flash"></div>
+<div id="stats" class="panel"></div>
+<div id="play" class="panel hidden">Click to play · or press a gamepad button</div>
+<div id="hint" class="panel fade"></div>
+
+<!-- VXCORE: the pure game logic (voxel world, greedy mesher, DDA raycast, player + debris physics), without
+     three.js, so it can be exercised headless (node: extract this script and run it with a `window` object).
+     Physics runs in voxel-cell units: cell (x,y,z) spans [x,x+1) and sits at origin + edge*(x,y,z) in the world. -->
+<script id="vxcore">
+(function (root) {
+  "use strict";
+  const CS = 32, CS3 = CS * CS * CS, P = 34, P2 = P * P, P3 = P * P * P;
+  const ckey = (cx, cy, cz) => cx + cy * 2048 + cz * 4194304;
+  const EPS = 1e-6, SKIN = 1e-3;
+
+  class World {
+    constructor(v) {
+      this.edge = v.edge; this.origin = v.origin.slice(); this.dims = v.dims.slice();
+      this.chunks = new Map(); this.count = 0; this.dirty = new Set();
+      this._k = -1; this._c = undefined;
+    }
+    get(cx, cy, cz) { return this.chunks.get(ckey(cx, cy, cz)); }
+    ensure(cx, cy, cz) {
+      const k = ckey(cx, cy, cz);
+      let c = this.chunks.get(k);
+      if (!c) {
+        c = { cx, cy, cz, key: k, occ: new Uint8Array(CS3), rgb: new Uint8Array(CS3 * 3), n: 0, quads: 0, mesh: null, tex: null };
+        this.chunks.set(k, c); this._k = -1;
+      }
+      return c;
+    }
+    inside(x, y, z) { return x >= 0 && y >= 0 && z >= 0 && x < this.dims[0] && y < this.dims[1] && z < this.dims[2]; }
+    solid(x, y, z) {  // integer cell coords
+      if (!(x >= 0 && y >= 0 && z >= 0 && x < this.dims[0] && y < this.dims[1] && z < this.dims[2])) return 0;
+      const k = ckey(x >> 5, y >> 5, z >> 5);
+      let c;
+      if (k === this._k) c = this._c; else { c = this.chunks.get(k); this._k = k; this._c = c; }
+      return c ? c.occ[(x & 31) | ((y & 31) << 5) | ((z & 31) << 10)] : 0;
+    }
+    rgb(x, y, z) {
+      const c = this.inside(x, y, z) && this.get(x >> 5, y >> 5, z >> 5);
+      if (!c) return null;
+      const i = ((x & 31) | ((y & 31) << 5) | ((z & 31) << 10)) * 3;
+      return [c.rgb[i], c.rgb[i + 1], c.rgb[i + 2]];
+    }
+    setCell(x, y, z, on, r, g, b) {
+      if (!this.inside(x, y, z)) return false;
+      const c = on ? this.ensure(x >> 5, y >> 5, z >> 5) : this.get(x >> 5, y >> 5, z >> 5);
+      if (!c) return false;
+      const i = (x & 31) | ((y & 31) << 5) | ((z & 31) << 10);
+      if (on) {
+        if (c.occ[i]) return false;
+        c.occ[i] = 1; c.rgb[i * 3] = r; c.rgb[i * 3 + 1] = g; c.rgb[i * 3 + 2] = b; c.n++; this.count++;
+      } else {
+        if (!c.occ[i]) return false;
+        c.occ[i] = 0; c.n--; this.count--;
+      }
+      this.touch(x, y, z);
+      return true;
+    }
+    // Mark the cell's chunk dirty, plus every neighbour whose 1-cell padded border holds it (faces + AO).
+    touch(x, y, z) {
+      const cx = x >> 5, cy = y >> 5, cz = z >> 5, lx = x & 31, ly = y & 31, lz = z & 31;
+      const xs = lx === 0 ? [0, -1] : lx === 31 ? [0, 1] : [0];
+      const ys = ly === 0 ? [0, -1] : ly === 31 ? [0, 1] : [0];
+      const zs = lz === 0 ? [0, -1] : lz === 31 ? [0, 1] : [0];
+      for (const dx of xs) for (const dy of ys) for (const dz of zs) {
+        const k = ckey(cx + dx, cy + dy, cz + dz);
+        if ((dx | dy | dz) === 0 || this.chunks.has(k)) this.dirty.add(k);
+      }
+    }
+    // Padded 34^3 occupancy of chunk c (and, if given, RGBA8 with alpha = occupancy; RGB for own cells only).
+    padded(c, occ, rgba) {
+      const bx = c.cx * CS - 1, by = c.cy * CS - 1, bz = c.cz * CS - 1;
+      for (let z = 0; z < CS; z++) for (let y = 0; y < CS; y++) {
+        const src = (y << 5) | (z << 10), dst = 1 + P * (y + 1) + P2 * (z + 1);
+        for (let x = 0; x < CS; x++) {
+          const o = c.occ[src + x];
+          occ[dst + x] = o;
+          if (rgba) {
+            const s = (src + x) * 3, d = (dst + x) * 4;
+            rgba[d] = c.rgb[s]; rgba[d + 1] = c.rgb[s + 1]; rgba[d + 2] = c.rgb[s + 2]; rgba[d + 3] = o ? 255 : 0;
+          }
+        }
+      }
+      for (let z = 0; z < P; z++) for (let y = 0; y < P; y++) {
+        const edgeRow = z === 0 || z === P - 1 || y === 0 || y === P - 1;
+        for (let x = 0; x < P; x += edgeRow ? 1 : P - 1) {
+          const i = x + P * y + P2 * z, o = this.solid(bx + x, by + y, bz + z);
+          occ[i] = o;
+          if (rgba) { const d = i * 4; rgba[d] = rgba[d + 1] = rgba[d + 2] = 0; rgba[d + 3] = o ? 255 : 0; }
+        }
+      }
+    }
+    // Remove every solid cell whose centre is within r of (px,py,pz) and y >= minY (the floor slab below minY
+    // is bedrock); pushes x,y,z,r,g,b of each to out.
+    removeSphere(px, py, pz, r, out, minY = -Infinity) {
+      const r2 = r * r;
+      let n = 0;
+      for (let z = Math.floor(pz - r); z <= Math.floor(pz + r); z++)
+        for (let y = Math.floor(py - r); y <= Math.floor(py + r); y++)
+          for (let x = Math.floor(px - r); x <= Math.floor(px + r); x++) {
+            const dx = x + 0.5 - px, dy = y + 0.5 - py, dz = z + 0.5 - pz;
+            if (y < minY || dx * dx + dy * dy + dz * dz > r2 || !this.solid(x, y, z)) continue;
+            if (out) { const c = this.rgb(x, y, z); out.push(x, y, z, c[0], c[1], c[2]); }
+            this.setCell(x, y, z, false);
+            n++;
+          }
+      return n;
+    }
+    // SCORCH: darken (x0.7, once per cell) every solid cell within r of (px,py,pz): after a shot, the crater's
+    // exposed walls and the bedrock floor inside it. Returns how many cells it darkened.
+    scorch(px, py, pz, r) {
+      const r2 = r * r;
+      let n = 0;
+      for (let z = Math.floor(pz - r); z <= Math.floor(pz + r); z++)
+        for (let y = Math.floor(py - r); y <= Math.floor(py + r); y++)
+          for (let x = Math.floor(px - r); x <= Math.floor(px + r); x++) {
+            const dx = x + 0.5 - px, dy = y + 0.5 - py, dz = z + 0.5 - pz;
+            if (dx * dx + dy * dy + dz * dz > r2 || !this.solid(x, y, z)) continue;
+            const c = this.get(x >> 5, y >> 5, z >> 5), i = (x & 31) | ((y & 31) << 5) | ((z & 31) << 10);
+            if (!c.sc) c.sc = new Uint8Array(CS3);
+            if (c.sc[i]) continue;
+            c.sc[i] = 1;
+            for (let k = 0; k < 3; k++) c.rgb[i * 3 + k] = Math.round(c.rgb[i * 3 + k] * 0.7);
+            this.touch(x, y, z); n++;
+          }
+      return n;
+    }
+    // Local surface normal at cell (x,y,z): the mean offset of the empty cells within r (null if none / balanced).
+    surfaceNormal(x, y, z, r = 2) {
+      let nx = 0, ny = 0, nz = 0;
+      for (let dz = -r; dz <= r; dz++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++)
+        if (!this.solid(x + dx, y + dy, z + dz)) { nx += dx; ny += dy; nz += dz; }
+      const l = Math.hypot(nx, ny, nz);
+      return l > 1e-6 ? [nx / l, ny / l, nz / l] : null;
+    }
+    // Amanatides-Woo DDA from o along unit d (cell units), at most maxT. {x,y,z, nx,ny,nz (entered face), t} or null.
+    raycast(ox, oy, oz, dx, dy, dz, maxT) {
+      let x = Math.floor(ox), y = Math.floor(oy), z = Math.floor(oz);
+      if (this.solid(x, y, z)) return { x, y, z, nx: 0, ny: 0, nz: 0, t: 0 };
+      const sx = dx > 0 ? 1 : -1, sy = dy > 0 ? 1 : -1, sz = dz > 0 ? 1 : -1;
+      const tdx = dx !== 0 ? Math.abs(1 / dx) : Infinity, tdy = dy !== 0 ? Math.abs(1 / dy) : Infinity, tdz = dz !== 0 ? Math.abs(1 / dz) : Infinity;
+      let tmx = dx !== 0 ? (sx > 0 ? x + 1 - ox : ox - x) * tdx : Infinity;
+      let tmy = dy !== 0 ? (sy > 0 ? y + 1 - oy : oy - y) * tdy : Infinity;
+      let tmz = dz !== 0 ? (sz > 0 ? z + 1 - oz : oz - z) * tdz : Infinity;
+      let nx = 0, ny = 0, nz = 0, t = 0;
+      for (let guard = 0; guard < 100000; guard++) {
+        if (tmx < tmy && tmx < tmz) { x += sx; t = tmx; tmx += tdx; nx = -sx; ny = 0; nz = 0; }
+        else if (tmy < tmz) { y += sy; t = tmy; tmy += tdy; nx = 0; ny = -sy; nz = 0; }
+        else { z += sz; t = tmz; tmz += tdz; nx = 0; ny = 0; nz = -sz; }
+        if (t > maxT) return null;
+        if (this.solid(x, y, z)) return { x, y, z, nx, ny, nz, t };
+      }
+      return null;
+    }
+    // Top (cell y + 1) of the first solid cell at or below y in column (x,z), or null within maxCells.
+    floorBelow(x, y, z, maxCells) {
+      const cx = Math.floor(x), cz = Math.floor(z);
+      for (let cy = Math.floor(y), n = 0; n <= maxCells; cy--, n++) if (this.solid(cx, cy, cz)) return cy + 1;
+      return null;
+    }
+  }
+
+  function decodeVXG1(bytes, v) {
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (bytes.length < 8 || String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) !== "VXG1") throw new Error("voxels: not a VXG1 file");
+    const nChunks = dv.getUint32(4, true);
+    const w = new World(v);
+    let at = 8;
+    for (let k = 0; k < nChunks; k++) {
+      const cx = dv.getInt32(at, true), cy = dv.getInt32(at + 4, true), cz = dv.getInt32(at + 8, true), n = dv.getUint32(at + 12, true);
+      at += 16;
+      if (at + 4096 + 3 * n > bytes.length) throw new Error(`voxels: chunk ${k} truncated`);
+      const c = w.ensure(cx, cy, cz), occ = c.occ, rgb = c.rgb;
+      let j = at + 4096;
+      for (let b = 0; b < 4096; b++) {
+        const m = bytes[at + b];
+        if (!m) continue;
+        for (let bit = 0; bit < 8; bit++) {
+          if (!(m & (1 << bit))) continue;
+          const i = (b << 3) | bit;
+          occ[i] = 1; rgb[i * 3] = bytes[j]; rgb[i * 3 + 1] = bytes[j + 1]; rgb[i * 3 + 2] = bytes[j + 2]; j += 3;
+        }
+      }
+      if (j !== at + 4096 + 3 * n) throw new Error(`voxels: chunk ${k} has ${(j - at - 4096) / 3} set bits, header says ${n}`);
+      c.n = n; w.count += n;
+      at = j;
+    }
+    if (at !== bytes.length) throw new Error(`voxels: ${bytes.length - at} trailing bytes`);
+    return w;
+  }
+
+  // Greedy mesher over a padded 34^3 occupancy: one quad per maximal rectangle of exposed faces (colour is
+  // looked up per fragment, so faces merge regardless of colour). Positions in chunk-local cell units 0..32.
+  const MASK = new Uint8Array(CS * CS);
+  function greedy(occ) {
+    const pos = [], nrm = [], idx = [], st = [1, P, P2], c = [0, 0, 0];
+    let nv = 0;
+    for (let a = 0; a < 3; a++) {
+      const u = (a + 1) % 3, v = (a + 2) % 3, sa = st[a], su = st[u], sv = st[v];
+      for (let s = 1; s >= -1; s -= 2) {
+        const off = s * sa;
+        for (let k = 0; k < CS; k++) {
+          const base = 1 + P + P2 + k * sa;
+          let any = 0;
+          for (let j = 0; j < CS; j++) {
+            let p = base + j * sv;
+            for (let i = 0; i < CS; i++, p += su) {
+              const f = occ[p] && !occ[p + off] ? 1 : 0;
+              MASK[i | (j << 5)] = f; any |= f;
+            }
+          }
+          if (!any) continue;
+          const plane = s > 0 ? k + 1 : k;
+          for (let j = 0; j < CS; j++) {
+            for (let i = 0; i < CS;) {
+              if (!MASK[i | (j << 5)]) { i++; continue; }
+              let w = 1;
+              while (i + w < CS && MASK[(i + w) | (j << 5)]) w++;
+              let h = 1;
+              grow: for (; j + h < CS; h++) {
+                const r = (j + h) << 5;
+                for (let q = 0; q < w; q++) if (!MASK[(i + q) | r]) break grow;
+              }
+              for (let y = 0; y < h; y++) MASK.fill(0, i + ((j + y) << 5), i + w + ((j + y) << 5));
+              c[a] = plane;
+              c[u] = i; c[v] = j; pos.push(c[0], c[1], c[2]);
+              c[u] = i + w; pos.push(c[0], c[1], c[2]);
+              c[v] = j + h; pos.push(c[0], c[1], c[2]);
+              c[u] = i; pos.push(c[0], c[1], c[2]);
+              const n0 = a === 0 ? s : 0, n1 = a === 1 ? s : 0, n2 = a === 2 ? s : 0;
+              nrm.push(n0, n1, n2, n0, n1, n2, n0, n1, n2, n0, n1, n2);
+              // (e_u x e_v) = e_a: counter-clockwise seen from +a for the positive face.
+              if (s > 0) idx.push(nv, nv + 1, nv + 2, nv, nv + 2, nv + 3);
+              else idx.push(nv, nv + 2, nv + 1, nv, nv + 3, nv + 2);
+              nv += 4;
+              i += w;
+            }
+          }
+        }
+      }
+    }
+    return { pos: new Float32Array(pos), nrm: new Int8Array(nrm), idx: nv > 65535 ? new Uint32Array(idx) : new Uint16Array(idx), quads: nv / 4 };
+  }
+
+  // First-person player: an AABB (feet centre p) swept per axis through the grid, with step-up / step-down.
+  const G_MS2 = 9.81;
+  class Player {
+    constructor(world, mpu) {
+      this.w = world;
+      this.k = 1 / (mpu * world.edge);  // cells per metre
+      this.p = [0, 0, 0]; this.v = [0, 0, 0];
+      this.hw = 0.25 * this.k;
+      this.onGround = false; this.crouched = false;
+      this.eyeM = 1.6; this.stepOff = 0;  // eye height (m, eased) and step smoothing (cells, decays to 0)
+      this.stepM = 0.26; this.respawns = 0; this.jumps = 0;
+    }
+    height(crouched = this.crouched) { return (crouched ? 1.2 : 1.75) * this.k; }
+    overlaps(h = this.height()) {
+      const p = this.p, hw = this.hw, w = this.w;
+      const x0 = Math.floor(p[0] - hw + EPS), x1 = Math.floor(p[0] + hw - EPS);
+      const y0 = Math.floor(p[1] + EPS), y1 = Math.floor(p[1] + h - EPS);
+      const z0 = Math.floor(p[2] - hw + EPS), z1 = Math.floor(p[2] + hw - EPS);
+      for (let y = y0; y <= y1; y++) for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) if (w.solid(x, y, z)) return true;
+      return false;
+    }
+    // Lift out of solid cells (spawn, teleport, a placed voxel): up to 2 m, in quarter cells.
+    unstick() {
+      if (!this.overlaps()) return true;
+      const y = this.p[1];
+      for (let d = 0.25; d <= 2 * this.k; d += 0.25) {
+        this.p[1] = y + d;
+        if (!this.overlaps()) { this.p[1] = Math.floor(this.p[1] + EPS) + SKIN; if (this.overlaps()) this.p[1] = y + d; return true; }
+      }
+      this.p[1] = y;
+      return false;
+    }
+    // Nearest free standing spot (spawn inside furniture or a wall): square rings of 5 cm steps out to maxR
+    // cells, each tried at the same height and up to stepM higher; else lift straight up (unstick). With a
+    // facing dir [x,z] (spawn), spots up to 0.6 m further out that can walk 0.5 m forward win over blocked ones.
+    findFree(maxR, dir) {
+      const p = this.p, x0 = p[0], y0 = p[1], z0 = p[2];
+      const st = Math.max(1, Math.round(0.05 * this.k)), up = Math.ceil(this.stepM * this.k), extra = 0.6 * this.k;
+      const cands = [];
+      let firstR = -1;
+      for (let r = 0; r <= maxR && (firstR < 0 || (dir && r <= firstR + extra)); r += st) {
+        for (let dz = -r; dz <= r; dz += st) for (let dx = -r; dx <= r; dx += st) {
+          if (Math.max(Math.abs(dx), Math.abs(dz)) < r) continue;
+          for (let dy = 0; dy <= up; dy += st) {
+            p[0] = x0 + dx; p[1] = y0 + dy; p[2] = z0 + dz;
+            if (!this.overlaps()) { cands.push([p[0], p[1], p[2], dx * dx + dz * dz + dy * dy]); break; }
+          }
+        }
+        if (cands.length && firstR < 0) { firstR = r; if (!dir) break; }
+      }
+      let best = null, bs = Infinity;
+      for (const c of cands) {
+        let s = c[3];
+        if (dir) {
+          p[0] = c[0]; p[1] = c[1]; p[2] = c[2];
+          this.sweep(0, dir[0] * 0.5 * this.k); this.sweep(2, dir[1] * 0.5 * this.k);
+          if ((p[0] - c[0]) ** 2 + (p[2] - c[2]) ** 2 < (0.45 * this.k) ** 2) s += 1e9;
+        }
+        if (s < bs) { bs = s; best = c; }
+      }
+      if (best) { p[0] = best[0]; p[1] = best[1]; p[2] = best[2]; return true; }
+      p[0] = x0; p[1] = y0; p[2] = z0;
+      return this.unstick();
+    }
+    layerSolid(axis, L, o1, a0, a1, o2, b0, b1) {
+      const c = [0, 0, 0];
+      c[axis] = L;
+      for (let a = a0; a <= a1; a++) {
+        c[o1] = a;
+        for (let b = b0; b <= b1; b++) { c[o2] = b; if (this.w.solid(c[0], c[1], c[2])) return true; }
+      }
+      return false;
+    }
+    // Move along one axis by d (cells), stopping SKIN short of the first solid layer. Returns true if blocked.
+    sweep(axis, d) {
+      if (d === 0) return false;
+      const p = this.p, hw = this.hw, h = this.height();
+      const mn = [p[0] - hw, p[1], p[2] - hw], mx = [p[0] + hw, p[1] + h, p[2] + hw];
+      const o1 = (axis + 1) % 3, o2 = (axis + 2) % 3;
+      const a0 = Math.floor(mn[o1] + EPS), a1 = Math.floor(mx[o1] - EPS), b0 = Math.floor(mn[o2] + EPS), b1 = Math.floor(mx[o2] - EPS);
+      if (d > 0) {
+        const s = Math.floor(mx[axis] - EPS) + 1, e = Math.floor(mx[axis] + d - EPS);
+        for (let L = s; L <= e; L++) if (this.layerSolid(axis, L, o1, a0, a1, o2, b0, b1)) { p[axis] += Math.min(d, L - SKIN - mx[axis]); return true; }
+      } else {
+        const s = Math.floor(mn[axis] + EPS) - 1, e = Math.floor(mn[axis] + d + EPS);
+        for (let L = s; L >= e; L--) if (this.layerSolid(axis, L, o1, a0, a1, o2, b0, b1)) { p[axis] += Math.max(d, L + 1 + SKIN - mn[axis]); return true; }
+      }
+      p[axis] += d;
+      return false;
+    }
+    // One fixed physics step. inp: {wx, wz (wish direction, |w| <= 1), sprint, jump, crouch}
+    step(dt, inp) {
+      const k = this.k, p = this.p, v = this.v;
+      if (inp.crouch) this.crouched = true;
+      else if (this.crouched && !this.overlaps(this.height(false))) this.crouched = false;
+      this.eyeM += ((this.crouched ? 1.0 : 1.6) - this.eyeM) * (1 - Math.exp(-14 * dt));
+      this.stepOff *= Math.exp(-16 * dt);
+      const speed = 1.4 * (inp.sprint && !this.crouched ? 1.8 : 1) * (this.crouched ? 0.55 : 1) * k;
+      const a = 1 - Math.exp(-(this.onGround ? 16 : 2.5) * dt);
+      v[0] += (inp.wx * speed - v[0]) * a;
+      v[2] += (inp.wz * speed - v[2]) * a;
+      let jumped = false;
+      if (inp.jump && this.onGround) { v[1] = Math.sqrt(2 * G_MS2 * 0.5) * k; this.onGround = false; this.jumps++; jumped = true; }
+      v[1] = Math.max(v[1] - G_MS2 * k * dt, -40 * k);
+      const wasGround = this.onGround;
+      const x0 = p[0], y0 = p[1], z0 = p[2];
+      let bx = this.sweep(0, v[0] * dt), bz = this.sweep(2, v[2] * dt);
+      if (bx || bz) {
+        // STEP-UP: rise up to stepM, move, settle back down; keep it if it got further than the plain move.
+        // Also in the air, so a jump (0.5 m apex) mantles onto ledges up to ~0.75 m.
+        const plain = [p[0], p[1], p[2]], pd = (p[0] - x0) ** 2 + (p[2] - z0) ** 2;
+        p[0] = x0; p[1] = y0; p[2] = z0;
+        this.sweep(1, this.stepM * k);
+        const rose = p[1] - y0;
+        const tbx = this.sweep(0, v[0] * dt), tbz = this.sweep(2, v[2] * dt);
+        this.sweep(1, -rose);
+        const td = (p[0] - x0) ** 2 + (p[2] - z0) ** 2;
+        if (rose > 0 && td > pd + 1e-10 && p[1] >= y0 - 1e-6) { this.stepOff -= p[1] - y0; bx = tbx; bz = tbz; }
+        else { p[0] = plain[0]; p[1] = plain[1]; p[2] = plain[2]; }
+      }
+      if (bx) v[0] = 0;
+      if (bz) v[2] = 0;
+      const by = this.sweep(1, v[1] * dt);
+      if (by) { if (v[1] < 0) this.onGround = true; v[1] = 0; }
+      else {
+        this.onGround = false;
+        // STEP-DOWN: walking off a small ledge keeps the feet on the ground (no 5 cm free falls on rugs).
+        if (wasGround && !jumped && v[1] <= 0) {
+          const y1 = p[1];
+          if (this.sweep(1, -this.stepM * k)) { this.onGround = true; v[1] = 0; this.stepOff += y1 - p[1]; }
+          else p[1] = y1;
+        }
+      }
+    }
+  }
+
+  // Debris: point bodies in cell units, gravity + per-axis bounce with friction against the grid.
+  function debrisStep(w, p, v, i, dt, g) {
+    const o = i * 3;
+    v[o + 1] -= g * dt;
+    let rest = true;
+    for (let a = 0; a < 3; a++) {
+      const np = p[o + a] + v[o + a] * dt;
+      const cx = Math.floor(a === 0 ? np : p[o]), cy = Math.floor(a === 1 ? np : p[o + 1]), cz = Math.floor(a === 2 ? np : p[o + 2]);
+      if (w.solid(cx, cy, cz)) {
+        v[o + a] *= -0.3;
+        if (a === 1) { v[o] *= 0.75; v[o + 2] *= 0.75; }
+        if (Math.abs(v[o + a]) < 0.5) v[o + a] = 0;
+      } else { p[o + a] = np; if (v[o + a] !== 0) rest = false; }
+    }
+    return rest;
+  }
+
+  // Splat hole mask: RG8, one texel per mask cell (holeF x holeF x holeF voxels), x fastest, then y (up),
+  // then z; mask cell (i,j,k) spans origin + hc*(i,j,k) .. +hc, hc = edge*holeF (the voxel grid's origin and
+  // axes). Interleaved bytes (stride 2):
+  //  R: signed distance field: 128 + HOLE_SCALE * (distance from the cell centre to the nearest crater sphere
+  //     surface, in mask cells), clamped: < 128 inside a crater, 255 (+12.7 cells) = far / no crater.
+  //  G: cavity colour factor x255 (255 = untouched): the scorched pocket behind each hit (see markCavity).
+  const HOLE_SCALE = 10, HOLE_FAR = 255;
+  // markHoles: union a sphere (centre c, radius rCells; mask-cell units) into the R field, for cells within
+  // rCells + 12.7 and y >= y0. Returns how many cells newly went inside.
+  // (zFrom..zTo: only those z slabs, so a big update can be spread over frames.)
+  function markHoles(data, dims, c, rCells, y0, stride = 1, zFrom = -Infinity, zTo = Infinity) {
+    const [hx, hy, hz] = dims, reach = rCells + (HOLE_FAR - 128) / HOLE_SCALE, r2 = reach * reach;
+    let n = 0;
+    for (let z = Math.max(0, zFrom, Math.floor(c[2] - reach)); z <= Math.min(hz - 1, zTo, Math.floor(c[2] + reach)); z++)
+      for (let y = Math.max(y0, 0, Math.floor(c[1] - reach)); y <= Math.min(hy - 1, Math.floor(c[1] + reach)); y++)
+        for (let x = Math.max(0, Math.floor(c[0] - reach)); x <= Math.min(hx - 1, Math.floor(c[0] + reach)); x++) {
+          const dx = x + 0.5 - c[0], dy = y + 0.5 - c[1], dz = z + 0.5 - c[2], q = dx * dx + dy * dy + dz * dz;
+          if (q > r2) continue;
+          const i = (x + hx * (y + hy * z)) * stride;
+          const v = Math.max(0, Math.min(HOLE_FAR, Math.round(128 + HOLE_SCALE * (Math.sqrt(q) - rCells))));
+          if (v < data[i]) { if (data[i] >= 128 && v < 128) n++; data[i] = v; }
+        }
+    return n;
+  }
+  const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  // Cavity colour factor at offset v (mask cells) from a hit at c with unit shot direction u: a cone along u
+  // from the hit to `depth`, radius rh at the hit widening to 1.2 rh at the far end; inside, x0.08 on the axis
+  // rising to x0.15 at the cone wall (near-black centre); edges and far end softened over fw to x1.
+  // Nothing toward the shooter (t < 0) is touched.
+  function cavityFactor(v, u, rh, depth, fw) { return cavityFactorXYZ(v[0], v[1], v[2], u, rh, depth, fw); }
+  function cavityFactorXYZ(vx, vy, vz, u, rh, depth, fw) {
+    const t = vx * u[0] + vy * u[1] + vz * u[2];
+    if (t < -0.5 * fw) return 1;
+    const ax = vx - t * u[0], ay = vy - t * u[1], az = vz - t * u[2], rad = Math.sqrt(ax * ax + ay * ay + az * az);
+    const rc = rh * (1 + 0.2 * Math.min(1, Math.max(0, t / depth)));
+    const w = (1 - smooth(rc - fw, rc + 0.5 * fw, rad)) * (1 - smooth(depth - fw, depth, t)) * smooth(-0.5 * fw, 0.5 * fw, t);
+    const inner = 0.08 + 0.07 * Math.min(1, rad / rc);
+    return 1 - w * (1 - inner);
+  }
+  // markCavity: darken (min) the G channel with cavityFactor. Returns how many cells it changed.
+  function markCavity(data, dims, c, u, rh, depth, fw, stride = 2, off = 1, zFrom = -Infinity, zTo = Infinity) {
+    const [hx, hy, hz] = dims, reach = Math.hypot(1.2 * rh + fw, depth) + 1;
+    let n = 0;
+    for (let z = Math.max(0, zFrom, Math.floor(c[2] - reach)); z <= Math.min(hz - 1, zTo, Math.floor(c[2] + reach)); z++)
+      for (let y = Math.max(0, Math.floor(c[1] - reach)); y <= Math.min(hy - 1, Math.floor(c[1] + reach)); y++)
+        for (let x = Math.max(0, Math.floor(c[0] - reach)); x <= Math.min(hx - 1, Math.floor(c[0] + reach)); x++) {
+          const f = cavityFactorXYZ(x + 0.5 - c[0], y + 0.5 - c[1], z + 0.5 - c[2], u, rh, depth, fw);
+          if (f >= 1) continue;
+          const i = (x + hx * (y + hy * z)) * stride + off, v = Math.round(255 * f);
+          if (v < data[i]) { data[i] = v; n++; }
+        }
+    return n;
+  }
+  // holeSample: a channel at world point p, trilinear between cell centres (exactly the GPU modifier's lookup;
+  // edges clamp); `far` outside the grid. holeDist: the R field in mask cells. holeCavity: the G factor 0..1.
+  function holeSample(data, dims, origin, hc, p, stride, off, far) {
+    const q = [0, 1, 2].map((a) => (p[a] - origin[a]) / hc - 0.5);
+    if (q.some((v, a) => !(v > -1 && v < dims[a]))) return far;
+    const i0 = q.map(Math.floor), f = q.map((v, a) => v - i0[a]);
+    const at = (dx, dy, dz) => {
+      const x = Math.min(dims[0] - 1, Math.max(0, i0[0] + dx)), y = Math.min(dims[1] - 1, Math.max(0, i0[1] + dy)), z = Math.min(dims[2] - 1, Math.max(0, i0[2] + dz));
+      return data[(x + dims[0] * (y + dims[1] * z)) * stride + off];
+    };
+    const lx = (dy, dz) => at(0, dy, dz) + (at(1, dy, dz) - at(0, dy, dz)) * f[0];
+    const ly = (dz) => lx(0, dz) + (lx(1, dz) - lx(0, dz)) * f[1];
+    return ly(0) + (ly(1) - ly(0)) * f[2];
+  }
+  function holeDist(data, dims, origin, hc, p, stride = 1) {
+    return (holeSample(data, dims, origin, hc, p, stride, 0, HOLE_FAR) - 128) / HOLE_SCALE;
+  }
+  function holeCavity(data, dims, origin, hc, p) { return holeSample(data, dims, origin, hc, p, 2, 1, 255) / 255; }
+  // The modifier's rule for a splat at hole distance d (mask cells) with largest std-dev s (mask cells):
+  // hidden when d < min(2 s, sMax) (centre inside the sphere, or within 2 sigma of it: no torn half-splats
+  // at the crater edge), scorched rim when d < that + rim.
+  const HOLE_SIGMAS = 2;
+  function holeClass(d, s, sMax, rim) {
+    const k = Math.min(HOLE_SIGMAS * s, sMax);
+    return d < k ? "hidden" : d < k + rim ? "rim" : "clear";
+  }
+  // Rim colour factor: 0.4 at the crater edge rising smoothly to 1 across the rim band (1 outside it).
+  function holeRimFactor(d, s, sMax, rim) {
+    const t = Math.min(1, Math.max(0, (d - Math.min(HOLE_SIGMAS * s, sMax)) / rim));
+    return 0.4 + 0.6 * t * t * (3 - 2 * t);
+  }
+
+  root.VXCore = { CS, P, P3, ckey, World, decodeVXG1, greedy, Player, debrisStep, markHoles, markCavity, cavityFactor, holeDist, holeCavity, holeClass, holeRimFactor, HOLE_SCALE, HOLE_FAR };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+
+<script type="module">
+import * as THREE from "three";
+
+const CFG = __CFG__;
+const Q = new URLSearchParams(location.search);
+const VX = window.VXCore;
+const MPU = CFG.metersPerUnit || 1;   // scene units -> metres
+const HUD = Q.get("hud") !== "0";
+const HOLES = Q.get("holes") === "sdf" ? "sdf" : Q.get("holes") === "0" ? "off" : "grid";
+let holesMode = HOLES;  // "grid" falls back to "sdf" if Spark's generator rejects the mask modifier
+const G = window.__game = { ready: false, splatReady: false, error: null, CFG };
+const $ = (id) => document.getElementById(id);
+const loadEl = $("load"), barEl = $("bar").firstElementChild, loadText = $("loadText");
+const setLoad = (f, t) => { barEl.style.width = `${Math.round(100 * Math.min(1, Math.max(0, f)))}%`; if (t) loadText.textContent = t; };
+if (!HUD) for (const id of ["stats", "hint", "cross", "play"]) $(id).classList.add("hidden");
+function fail(e) {
+  console.error(e);
+  G.error = String(e && e.message || e);
+  loadEl.classList.remove("hidden");
+  loadText.textContent = "Could not start: " + G.error;
+}
+addEventListener("error", (e) => { if (!G.ready) fail(e.error || e.message); });
+
+// ------------------------------------------------------------ data parts (file:// safe: classic script tags)
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = () => { s.remove(); res(); }; s.onerror = () => rej(new Error("could not load " + src));
+    document.head.appendChild(s);
+  });
+}
+function b64ToBytes(b64) {
+  if (Uint8Array.fromBase64) return Uint8Array.fromBase64(b64);
+  const bin = atob(b64), n = bin.length, out = new Uint8Array(n);
+  for (let i = 0; i < n; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+const yieldTask = () => new Promise((r) => setTimeout(r, 0));
+// base64 -> bytes: Uint8Array.fromBase64 where it exists, else a data: URL fetch (decoded off the main thread,
+// works from file://), else atob.
+async function b64ToBytesAsync(b64) {
+  if (Uint8Array.fromBase64) return Uint8Array.fromBase64(b64);
+  try { return new Uint8Array(await (await fetch("data:application/octet-stream;base64," + b64)).arrayBuffer()); }
+  catch (e) { return b64ToBytes(b64); }
+}
+// whenIdle(): resolves at a moment the game can afford a long task (see the main loop's idleGate); the
+// background full model loads part by part only then.
+async function dataBytes(v, progress, whenIdle) {  // data/<key>-NN.js parts -> one Uint8Array of v.bytes
+  window.__SPLAT_DATA = window.__SPLAT_DATA || {};
+  const out = new Uint8Array(v.bytes);
+  let at = 0;
+  for (let i = 0; i < v.parts; i++) {
+    const k = `${v.key}-${String(i).padStart(2, "0")}`;
+    progress?.(i / v.parts);
+    if (whenIdle) await whenIdle();
+    await loadScript(`data/${k}.js`);
+    if (whenIdle) await whenIdle();
+    const b = await b64ToBytesAsync(window.__SPLAT_DATA[k]);
+    delete window.__SPLAT_DATA[k];
+    out.set(b, at); at += b.length;
+    await yieldTask();
+  }
+  if (at !== v.bytes) throw new Error(`${v.key}: got ${at} of ${v.bytes} bytes`);
+  progress?.(1);
+  return out;
+}
+
+// ------------------------------------------------------------ renderer, camera
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+renderer.setPixelRatio(DPR);
+renderer.setSize(innerWidth, innerHeight);
+document.body.prepend(renderer.domElement);
+renderer.domElement.tabIndex = 0;
+const scene = new THREE.Scene();
+const BG = new THREE.Color(0x0b0c10);
+scene.background = BG;
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.03 / MPU, 400 / MPU);
+camera.rotation.order = "YXZ";
+// FOV: the capture's vertical FOV clamped to [50, 75] deg, and never wider than 90 deg horizontally.
+const VFOV = THREE.MathUtils.clamp(CFG.spawn?.vfov_deg || 60, 50, 75);
+let camPin = null;  // setCamera(): {pos, quat, vfov} pins the view, controller frozen
+function fitCamera() {
+  const aspect = innerWidth / innerHeight, d2r = Math.PI / 180;
+  if (camPin?.vfov) { camera.fov = camPin.vfov; camera.aspect = aspect; camera.updateProjectionMatrix(); return; }
+  const hfov = 2 * Math.atan(Math.tan(VFOV * d2r / 2) * aspect);
+  camera.fov = hfov > 90 * d2r ? 2 * Math.atan(Math.tan(45 * d2r) / aspect) / d2r : VFOV;
+  camera.aspect = aspect;
+  camera.updateProjectionMatrix();
+}
+fitCamera();
+addEventListener("resize", () => { renderer.setSize(innerWidth, innerHeight); fitCamera(); });
+
+// ------------------------------------------------------------ voxel rendering
+// One mesh per 32^3 chunk (greedy quads, chunk-local cell units, scaled by the voxel edge). Colour per
+// fragment from the chunk's padded 34^3 RGBA8 3D texture (alpha = occupancy) at the face's own cell;
+// per-face directional shade and smooth corner AO from the 8 cells in front of the face.
+const VOX_VS = `
+flat out vec3 vN;
+out vec3 vCell;
+void main() {
+  vN = normal; vCell = position;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+const VOX_FS = `
+layout(location = 0) out highp vec4 outColor;
+uniform highp sampler3D colTex;
+flat in vec3 vN;
+in vec3 vCell;
+float occ(ivec3 c) { return texelFetch(colTex, c, 0).a > 0.5 ? 1.0 : 0.0; }
+float vao(float a, float b, float c) { return (a > 0.5 && b > 0.5) ? 0.0 : 3.0 - (a + b + c); }
+void main() {
+  vec3 n = vN;
+  vec3 inside = vCell - n * 0.5;
+  ivec3 c = clamp(ivec3(floor(inside)) + 1, ivec3(1), ivec3(32));
+  vec3 col = texelFetch(colTex, c, 0).rgb;
+  vec3 an = abs(n);
+  ivec3 tu = an.x > 0.5 ? ivec3(0, 1, 0) : ivec3(1, 0, 0);
+  ivec3 tv = an.z > 0.5 ? ivec3(0, 1, 0) : ivec3(0, 0, 1);
+  ivec3 f = c + ivec3(round(n));
+  vec3 fr = fract(inside);
+  float fu = dot(fr, vec3(tu)), fv = dot(fr, vec3(tv));
+  float su0 = occ(f - tu), su1 = occ(f + tu), sv0 = occ(f - tv), sv1 = occ(f + tv);
+  float a00 = vao(su0, sv0, occ(f - tu - tv)), a10 = vao(su1, sv0, occ(f + tu - tv));
+  float a01 = vao(su0, sv1, occ(f - tu + tv)), a11 = vao(su1, sv1, occ(f + tu + tv));
+  float ao = mix(mix(a00, a10, fu), mix(a01, a11, fu), fv) / 3.0;
+  float shade = n.y > 0.5 ? 1.0 : n.y < -0.5 ? 0.6 : an.x > 0.5 ? 0.86 : 0.76;
+  outColor = vec4(col * shade * mix(0.62, 1.0, ao), 1.0);
+}`;
+const voxRoot = new THREE.Group();
+scene.add(voxRoot);
+let world = null, player = null;
+let totalQuads = 0;
+const padOcc = new Uint8Array(VX.P3);
+function buildChunk(c) {
+  if (!c.texData) c.texData = new Uint8Array(VX.P3 * 4);
+  world.padded(c, padOcc, c.texData);
+  const m = VX.greedy(padOcc);
+  totalQuads += m.quads - c.quads; c.quads = m.quads;
+  if (c.mesh) c.mesh.geometry.dispose();
+  if (!m.quads) {
+    if (c.mesh) { voxRoot.remove(c.mesh); c.mesh = null; }
+    return;
+  }
+  if (!c.tex) {
+    const t = new THREE.Data3DTexture(c.texData, VX.P, VX.P, VX.P);
+    t.format = THREE.RGBAFormat; t.type = THREE.UnsignedByteType;
+    t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.unpackAlignment = 1;
+    c.tex = t;
+  }
+  c.tex.needsUpdate = true;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(m.pos, 3));
+  g.setAttribute("normal", new THREE.BufferAttribute(m.nrm, 3));
+  g.setIndex(new THREE.BufferAttribute(m.idx, 1));
+  g.computeBoundingSphere();
+  if (!c.mesh) {
+    const mat = new THREE.ShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: VOX_VS, fragmentShader: VOX_FS,
+      uniforms: { colTex: { value: c.tex } } });
+    c.mesh = new THREE.Mesh(g, mat);
+    const e = world.edge, o = world.origin;
+    c.mesh.position.set(o[0] + e * 32 * c.cx, o[1] + e * 32 * c.cy, o[2] + e * 32 * c.cz);
+    c.mesh.scale.setScalar(e);
+    c.mesh.updateMatrix(); c.mesh.matrixAutoUpdate = false;
+    voxRoot.add(c.mesh);
+  } else c.mesh.geometry = g;
+}
+// In splat mode the voxel world is out of the scene: shots leave its chunks dirty (collision reads the
+// occupancy directly) and they are remeshed when voxel mode comes back.
+function remeshIfShown() { if (voxRoot.parent) remeshDirty(); }
+function remeshDirty() {
+  for (const k of world.dirty) { const c = world.chunks.get(k); if (c) buildChunk(c); }
+  world.dirty.clear();
+}
+
+// ------------------------------------------------------------ cell <-> world
+const toCell = (wx, wy, wz) => [(wx - world.origin[0]) / world.edge, (wy - world.origin[1]) / world.edge, (wz - world.origin[2]) / world.edge];
+const toWorld = (c) => [world.origin[0] + world.edge * c[0], world.origin[1] + world.edge * c[1], world.origin[2] + world.edge * c[2]];
+const mToCells = (m) => m / (MPU * world.edge);
+
+// ------------------------------------------------------------ effects: debris, sparks, muzzle flash
+const MAXD = 600, MAXS = 480;
+const dP = new Float32Array(MAXD * 3), dV = new Float32Array(MAXD * 3), dLife = new Float32Array(MAXD),
+  dAxis = new Float32Array(MAXD * 3), dAng = new Float32Array(MAXD), dSpin = new Float32Array(MAXD);
+let nDebris = 0;
+const DEB_VS = `
+out vec3 vC;
+void main() {
+  vec3 n = normalize(mat3(instanceMatrix) * normal);
+  float l = 0.62 + 0.38 * max(dot(n, normalize(vec3(0.35, 1.0, 0.2))), 0.0);
+  vC = instanceColor * l;
+  gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+}`;
+const DEB_FS = `layout(location = 0) out highp vec4 outColor;\nin vec3 vC;\nvoid main() { outColor = vec4(vC, 1.0); }`;
+const debris = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1),
+  new THREE.ShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: DEB_VS, fragmentShader: DEB_FS }), MAXD);
+debris.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAXD * 3), 3);
+debris.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+debris.instanceColor.setUsage(THREE.DynamicDrawUsage);
+debris.frustumCulled = false; debris.count = 0;
+scene.add(debris);
+const sP = new Float32Array(MAXS * 3), sV = new Float32Array(MAXS * 3), sLife = new Float32Array(MAXS);
+let nSparks = 0;
+const sparkGeo = new THREE.BufferGeometry();
+const sparkPos = new THREE.BufferAttribute(new Float32Array(MAXS * 3), 3).setUsage(THREE.DynamicDrawUsage);
+sparkGeo.setAttribute("position", sparkPos);
+const sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial({ color: 0xffd27a, size: 3, sizeAttenuation: false,
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+sparks.frustumCulled = false; sparkGeo.setDrawRange(0, 0);
+scene.add(sparks);
+// CRATER BOWLS (?bowl=1 only; off by default: Spark writes no depth, so the opaque bowl also covered splats in
+// front of the crater on the M4): a dark inner sphere per crater (radius = the splat hole radius), back faces only,
+// clipped to the half below the local surface plane, opaque and depth-writing. Seen through the hole it reads
+// as a dark cavity and hides the splats behind it; surface splats around the hole draw over it (Spark tests
+// depth but doesn't write it). Ring of MAXB; cost: one instanced draw.
+const MAXB = 512, BOWL = Q.get("bowl") === "1";
+const bowlGeo = new THREE.SphereGeometry(1, 20, 14);
+const bowlN = new THREE.InstancedBufferAttribute(new Float32Array(MAXB * 3), 3).setUsage(THREE.DynamicDrawUsage);
+bowlGeo.setAttribute("bowlN", bowlN);
+const BOWL_VS = `
+in vec3 bowlN;
+out vec3 vW;
+flat out vec3 vC, vN;
+flat out float vR;
+void main() {
+  mat4 m = modelMatrix * instanceMatrix;
+  vec4 w = m * vec4(position, 1.0);
+  vW = w.xyz; vC = (m * vec4(0.0, 0.0, 0.0, 1.0)).xyz; vR = length((m * vec4(1.0, 0.0, 0.0, 0.0)).xyz); vN = bowlN;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+const BOWL_FS = `
+layout(location = 0) out highp vec4 outColor;
+in vec3 vW;
+flat in vec3 vC, vN;
+flat in float vR;
+void main() {
+  float h = dot(vW - vC, vN);
+  if (h > 0.0) discard;                       // only the half inside the surface
+  float depth = clamp(-h / vR, 0.0, 1.0);
+  outColor = vec4(mix(vec3(0.075, 0.065, 0.055), vec3(0.02, 0.017, 0.015), depth), 1.0);
+}`;
+const bowls = new THREE.InstancedMesh(bowlGeo, new THREE.ShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: BOWL_VS,
+  fragmentShader: BOWL_FS, side: THREE.BackSide }), MAXB);
+bowls.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+bowls.count = 0; bowls.frustumCulled = false; bowls.visible = false;
+scene.add(bowls);
+let nBowls = 0;
+function addBowl(wc, rWorld, n) {
+  const i = nBowls++ % MAXB;
+  bowls.setMatrixAt(i, _m4.compose(_v3.set(wc[0], wc[1], wc[2]), _q.identity(), _s3.setScalar(rWorld)));
+  bowlN.setXYZ(i, n[0], n[1], n[2]);
+  bowls.count = Math.min(nBowls, MAXB);
+  bowls.instanceMatrix.needsUpdate = true; bowlN.needsUpdate = true;
+}
+const flashEl = $("flash"), crossEl = $("cross");
+let flashUntil = 0, hitUntil = 0;
+
+function spawnDebris(removed, cx, cy, cz, nx, ny, nz) {
+  const n = removed.length / 6, want = Math.min(n, 160), k = player.k;
+  for (let s = 0; s < want; s++) {
+    const r = Math.floor((s + Math.random()) * n / want) * 6;
+    let i;
+    if (nDebris < MAXD) i = nDebris++;
+    else { i = Math.floor(Math.random() * MAXD); }  // full: replace a random piece
+    const o = i * 3;
+    dP[o] = removed[r] + 0.5; dP[o + 1] = removed[r + 1] + 0.5; dP[o + 2] = removed[r + 2] + 0.5;
+    let ox = dP[o] - cx, oy = dP[o + 1] - cy, oz = dP[o + 2] - cz;
+    const ol = Math.hypot(ox, oy, oz) || 1;
+    const sp = (1.2 + 2.2 * Math.random()) * k;
+    dV[o] = (ox / ol + 0.9 * nx) * sp + (Math.random() - 0.5) * 0.6 * k;
+    dV[o + 1] = (oy / ol + 0.9 * ny) * sp + (1.2 + Math.random() * 1.5) * k;
+    dV[o + 2] = (oz / ol + 0.9 * nz) * sp + (Math.random() - 0.5) * 0.6 * k;
+    dLife[i] = 3.4 + Math.random() * 1.2;
+    const ax = Math.random() - 0.5, ay = Math.random() - 0.5, az = Math.random() - 0.5, al = Math.hypot(ax, ay, az) || 1;
+    dAxis[o] = ax / al; dAxis[o + 1] = ay / al; dAxis[o + 2] = az / al;
+    dAng[i] = Math.random() * 6.28; dSpin[i] = (Math.random() - 0.5) * 18;
+    debris.instanceColor.setXYZ(i, removed[r + 3] / 255, removed[r + 4] / 255, removed[r + 5] / 255);
+  }
+  debris.instanceColor.needsUpdate = true;
+}
+function killDebris(i) {  // swap the last live piece into slot i
+  const j = --nDebris;
+  if (i === j) return;
+  for (let a = 0; a < 3; a++) { dP[i * 3 + a] = dP[j * 3 + a]; dV[i * 3 + a] = dV[j * 3 + a]; dAxis[i * 3 + a] = dAxis[j * 3 + a]; }
+  dLife[i] = dLife[j]; dAng[i] = dAng[j]; dSpin[i] = dSpin[j];
+  const ic = debris.instanceColor;
+  ic.setXYZ(i, ic.getX(j), ic.getY(j), ic.getZ(j));
+  ic.needsUpdate = true;
+}
+const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _v3 = new THREE.Vector3(), _s3 = new THREE.Vector3(), _ax = new THREE.Vector3();
+// Effect pools only touch / re-upload their buffers while something is live (or on the frame it empties),
+// and are invisible (no draw) when empty.
+let effectsLive = { d: false, s: false };
+function updateEffects(dt) {
+  const g = 9.81 * player.k, e = world.edge;
+  updateDust(dt);
+  if (!nDebris && !nSparks && !effectsLive.d && !effectsLive.s) return;
+  const sub = dt > 1 / 90 ? 2 : 1;
+  for (let i = 0; i < nDebris;) {
+    dLife[i] -= dt;
+    if (dLife[i] <= 0) { killDebris(i); continue; }
+    let rest = true;
+    for (let s = 0; s < sub; s++) rest = VX.debrisStep(world, dP, dV, i, dt / sub, g) && rest;
+    if (!rest) dAng[i] += dSpin[i] * dt;
+    const o = i * 3;
+    // nothing drawn within 0.35 m of the eye (a piece flying at the camera would fill the view)
+    const ex = dP[o] - curEye[0], ey = dP[o + 1] - curEye[1], ez = dP[o + 2] - curEye[2];
+    const near = ex * ex + ey * ey + ez * ez < mToCells(0.35) ** 2;
+    const sc = near ? 0 : e * 0.85 * Math.min(1, dLife[i] / 0.5);
+    _v3.set(world.origin[0] + e * dP[o], world.origin[1] + e * dP[o + 1], world.origin[2] + e * dP[o + 2]);
+    _q.setFromAxisAngle(_ax.set(dAxis[o], dAxis[o + 1], dAxis[o + 2]), dAng[i]);
+    debris.setMatrixAt(i, _m4.compose(_v3, _q, _s3.setScalar(sc)));
+    i++;
+  }
+  if (nDebris || effectsLive.d) { debris.count = nDebris; debris.instanceMatrix.needsUpdate = true; }
+  debris.visible = nDebris > 0; effectsLive.d = nDebris > 0;
+  for (let i = 0; i < nSparks;) {
+    sLife[i] -= dt;
+    const o = i * 3;
+    if (sLife[i] <= 0) {
+      const j = --nSparks;
+      for (let a = 0; a < 3; a++) { sP[o + a] = sP[j * 3 + a]; sV[o + a] = sV[j * 3 + a]; }
+      sLife[i] = sLife[j];
+      continue;
+    }
+    sV[o + 1] -= g * 0.6 * dt;
+    for (let a = 0; a < 3; a++) sP[o + a] += sV[o + a] * dt;
+    sparkPos.setXYZ(i, world.origin[0] + e * sP[o], world.origin[1] + e * sP[o + 1], world.origin[2] + e * sP[o + 2]);
+    i++;
+  }
+  if (nSparks || effectsLive.s) { sparkGeo.setDrawRange(0, nSparks); sparkPos.needsUpdate = true; }
+  sparks.visible = nSparks > 0; effectsLive.s = nSparks > 0;
+}
+// DUST: a soft puff per hit (both modes), pooled: MAXP alpha sprites expanding and fading over ~0.6-0.8 s,
+// greyish, tinted by the surface colour; drawn after the scene with depth test, no depth write.
+const MAXP = 256;
+const pP = new Float32Array(MAXP * 3), pV = new Float32Array(MAXP * 3), pLife = new Float32Array(MAXP), pMax = new Float32Array(MAXP),
+  pSize0 = new Float32Array(MAXP), pSize1 = new Float32Array(MAXP);
+let nPuffs = 0;
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new THREE.BufferAttribute(new Float32Array(MAXP * 3), 3).setUsage(THREE.DynamicDrawUsage);
+const dustCol = new THREE.BufferAttribute(new Float32Array(MAXP * 4), 4).setUsage(THREE.DynamicDrawUsage);  // rgb, alpha
+const dustSize = new THREE.BufferAttribute(new Float32Array(MAXP), 1).setUsage(THREE.DynamicDrawUsage);   // world units
+dustGeo.setAttribute("position", dustPos); dustGeo.setAttribute("dcol", dustCol); dustGeo.setAttribute("dsize", dustSize);
+const dust = new THREE.Points(dustGeo, new THREE.ShaderMaterial({
+  glslVersion: THREE.GLSL3, transparent: true, depthWrite: false, depthTest: true,
+  uniforms: { viewH: { value: 1 } },
+  vertexShader: `
+in vec4 dcol;
+in float dsize;
+uniform float viewH;
+out vec4 vCol;
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  gl_PointSize = clamp(dsize * viewH * 0.5 * projectionMatrix[1][1] / max(-mv.z, 1e-3), 1.0, 256.0);
+  vCol = dcol;
+}`,
+  fragmentShader: `
+layout(location = 0) out highp vec4 outColor;
+in vec4 vCol;
+void main() {
+  vec2 q = gl_PointCoord * 2.0 - 1.0;
+  float r2 = dot(q, q);
+  if (r2 > 1.0) discard;
+  outColor = vec4(vCol.rgb, vCol.a * (1.0 - r2) * (1.0 - r2));
+}` }));
+dust.frustumCulled = false; dust.renderOrder = 2; dustGeo.setDrawRange(0, 0);
+scene.add(dust);
+function spawnDust(x, y, z, nx, ny, nz, rgb) {  // cell units; rgb 0..255 surface colour
+  const k = player.k, tint = rgb ? rgb.map((c) => 0.5 * c / 255 + 0.5 * 0.62) : [0.62, 0.62, 0.62];
+  for (let s = 0; s < 36; s++) {
+    let i;
+    if (nPuffs < MAXP) i = nPuffs++; else i = Math.floor(Math.random() * MAXP);
+    const o = i * 3, rx = Math.random() - 0.5, ry = Math.random() - 0.5, rz = Math.random() - 0.5;
+    const sp = (0.25 + 0.9 * Math.random()) * k;
+    pP[o] = x + rx * 0.06 * k; pP[o + 1] = y + ry * 0.06 * k; pP[o + 2] = z + rz * 0.06 * k;
+    pV[o] = (nx * 0.9 + rx * 1.4) * sp; pV[o + 1] = (ny * 0.9 + ry * 1.4 + 0.25) * sp; pV[o + 2] = (nz * 0.9 + rz * 1.4) * sp;
+    pMax[i] = pLife[i] = 0.6 + 0.2 * Math.random();
+    pSize0[i] = (0.04 + 0.04 * Math.random()) / MPU; pSize1[i] = (0.18 + 0.14 * Math.random()) / MPU;
+    const j = 0.9 + 0.2 * Math.random();
+    dustCol.setXYZW(i, tint[0] * j, tint[1] * j, tint[2] * j, 0);
+  }
+}
+let dustLive = false;
+function updateDust(dt) {
+  dust.visible = nPuffs > 0;
+  if (!nPuffs && !dustLive) return;
+  dustLive = nPuffs > 0;
+  const e = world.edge, drag = Math.exp(-3.5 * dt);
+  dust.material.uniforms.viewH.value = renderer.getDrawingBufferSize(_dsz).y;
+  for (let i = 0; i < nPuffs;) {
+    pLife[i] -= dt;
+    const o = i * 3;
+    if (pLife[i] <= 0) {  // swap the last live puff in
+      const j = --nPuffs;
+      for (let a = 0; a < 3; a++) { pP[o + a] = pP[j * 3 + a]; pV[o + a] = pV[j * 3 + a]; }
+      pLife[i] = pLife[j]; pMax[i] = pMax[j]; pSize0[i] = pSize0[j]; pSize1[i] = pSize1[j];
+      dustCol.setXYZW(i, dustCol.getX(j), dustCol.getY(j), dustCol.getZ(j), 0);
+      continue;
+    }
+    for (let a = 0; a < 3; a++) { pV[o + a] *= drag; pP[o + a] += pV[o + a] * dt; }
+    const t = 1 - pLife[i] / pMax[i];  // 0 -> 1 over the puff's life
+    dustPos.setXYZ(i, world.origin[0] + e * pP[o], world.origin[1] + e * pP[o + 1], world.origin[2] + e * pP[o + 2]);
+    dustSize.setX(i, pSize0[i] + (pSize1[i] - pSize0[i]) * Math.sqrt(t));
+    dustCol.setW(i, 0.42 * Math.min(1, t / 0.12) * (1 - t) * (1 - t));
+    i++;
+  }
+  dustGeo.setDrawRange(0, nPuffs);
+  dustPos.needsUpdate = dustCol.needsUpdate = dustSize.needsUpdate = true;
+}
+const _dsz = new THREE.Vector2();
+function spawnSparks(x, y, z, nx, ny, nz) {
+  const k = player.k;
+  for (let s = 0; s < 28 && nSparks < MAXS; s++) {
+    const i = nSparks++, o = i * 3;
+    sP[o] = x; sP[o + 1] = y; sP[o + 2] = z;
+    const rx = Math.random() - 0.5, ry = Math.random() - 0.5, rz = Math.random() - 0.5, sp = (2 + 4 * Math.random()) * k;
+    sV[o] = (nx + rx * 1.6) * sp; sV[o + 1] = (ny + ry * 1.6 + 0.3) * sp; sV[o + 2] = (nz + rz * 1.6) * sp;
+    sLife[i] = 0.18 + 0.25 * Math.random();
+  }
+}
+
+// ------------------------------------------------------------ player, view, input
+let yaw = 0, pitch = 0, broken = 0, placed = 0, shots = 0;
+let spawnFeet = null, spawnYaw = 0, spawnPitch = 0, floorCellY = 0;
+// BEDROCK: the floor slab (cells below the spawn floor) can't be shot away, so the player can't dig out of the room.
+let bedrockY = -Infinity;
+const prevEye = [0, 0, 0], curEye = [0, 0, 0];
+const PITCH_MAX = 85 * Math.PI / 180;
+function eyeCell() { return [player.p[0], player.p[1] + mToCells(player.eyeM) + player.stepOff, player.p[2]]; }
+function viewDir() {
+  const cp = Math.cos(pitch);
+  return [-Math.sin(yaw) * cp, Math.sin(pitch), -Math.cos(yaw) * cp];
+}
+function placePlayer(feetCell, y, p, spawn) {
+  player.p[0] = feetCell[0]; player.p[1] = feetCell[1]; player.p[2] = feetCell[2];
+  player.v[0] = player.v[1] = player.v[2] = 0;
+  player.onGround = false; player.stepOff = 0;
+  if (spawn) player.findFree(mToCells(1.5), [-Math.sin(y), -Math.cos(y)]);
+  else if (player.overlaps()) player.findFree(mToCells(1.5));
+  if (y !== undefined && y !== null) yaw = y;
+  if (p !== undefined && p !== null) pitch = THREE.MathUtils.clamp(p, -PITCH_MAX, PITCH_MAX);
+  const e = eyeCell(); for (let a = 0; a < 3; a++) prevEye[a] = curEye[a] = e[a];
+}
+function respawn() { player.respawns++; placePlayer(spawnFeet.slice(), spawnYaw, spawnPitch, true); }
+
+const keys = new Set();
+let mouseFire = false, locked = false, inputSeen = false;
+const pad = { prev: [], active: false, seen: false };
+let jumpBuffer = 0, nextShotAt = 0, nextPlaceAt = 0;
+const KEYS_GAME = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyC", "ControlLeft", "ControlRight"]);
+addEventListener("keydown", (e) => {
+  if (KEYS_GAME.has(e.code)) e.preventDefault();
+  if (e.repeat) return;
+  keys.add(e.code); noteInput();
+  if (e.code === "Space") jumpBuffer = 0.15;
+  if (e.code === "KeyV") toggleMode();
+  if (e.code === "KeyR" && player) respawn();
+  if (e.code === "KeyH") showHint();
+});
+addEventListener("keyup", (e) => keys.delete(e.code));
+addEventListener("blur", () => { keys.clear(); mouseFire = false; });
+const cv = renderer.domElement;
+cv.addEventListener("contextmenu", (e) => e.preventDefault());
+cv.addEventListener("mousedown", (e) => {
+  noteInput();
+  if (!locked) { try { cv.requestPointerLock?.()?.catch?.(() => {}); } catch (e) { /* not allowed here */ } return; }
+  if (e.button === 0) { mouseFire = true; if (performance.now() >= nextShotAt) { shoot(); nextShotAt = performance.now() + 1000 / 6; } }
+  if (e.button === 2) placeVoxel();
+});
+addEventListener("mouseup", (e) => { if (e.button === 0) mouseFire = false; });
+document.addEventListener("pointerlockchange", () => { locked = document.pointerLockElement === cv; if (!locked) mouseFire = false; updatePlay(); });
+document.addEventListener("mousemove", (e) => {
+  if (!locked) return;
+  yaw -= e.movementX * 0.0022;
+  pitch = THREE.MathUtils.clamp(pitch - e.movementY * 0.0022, -PITCH_MAX, PITCH_MAX);
+});
+const playEl = $("play");
+function updatePlay() { playEl.classList.toggle("hidden", !HUD || !G.ready || locked || pad.active); }
+function noteInput() { inputSeen = true; }
+const hintEl = $("hint");
+let hintTimer = 0;
+// Gamepad-first when a pad has been seen, else keyboard/mouse. Shown ~6 s at start, then fades; again on the
+// first gamepad and on H.
+const HINT_PAD = [["Left stick", "move"], ["Right stick", "look"], ["A", "jump"], ["B", "crouch"], ["RT", "shoot"], ["Y", "voxel / splat"]];
+const HINT_KEYS = [["WASD", "move"], ["Mouse", "look (click to lock)"], ["Space", "jump"], ["C", "crouch"], ["Click", "shoot"], ["V", "voxel / splat"]];
+function showHint() {
+  const rows = pad.seen ? HINT_PAD : HINT_KEYS;
+  hintEl.innerHTML = `<div class="t">${pad.seen ? "Gamepad" : "Keyboard + mouse"}</div>` +
+    rows.map(([k, v]) => `<b>${k}</b> ${v}`).join("<br>") + `<br><b>H</b> show again`;
+  hintEl.classList.remove("fade"); clearTimeout(hintTimer); hintTimer = setTimeout(() => hintEl.classList.add("fade"), 6000);
+}
+
+// Gamepad: standard mapping, polled every frame (no reliance on gamepadconnected).
+const DZ = 0.15;
+function stick(x, y) {  // radial dead zone, rescaled to 0..1
+  const m = Math.hypot(x, y);
+  if (m < DZ) return [0, 0, 0];
+  const s = Math.min(1, (m - DZ) / (1 - DZ));
+  return [x / m * s, y / m * s, s];
+}
+function readPad() {
+  let gp = null;
+  try {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (const p of pads || []) if (p && p.axes && p.buttons && (!gp || (p.mapping === "standard" && gp.mapping !== "standard"))) gp = p;
+  } catch (e) { gp = null; }
+  if (!gp) return null;
+  if (!pad.seen) { pad.seen = true; if (G.ready) showHint(); }  // first pad: re-show the card, gamepad-first
+  const btn = (i) => { const b = gp.buttons[i]; return !!b && (b.pressed || (typeof b === "number" ? b : b.value) > 0.5); };
+  const cur = [], edge = [];
+  for (let i = 0; i < 17; i++) { cur[i] = btn(i); edge[i] = cur[i] && !pad.prev[i]; }
+  pad.prev = cur;
+  const ax = (i) => +(gp.axes[i] || 0);
+  const L = stick(ax(0), ax(1)), R = stick(ax(2), ax(3));
+  if (L[2] || R[2] || cur.some(Boolean)) { if (!pad.active) { pad.active = true; updatePlay(); } }
+  return { L, R, cur, edge };
+}
+
+// ------------------------------------------------------------ shooting / placing
+const SHOT_MAX_M = 30, SHOT_R_M = 0.25;
+function shoot() {
+  if (!G.ready) return { hit: false };
+  shots++;
+  flashUntil = performance.now() + 60;
+  const o = eyeCell(), d = viewDir();
+  const hit = world.raycast(o[0], o[1], o[2], d[0], d[1], d[2], mToCells(SHOT_MAX_M));
+  if (!hit) return { hit: false };
+  const R = mToCells(SHOT_R_M), cx = hit.x + 0.5, cy = hit.y + 0.5, cz = hit.z + 0.5;
+  // surface normal before the cut (for the crater bowl's clip plane); else the face entered, else -ray
+  const sn = world.surfaceNormal(hit.x, hit.y, hit.z) || ((hit.nx || hit.ny || hit.nz) ? [hit.nx, hit.ny, hit.nz] : [-d[0], -d[1], -d[2]]);
+  const removed = [];
+  const n = world.removeSphere(cx, cy, cz, R, removed, bedrockY);
+  world.scorch(cx, cy, cz, R + 1.5);  // crater walls (and the bedrock floor inside it) read as scorched
+  broken += n;
+  remeshIfShown();
+  let nx = hit.nx, ny = hit.ny, nz = hit.nz;
+  if (!(nx || ny || nz)) { nx = -d[0]; ny = -d[1]; nz = -d[2]; }
+  // DAMAGE BURST (both modes): debris cubes in the removed voxels' colours (a handful in the hit colour when
+  // nothing broke, e.g. on bedrock), a dust puff tinted by the surface, sparks.
+  const hitRgb = world.rgb(hit.x, hit.y, hit.z) || (removed.length ? [removed[3], removed[4], removed[5]] : null);
+  if (!removed.length && hitRgb) for (let s = 0; s < 14; s++) removed.push(hit.x + (Math.random() - 0.5) * R, hit.y + (Math.random() - 0.5) * R, hit.z + (Math.random() - 0.5) * R, hitRgb[0], hitRgb[1], hitRgb[2]);
+  spawnDebris(removed, cx, cy, cz, nx, ny, nz);
+  const hx = o[0] + d[0] * hit.t, hy = o[1] + d[1] * hit.t, hz = o[2] + d[2] * hit.t;
+  spawnSparks(hx, hy, hz, nx, ny, nz);
+  spawnDust(hx, hy, hz, nx, ny, nz, hitRgb);
+  addHole(toWorld([cx, cy, cz]), R * world.edge, d);
+  if (BOWL) addBowl(toWorld([cx, cy, cz]), R * world.edge + world.edge, sn);
+  hitUntil = performance.now() + 120;
+  return { hit: true, removed: n, cell: [hit.x, hit.y, hit.z], dist_m: +(hit.t * world.edge * MPU).toFixed(3) };
+}
+function placeVoxel() {
+  if (!G.ready) return false;
+  const o = eyeCell(), d = viewDir();
+  const hit = world.raycast(o[0], o[1], o[2], d[0], d[1], d[2], mToCells(8));
+  if (!hit || !(hit.nx || hit.ny || hit.nz)) return false;
+  const x = hit.x + hit.nx, y = hit.y + hit.ny, z = hit.z + hit.nz;
+  const c = world.rgb(hit.x, hit.y, hit.z) || [180, 180, 180];
+  if (!world.setCell(x, y, z, true, c[0], c[1], c[2])) return false;
+  if (player.overlaps()) { world.setCell(x, y, z, false); world.dirty.clear(); return false; }
+  placed++;
+  remeshIfShown();
+  removeHoleAt(x, y, z);
+  return true;
+}
+
+// ------------------------------------------------------------ splat look (Spark 2.2), loaded in the background
+// MOTION LOD (as export-viewer): the interactive model (cfg.splat, ~1M) loads first and is drawn while the
+// camera moves; the full model (cfg.splatFull) loads behind it and is swapped in once the camera has been
+// still for SETTLE_MS and the full model's sort for that exact pose is done (sorted off screen first). Any
+// move or turn cuts back to the interactive model on that frame. Each model has its own SparkRenderer on its
+// own layer (1 / 2); the voxel world, debris and sparks are on layer 0, seen by both cameras.
+let spark = null, sparkF = null, splatMesh = null, meshF = null, splatPct = 0, splatErr = null, fullPct = 0, fullErr = null;
+let SparkMod = null;
+const LAYER_I = 1, LAYER_F = 2, SETTLE_MS = 500;
+const camI = camera.clone(), camF = camera.clone();
+let presented = "I", movedAt = -1e9, fullKick = null, fullKickAt = Infinity;
+// LOD clock: the full model is swapped in only after SETTLE_MS without camera moves AND without crater
+// uploads; while the interactive model is shown the full one is neither regenerated nor re-sorted (its
+// fresh off-screen sort at the kick regenerates it once, with every crater so far).
+let lodChangedAt = -1e9;
+// whenStill(): resolves once the camera has been still for SETTLE_MS (background long tasks wait for it).
+const whenStill = async () => { while (performance.now() - Math.max(movedAt, lodChangedAt) < SETTLE_MS) await new Promise((r) => setTimeout(r, 100)); };
+const lastView = new THREE.Matrix4(), lastProj = new THREE.Matrix4();
+const sameMatrix = (a, b) => a.elements.every((x, i) => Math.abs(x - b.elements[i]) <= 1e-7);
+function syncCams() {
+  for (const [c, layer] of [[camI, LAYER_I], [camF, LAYER_F]]) {
+    c.copy(camera); c.layers.set(0); c.layers.enable(layer); c.updateMatrixWorld();
+  }
+}
+function fullSorted() {  // sparkF's newest sort is finished and was for this camera pose (viewer's rule)
+  const pos = camera.getWorldPosition(new THREE.Vector3()), dir = camera.getWorldDirection(new THREE.Vector3());
+  return sparkF.lastSortTime > fullKickAt && !sparkF.sorting && !sparkF.sortDirty &&
+    sparkF.sortedCenter.distanceTo(pos) <= 1e-5 && sparkF.sortedDir.dot(dir) >= 1 - 1e-7;
+}
+const splatMeshes = () => [splatMesh, meshF].filter(Boolean);
+// HOLES: in splat mode the splats inside shot spheres are hidden, out to the shot radius plus one voxel (a
+// clearly visible crater). Default ("grid"): a Spark world modifier (SplatMesh.worldModifier, world-space
+// centres) texelFetches a 3D hole mask (R8, one byte per voxel cell, coarser for big scenes; same origin,
+// edge and Y-up axes as the voxel grid) at each splat centre and zeroes alpha: O(1) per splat however many
+// shots. Each change re-uploads the mask, bumps the mesh version (Spark regenerates the splats) and forces a
+// re-sort. If the generator fails or lacks the mask, it falls back to "sdf" by itself. ?holes=sdf: one
+// SplatEdit with a sphere SDF (opacity 0) per shot (capped). ?holes=0: no holes. Debug: __game.holeStats().
+let holeTex = null, holeData = null, holeDims = null, holeF = 1, holesDirty = false, holeU = null;
+const holeChecked = new Set();
+let holeCount = 0, maskCells = 0, uploads = 0, lastUpdateMs = null, holeCheck = null;
+const holeList = [];  // every hole [world centre, radius] (replayed into SplatEdit spheres on a fallback)
+const sdfPending = [];
+let sdfEdit = null, sdfCount = 0;
+const SDF_CAP = 192;
+function initHoleGrid() {
+  const d = world.dims, mx = Math.max(...d);
+  // mask cells >= 5 cm (coarser than fine voxel grids) and <= 256 per axis
+  holeF = Math.max(1, Math.ceil(mx / 256), Math.ceil(0.05 / (MPU * world.edge) - 1e-6));
+  holeDims = d.map((n) => Math.ceil(n / holeF));
+  holeData = new Uint8Array(2 * holeDims[0] * holeDims[1] * holeDims[2]).fill(255);  // RG: R far, G untouched
+}
+// Splat crater rules (mask cells): hide when the centre is within the sphere (shot radius + 1 voxel) or
+// within 2 sigma_max of it (sigma_max capped at 10 cm, and the reach at 9 mask cells so far-field cells,
+// +12.7, never hide anything); smooth scorched rim out to 1.5 voxels beyond that; dark cavity behind the hit.
+const HOLE_SIGMA_CAP_M = 0.1;
+const holeSMax = () => Math.min(2 * HOLE_SIGMA_CAP_M / MPU / (world.edge * holeF), 9);
+const holeRim = () => 1.5 / holeF;
+// CAVITY: the splats behind the hit are darkened to near black (VXCore.cavityFactor: a cone of the hole radius
+// along the shot direction, x1.2 wider at the back, x0.08 on the axis to x0.15 at its wall, soft edges) so
+// the hole reads as a hole on any surface and never covers anything in front of it. Depth: the hole radius
+// + 0.6 m, or through to the first solid voxel behind the hit + 2 cells (DDA along the shot; a thin mirror or
+// bag darkens the wall seen through it), whichever is further, capped at 1.5 m.
+function addHole(wc, rShotWorld, dir) {
+  const rWorld = rShotWorld + world.edge;  // generous: shot radius + one voxel
+  holeList.push([wc, rWorld]); holeCount++;
+  if (holesMode === "off") return;
+  if (holesMode === "sdf") { sdfPending.push([wc, rWorld]); flushSdf(); return; }
+  if (!holeData) return;
+  const hc = world.edge * holeF, c = toCell(...wc).map((v) => v / holeF);
+  const y0 = Number.isFinite(bedrockY) ? Math.floor(bedrockY / holeF) : 0;  // floor-slab splats stay (bedrock)
+  let cavDepth = rWorld + 0.6 / MPU;
+  if (dir) {
+    const cc = toCell(...wc), maxT = mToCells(1.5);
+    const back = world.raycast(cc[0], cc[1], cc[2], dir[0], dir[1], dir[2], maxT);  // the crater is empty now
+    if (back && back.t > 0) cavDepth = Math.max(cavDepth, (back.t + 2) * world.edge);
+    cavDepth = Math.min(cavDepth, 1.5 / MPU);
+  }
+  const fw = Math.max(0.75, 1.5 / holeF);
+  // the modifier skips its 8 fetches for splats outside the box around every crater's reach
+  const reach = Math.max(rWorld + (holeSMax() + holeRim() + 1) * hc, Math.hypot(1.2 * rWorld + fw * hc, cavDepth) + hc);
+  // MASK JOBS: marking a crater (+ its pocket, up to ~250K mask cells) is spread over frames, a few z slabs at a
+  // time within HOLE_BUDGET_MS; the mask goes up (one sub-box upload, one Spark regeneration) when it is done.
+  const rc = reach / hc + 1;
+  const box = [0, 1, 2].map((a) => Math.max(0, Math.floor(c[a] - rc))).concat([0, 1, 2].map((a) => Math.min(holeDims[a] - 1, Math.floor(c[a] + rc))));
+  holeJobs.push({ c, r: rWorld / hc, y0, dir, depth: cavDepth / hc, fw, z: box[2], box, boxW: [wc, reach] });
+}
+const HOLE_BUDGET_MS = 2.5;
+const holeJobs = [];
+let holePend = null;  // mask-cell box [x0,y0,z0,x1,y1,z1] marked but not uploaded yet
+const unionBox = (a, b) => (a ? [0, 1, 2].map((i) => Math.min(a[i], b[i])).concat([3, 4, 5].map((i) => Math.max(a[i], b[i]))) : b.slice());
+function runHoleJobs() {
+  if (!holeJobs.length) return;
+  const t0 = performance.now();
+  while (holeJobs.length && performance.now() - t0 < HOLE_BUDGET_MS) {
+    const j = holeJobs[0];
+    maskCells += VX.markHoles(holeData, holeDims, j.c, j.r, j.y0, 2, j.z, j.z);
+    if (j.dir) VX.markCavity(holeData, holeDims, j.c, j.dir, j.r, j.depth, j.fw, 2, 1, j.z, j.z);
+    if (++j.z > j.box[5]) {
+      holeJobs.shift();
+      holePend = unionBox(holePend, j.box);
+      const [wc, reach] = j.boxW;
+      holeBoxMin.min(new THREE.Vector3(wc[0] - reach, wc[1] - reach, wc[2] - reach));
+      holeBoxMax.max(new THREE.Vector3(wc[0] + reach, wc[1] + reach, wc[2] + reach));
+      if (!holeJobs.length) holesDirty = true;
+    }
+  }
+}
+function removeHoleAt(x, y, z) {  // a placed voxel fills its hole cell again (grid mode)
+  if (!holeData) return;
+  const i = 2 * (Math.floor(x / holeF) + holeDims[0] * (Math.floor(y / holeF) + holeDims[1] * Math.floor(z / holeF)));
+  if (holeData[i] < 128) {
+    holeData[i] = VX.HOLE_FAR; maskCells--; holesDirty = true;
+    const b = [Math.floor(x / holeF), Math.floor(y / holeF), Math.floor(z / holeF)];
+    holePend = unionBox(holePend, b.concat(b));
+  }
+}
+function flushSdf() {
+  if (!SparkMod || !sdfEdit) return;
+  const { SplatEditSdf, SplatEditSdfType } = SparkMod;
+  while (sdfPending.length && sdfCount < SDF_CAP) {
+    const [wc, r] = sdfPending.shift();
+    const s = new SplatEditSdf({ type: SplatEditSdfType.SPHERE, radius: r, opacity: 0, color: new THREE.Color(1, 1, 1) });
+    s.position.set(wc[0], wc[1], wc[2]); s.updateMatrixWorld();
+    sdfEdit.addSdf(s); sdfCount++;
+  }
+  sdfPending.length = 0;
+  meshChanged();
+}
+// Upload only the changed box (texSubImage3D into three's texture) once three has the texture on the GPU;
+// else (first use, or any failure) a full re-upload via needsUpdate.
+function subUploadHoles(b) {
+  const tp = renderer.properties.get(holeTex);
+  if (!b || !tp.__webglTexture || tp.__version !== holeTex.version) return false;
+  const gl = renderer.getContext();
+  try {
+    renderer.state.bindTexture(gl.TEXTURE_3D, tp.__webglTexture);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, holeDims[0]); gl.pixelStorei(gl.UNPACK_IMAGE_HEIGHT, holeDims[1]);
+    gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, b[0]); gl.pixelStorei(gl.UNPACK_SKIP_ROWS, b[1]); gl.pixelStorei(gl.UNPACK_SKIP_IMAGES, b[2]);
+    gl.texSubImage3D(gl.TEXTURE_3D, 0, b[0], b[1], b[2], b[3] - b[0] + 1, b[4] - b[1] + 1, b[5] - b[2] + 1, gl.RG, gl.UNSIGNED_BYTE, holeData);
+    return true;
+  } catch (e) {
+    console.warn("hole mask sub-upload failed; full upload", e);
+    return false;
+  } finally {
+    for (const k of ["UNPACK_ROW_LENGTH", "UNPACK_IMAGE_HEIGHT", "UNPACK_SKIP_PIXELS", "UNPACK_SKIP_ROWS", "UNPACK_SKIP_IMAGES"]) gl.pixelStorei(gl[k], 0);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  }
+}
+let subUploads = 0, lastUploadAt = -1e9;
+const HOLE_UPLOAD_MS = 250;  // at most one mask upload (= one Spark regeneration) per 250 ms of sustained fire
+function uploadHoles(force) {
+  if (!holesDirty || !holeTex || !splatMesh || holesMode !== "grid") return;
+  if (!force && performance.now() - lastUploadAt < HOLE_UPLOAD_MS) return;
+  lastUploadAt = performance.now();
+  holesDirty = false;
+  if (subUploadHoles(holePend)) subUploads++;
+  else holeTex.needsUpdate = true;  // three re-uploads it when Spark's generator binds it
+  holePend = null;
+  for (const m of splatMeshes()) m.updateVersion();  // new versions: Spark regenerates (the modifier reads the mask)
+  meshChanged();               // and re-sorts, even with a still camera
+  uploads++; lastUpdateMs = +performance.now().toFixed(1);
+}
+function generatorProgram(m = splatMesh) {
+  try { return SparkMod?.SplatAccumulator?.generatorProgram?.get(m?.generator) ?? null; } catch (e) { return null; }
+}
+// Once Spark has compiled a mesh's generator: the mask modifier must be in it, else use SplatEdit spheres.
+function checkHoleModifier() {
+  if (holesMode !== "grid") return;
+  for (const m of splatMeshes()) {
+    if (holeChecked.has(m)) continue;
+    if (m.generatorError) return switchToSdf("generator error: " + String(m.generatorError).slice(0, 200));
+    const prog = generatorProgram(m);
+    if (!prog) continue;
+    holeChecked.add(m);
+    holeCheck = prog.shader.includes("holeQ") ? "ok" : "missing";
+    if (holeCheck !== "ok") return switchToSdf("mask modifier missing from the generator shader");
+  }
+}
+function switchToSdf(why) {
+  console.warn("splat holes: falling back to SplatEdit spheres:", why);
+  holeCheck = "fallback: " + why;
+  holesMode = "sdf";
+  for (const m of splatMeshes()) { m.worldModifier = null; m.updateGenerator(); }
+  if (!sdfEdit) { sdfEdit = new SparkMod.SplatEdit({ rgbaBlendMode: SparkMod.SplatEditRgbaBlendMode.MULTIPLY, sdfs: [] }); scene.add(sdfEdit); }
+  sdfPending.push(...holeList.slice(-SDF_CAP));
+  flushSdf();
+}
+let forceRegen = true;
+function meshChanged() {  // RE-SORT AFTER CHANGE (as the viewer): a still camera is no view change to Spark
+  forceRegen = true; touch();
+  if (spark) { spark.sortDirty = true; spark.setDirty(); }  // the shown interactive model; the full one at its kick
+  lodChangedAt = performance.now();
+  if (presented === "F") presented = "I";  // cut back; the full model re-sorts (and regenerates) before returning
+}
+function matchTrainerRaster(m) {  // as viewer/index.html (match the trainer's rasterizer)
+  const edits = [
+    ["vec2 J2 = -(J1 * viewCenter.xy) * invZ;",
+     `vec2 pOff = vec2(projectionMatrix[2][0], projectionMatrix[2][1]);
+        vec2 pScale = vec2(projectionMatrix[0][0], projectionMatrix[1][1]);
+        vec2 tA = -(vec2(1.3) + pOff) / pScale, tB = -(vec2(-1.3) + pOff) / pScale;
+        vec2 J2 = -J1 * clamp(viewCenter.xy * invZ, min(tA, tB), max(tA, tB));`],
+    ["vec2 eigenVec1 = (abs(b) > 0.001)",
+     "adjustedStdDev = footprintScale * sqrt(max(0.0, 2.0 * log(255.0 * min(rgba.a, 1.0))));\n    vec2 eigenVec1 = (abs(b) > 0.001)"],
+    ["vec2 pixelOffset = position.x", "vSplatUv = position.xy * adjustedStdDev;\n    vec2 pixelOffset = position.x"],
+    ["uniform float clipXY;", "uniform float clipXY;\nuniform float footprintScale;"],
+  ];
+  for (const [from, to] of edits) {
+    if (m.vertexShader.includes(from)) m.vertexShader = m.vertexShader.replace(from, to);
+    else console.warn("matchTrainerRaster: Spark shader changed, edit skipped:", from);
+  }
+  m.uniforms.footprintScale = { value: 1 };
+  m.needsUpdate = true;
+}
+const holeBoxMin = new THREE.Vector3(1e30, 1e30, 1e30), holeBoxMax = new THREE.Vector3(-1e30, -1e30, -1e30);
+function holeModifier() {  // one modifier per SplatMesh; the mask texture and uniforms are shared
+  const { dyno } = SparkMod;
+  const { Dyno, dynoBlock, Gsplat, DynoSampler3D, DynoVec3 } = dyno;
+  if (!holeU) {
+    holeTex = new THREE.Data3DTexture(holeData, holeDims[0], holeDims[1], holeDims[2]);
+    holeTex.format = THREE.RGFormat; holeTex.type = THREE.UnsignedByteType;  // RG8
+    holeTex.minFilter = holeTex.magFilter = THREE.NearestFilter; holeTex.generateMipmaps = false; holeTex.unpackAlignment = 1;
+    holeTex.needsUpdate = true; holesDirty = false;
+    const hc = world.edge * holeF;
+    holeU = {
+      tex: new DynoSampler3D({ key: "holeTex", value: holeTex }),
+      org: new DynoVec3({ key: "holeOrg", value: new THREE.Vector3(...world.origin) }),
+      inv: new DynoVec3({ key: "holeInv", value: new THREE.Vector3(1 / hc, 1 / hc, 1 / hc) }),
+      dims: new DynoVec3({ key: "holeDims", value: new THREE.Vector3(...holeDims) }),
+      // x: HOLE_SCALE, y: far distance, z: sMax (mask cells), w: rim (mask cells)
+      prm: new dyno.DynoVec4({ key: "holePrm", value: new THREE.Vector4(VX.HOLE_SCALE, (VX.HOLE_FAR - 128) / VX.HOLE_SCALE, holeSMax(), holeRim()) }),
+      bmin: new DynoVec3({ key: "holeBMin", value: holeBoxMin }),
+      bmax: new DynoVec3({ key: "holeBMax", value: holeBoxMax }),
+    };
+  }
+  const { tex, org, inv, dims, prm, bmin, bmax } = holeU;
+  return dynoBlock({ gsplat: Gsplat }, { gsplat: Gsplat }, ({ gsplat }) => {
+    const d = new Dyno({
+      inTypes: { gsplat: Gsplat, tex: "sampler3D", org: "vec3", inv: "vec3", dims: "vec3", prm: "vec4", bmin: "vec3", bmax: "vec3" },
+      outTypes: { gsplat: Gsplat },
+      inputs: { gsplat, tex, org, inv, dims, prm, bmin, bmax },
+      // Trilinear distance between cell centres from 8 integer texelFetches (as VXCore.holeDist), then the
+      // VXCore.holeClass rule: hidden / scorched rim / clear.
+      statements: ({ inputs, outputs }) => {
+        const g = outputs.gsplat, t = inputs.tex;
+        const f = (dx, dy, dz) => `texelFetch(${t}, clamp(holeI + ivec3(${dx}, ${dy}, ${dz}), ivec3(0), holeHi), 0).rg`;
+        return [
+          `${g} = ${inputs.gsplat};`,
+          `vec3 holeQ = (${g}.center - ${inputs.org}) * ${inputs.inv} - 0.5;`,
+          `float holeD = ${inputs.prm}.y, holeCav = 1.0;`,
+          `if (all(greaterThanEqual(${g}.center, ${inputs.bmin})) && all(lessThanEqual(${g}.center, ${inputs.bmax}))`,
+          `    && all(greaterThan(holeQ, vec3(-1.0))) && all(lessThan(holeQ, ${inputs.dims}))) {`,
+          `  ivec3 holeI = ivec3(floor(holeQ)), holeHi = ivec3(${inputs.dims} + 0.5) - 1;`,
+          `  vec3 holeF = holeQ - floor(holeQ);`,
+          `  vec2 hx00 = mix(${f(0, 0, 0)}, ${f(1, 0, 0)}, holeF.x), hx10 = mix(${f(0, 1, 0)}, ${f(1, 1, 0)}, holeF.x);`,
+          `  vec2 hx01 = mix(${f(0, 0, 1)}, ${f(1, 0, 1)}, holeF.x), hx11 = mix(${f(0, 1, 1)}, ${f(1, 1, 1)}, holeF.x);`,
+          `  vec2 holeV = mix(mix(hx00, hx10, holeF.y), mix(hx01, hx11, holeF.y), holeF.z);`,
+          `  holeD = (holeV.x * 255.0 - 128.0) / ${inputs.prm}.x;`,
+          `  holeCav = holeV.y;`,
+          `}`,
+          `float holeK = min(2.0 * max(max(${g}.scales.x, ${g}.scales.y), ${g}.scales.z) * ${inputs.inv}.x, ${inputs.prm}.z);`,
+          `if (holeD < holeK) {`,
+          `  ${g}.rgba.a = 0.0;`,
+          `} else {`,
+          `  float holeT = clamp((holeD - holeK) / ${inputs.prm}.w, 0.0, 1.0);  // rim: x0.4 at the edge -> x1`,
+          `  ${g}.rgba.rgb *= min(0.4 + 0.6 * holeT * holeT * (3.0 - 2.0 * holeT), holeCav);  // and the cavity`,
+          `}`,
+        ];
+      },
+    });
+    return { gsplat: d.outputs.gsplat };
+  });
+}
+function makeSpark(layer) {
+  const s = new SparkMod.SparkRenderer({ renderer, accumExtSplats: true });
+  const mip = !!CFG.splat?.mip;
+  s.blurAmount = mip ? 0.1 : 0;
+  s.preBlurAmount = mip ? 0 : 0.3;
+  s.minAlpha = 1 / 255;
+  s.sortRadial = false;
+  s.clipXY = 3;
+  s.maxPixelRadius = 4096;
+  matchTrainerRaster(s.material);
+  s.layers.set(layer);
+  s.visible = false;
+  scene.add(s);
+  return s;
+}
+async function makeMesh(v, layer, progress, whenIdle) {
+  const bytes = await dataBytes(v, progress, whenIdle);
+  if (whenIdle) await whenIdle();
+  const mesh = new SparkMod.SplatMesh({ fileBytes: bytes, fileType: "spz", extSplats: true });
+  mesh.layers.set(layer);
+  if (holesMode === "grid") { mesh.worldModifier = holeModifier(); mesh.updateGenerator(); holesDirty = holesDirty || maskCells > 0; }
+  await mesh.initialized;
+  mesh.visible = false;
+  scene.add(mesh);
+  return mesh;
+}
+async function loadSplat() {
+  try {
+    await loadScript("data/spark.js");
+    const url = URL.createObjectURL(new Blob([window.__SPARK_SRC], { type: "text/javascript" }));
+    delete window.__SPARK_SRC;
+    SparkMod = await import(url);
+    const { SplatEdit, SplatEditRgbaBlendMode } = SparkMod;
+    spark = makeSpark(LAYER_I);
+    if (holesMode === "sdf") {
+      sdfEdit = new SplatEdit({ rgbaBlendMode: SplatEditRgbaBlendMode.MULTIPLY, sdfs: [] });
+      scene.add(sdfEdit);
+    }
+    splatMesh = await makeMesh(CFG.splat, LAYER_I, (f) => { splatPct = Math.round(100 * f); });
+    G.splatReady = true; G.numSplats = splatMesh.numSplats;
+    if (holesMode === "sdf") flushSdf();
+    applyMode();
+  } catch (e) {
+    console.error("splat load failed", e);
+    splatErr = String(e && e.message || e);
+    G.splatError = splatErr;
+    return;
+  }
+  if (!CFG.splatFull?.parts || Q.get("full") === "0") return;
+  try {  // the full model, behind the interactive one
+    sparkF = makeSpark(LAYER_F);
+    meshF = await makeMesh(CFG.splatFull, LAYER_F, (f) => { fullPct = Math.round(100 * f); }, whenStill);
+    G.splatFullReady = true; G.numSplatsFull = meshF.numSplats;
+    applyMode();
+  } catch (e) {
+    console.error("full splat model failed; staying on the interactive model", e);
+    fullErr = String(e && e.message || e);
+    G.splatFullError = fullErr;
+    meshF = null;
+  }
+}
+
+// ------------------------------------------------------------ modes
+let mode = Q.get("mode") === "voxel" ? "voxel" : "splat";  // splat look by default; voxels draw until the splats are decoded
+function applyMode() {
+  const showSplat = mode === "splat" && !!splatMesh;
+  // splat mode: the voxel world leaves the scene and frees its GPU buffers / 3D textures (three re-uploads
+  // them when it comes back); collision stays on the CPU, edits keep updating the chunk data.
+  if (showSplat && voxRoot.parent) { scene.remove(voxRoot); freeVoxelGpu(); }
+  else if (!showSplat && !voxRoot.parent) { scene.add(voxRoot); remeshDirty(); }
+  for (const s of [spark, sparkF]) if (s) s.visible = showSplat;
+  for (const m of splatMeshes()) m.visible = showSplat;
+  bowls.visible = showSplat && BOWL;
+  if (showSplat) { uploadHoles(); meshChanged(); }
+  else { presented = "I"; if (renderer.getPixelRatio() !== DPR) renderer.setPixelRatio(DPR); }
+}
+function freeVoxelGpu() {
+  for (const c of world.chunks.values()) { c.mesh?.geometry.dispose(); c.tex?.dispose(); }
+}
+function setMode(m) { mode = m === "splat" ? "splat" : "voxel"; applyMode(); touch(); return mode; }
+function toggleMode() { return setMode(mode === "splat" ? "voxel" : "splat"); }
+
+// ------------------------------------------------------------ hooks (contract: window.__game)
+// cfg.level.matrix: the exporter's package -> game levelling transform (flat 16 column-major, or 4 columns).
+const LEVEL = (() => {
+  const m = CFG.level?.matrix;
+  if (!Array.isArray(m)) return null;
+  const a = Array.isArray(m[0]) ? m.flat() : m;
+  return a.length === 16 && a.every(Number.isFinite) ? new THREE.Matrix4().fromArray(a) : null;
+})();
+const fpsWindows = [];
+let fpsSmooth = 0, emaDt = 16.7;
+Object.assign(G, {
+  state() {
+    if (!player) return null;
+    const f = toWorld(player.p), e = toWorld(eyeCell()), s = world.edge;
+    return { pos: f, eye: e, vel: player.v.map((v) => v * s), yaw, pitch, onGround: player.onGround, crouched: player.crouched,
+      mode, broken, voxels: world.count, fps: +fpsSmooth.toFixed(1), eyeHeightM: eyeHeightM(), respawns: player.respawns,
+      shots, placed, jumps: player.jumps, puffs: nPuffs, pinned: !!camPin, debris: nDebris, quads: totalQuads, chunks: world.chunks.size,
+      splatPct, splatError: splatErr, pixelRatio: renderer.getPixelRatio(), renderScale: resLevel, idle: idleNow, holes: holesMode,
+      presented: presented === "F" ? "full" : "interactive", fullPct, fullReady: !!meshF, fullError: fullErr,
+      still: performance.now() - movedAt >= SETTLE_MS };
+  },
+  setMode, toggleMode,
+  shoot: () => shoot(),
+  place: () => placeVoxel(),
+  // setCamera({position, look_at, vfov_deg?, up?, frame?: "game"|"package"}): pin the eye to this exact pose
+  // and vertical FOV (degrees, unclamped; roll via up), controller frozen. frame "package" maps the pose
+  // through cfg.level.matrix (package -> game, 16 numbers column-major as glam's to_cols_array; identity
+  // if absent). setCamera(null) releases back to the controller. Returns the game-frame pose used.
+  setCamera(c) {
+    if (!c) { camPin = null; camera.up.set(0, 1, 0); fitCamera(); return null; }
+    const pos = new THREE.Vector3(...c.position), look = new THREE.Vector3(...c.look_at);
+    const up = new THREE.Vector3(...(c.up || [0, 1, 0]));
+    if (c.frame === "package" && LEVEL) { pos.applyMatrix4(LEVEL); look.applyMatrix4(LEVEL); up.transformDirection(LEVEL); }
+    const t = new THREE.PerspectiveCamera();
+    t.up.copy(up).normalize(); t.position.copy(pos); t.lookAt(look);
+    camPin = { pos, quat: t.quaternion.clone(), vfov: c.vfov_deg || null };
+    fitCamera();
+    meshChanged();
+    return { position: pos.toArray(), look_at: look.toArray(), up: up.toArray(), vfov_deg: camera.fov, levelled: c.frame === "package" && !!LEVEL };
+  },
+  teleport(pos, y, p) { if (!player) return false; placePlayer(toCell(pos[0], pos[1], pos[2]), y, p); return true; },
+  respawn: () => respawn(),
+  fpsWindow(ms) {
+    return new Promise((res) => fpsWindows.push({ until: performance.now() + ms, dts: [], res }));
+  },
+  holeStats() {
+    const prog = generatorProgram();
+    const progF = meshF ? generatorProgram(meshF) : null;
+    return { mode: holesMode, holes: holeCount, maskCells, lastUpdateMs, uploads, uploadPending: holesDirty,
+      texVersion: holeTex ? holeTex.version : null, meshVersion: splatMesh ? splatMesh.version : null,
+      shaderHasMask: prog ? prog.shader.includes("holeQ") : null, check: holeCheck,
+      fullShaderHasMask: progF ? progF.shader.includes("holeQ") : null,
+      generatorError: splatMesh?.generatorError ? String(splatMesh.generatorError).slice(0, 300) : null,
+      sdfs: sdfCount, maskDims: holeDims, jobs: holeJobs.length, subUploads, maskCellCm: world ? +(world.edge * holeF * MPU * 100).toFixed(2) : null };
+  },
+  // CPU mirror of the GPU rule for a splat centred at world (x,y,z) with largest std-dev `scale` (world units,
+  // default 0): {class: "hidden"|"rim"|"clear", distM: distance to the nearest crater surface in metres}.
+  holeAt(x, y, z, scale = 0) {
+    if (!holeData) return null;
+    const hc = world.edge * holeF, d = VX.holeDist(holeData, holeDims, world.origin, hc, [x, y, z], 2);
+    const cls = VX.holeClass(d, scale / hc, holeSMax(), holeRim()), cav = VX.holeCavity(holeData, holeDims, world.origin, hc, [x, y, z]);
+    const rim = VX.holeRimFactor(d, scale / hc, holeSMax(), holeRim());
+    return { class: cls, distM: +(d * hc * MPU).toFixed(3), cavity: +cav.toFixed(3), rgbFactor: cls === "hidden" ? null : +Math.min(rim, cav).toFixed(3) };
+  },
+  isSolid(x, y, z) {
+    if (!world) return false;
+    const c = toCell(x, y, z);
+    return !!world.solid(Math.floor(c[0]), Math.floor(c[1]), Math.floor(c[2]));
+  },
+  three: { renderer, scene, camera },
+});
+function eyeHeightM() {
+  if (!player) return null;
+  const top = world.floorBelow(player.p[0], player.p[1] + 0.5, player.p[2], mToCells(3));
+  if (top === null) return null;
+  return +((eyeCell()[1] - top) * world.edge * MPU).toFixed(3);
+}
+
+// ------------------------------------------------------------ boot: voxels first, then play; splats behind
+async function boot() {
+  setLoad(0, "Loading voxels…");
+  const mb = (CFG.voxel.bytes / 1e6).toFixed(1);
+  const bytes = await dataBytes(CFG.voxel, (f) => setLoad(0.5 * f, `Loading voxels ${Math.round(100 * f)}% (${mb} MB)…`));
+  setLoad(0.5, "Decoding voxels…");
+  await yieldTask();
+  world = VX.decodeVXG1(bytes, CFG.voxel);
+  const list = [...world.chunks.values()];
+  let t = performance.now();
+  for (let i = 0; i < list.length; i++) {
+    buildChunk(list[i]);
+    if (performance.now() - t > 30) { setLoad(0.5 + 0.5 * i / list.length, `Building world ${i + 1}/${list.length} chunks…`); await yieldTask(); t = performance.now(); }
+  }
+  world.dirty.clear();
+  initHoleGrid();
+  player = new VX.Player(world, MPU);
+  const sp = CFG.spawn, eyeW = sp.position, look = sp.look_at;
+  const dx = look[0] - eyeW[0], dy = look[1] - eyeW[1], dz = look[2] - eyeW[2];
+  spawnYaw = Math.atan2(-dx, -dz);
+  spawnPitch = THREE.MathUtils.clamp(Math.atan2(dy, Math.hypot(dx, dz)), -PITCH_MAX, PITCH_MAX);
+  const eyeM = CFG.eyeHeightM || 1.6;
+  spawnFeet = toCell(eyeW[0], eyeW[1] - eyeM / MPU, eyeW[2]);
+  floorCellY = toCell(0, sp.floor_y ?? (eyeW[1] - eyeM / MPU), 0)[1];
+  bedrockY = Q.get("bedrock") === "0" ? -Infinity : Math.round(floorCellY) - 1;  // top floor layer breaks, the rest holds
+  placePlayer(spawnFeet.slice(), spawnYaw, spawnPitch, true);
+  spawnFeet = player.p.slice();  // respawn where the spawn search landed
+  G.spawnFeet = toWorld(spawnFeet);
+  loadEl.classList.add("hidden");
+  G.ready = true; G.readyAt = performance.now();
+  updatePlay(); showHint();
+  applyMode();
+  loadSplat();
+}
+
+// ------------------------------------------------------------ main loop (fixed 120 Hz physics)
+const STEP = 1 / 120;
+let acc = 0, lastT = null, hudAt = 0;
+// MOVING RESOLUTION (export-viewer block 9, splat mode): start at full DPR; shrink the moving pixel budget 20%
+// right after a >18 ms moving frame, probe up 8% after 60 consecutive clean moving frames; floor 0.65 of
+// native DPR (?movefloor=0..1); the footprint is 0.85 below full resolution. Still (no move for 200 ms):
+// full DPR, footprint 1.
+const SLOW_FRAME_MS = 18, MIN_MOVING_PIXELS = 640 * 360, MOVING_FOOTPRINT = 0.85, PACE_SETTLE_MS = 200;
+const floorQ = Q.has("movefloor") ? Number(Q.get("movefloor")) : NaN;
+const MOVING_FLOOR = Number.isFinite(floorQ) ? Math.min(1, Math.max(0, floorQ)) : 0.65;
+let fullMovingPixels = innerWidth * innerHeight * DPR * DPR, movingPixels = fullMovingPixels;
+let paceGood = 0, lastPaceAt = 0, wasPaceMoving = false;
+const cssSize = new THREE.Vector2();
+addEventListener("resize", () => {
+  const full = innerWidth * innerHeight * DPR * DPR;
+  movingPixels = Math.min(full, movingPixels * full / fullMovingPixels); fullMovingPixels = full;
+});
+// The canvas is never resized for the scaler (setPixelRatio -> setSize blocked ~70-200 ms in gl.getError
+// draining the GPU queue on the M4): it stays at native DPR (<= 2); a moving frame below full resolution
+// renders the splat pass into one of a few pre-allocated render targets at quantized scales of the drawing
+// buffer and draws it to the canvas with one full-screen quad. The viewer's controller sets the budget; the
+// level is the largest one within it, stepping down at once and up at most once per 2 s.
+const RES_LEVELS = [1, 0.85, 0.75, 0.65].filter((l) => l >= MOVING_FLOOR - 1e-6);
+const RES_UP_MS = 2000;
+let resLevel = 1, resLevelAt = -1e9;
+const resTargets = new Map();
+const bufSize = new THREE.Vector2();
+function resolutionLevel(now, moving) {
+  let lv = 1;
+  if (moving) {
+    const c = renderer.getSize(cssSize), want = Math.min(1, Math.sqrt(movingPixels / (c.x * c.y * DPR * DPR)));
+    lv = RES_LEVELS[RES_LEVELS.length - 1];
+    for (const l of RES_LEVELS) if (l <= want + 1e-6) { lv = l; break; }
+    if (lv > resLevel && now - resLevelAt < RES_UP_MS) lv = resLevel;
+  }
+  if (lv !== resLevel) { resLevel = lv; resLevelAt = now; }
+  return lv;
+}
+function targetFor(level) {
+  renderer.getDrawingBufferSize(bufSize);
+  const w = Math.max(1, Math.round(bufSize.x * level)), hh = Math.max(1, Math.round(bufSize.y * level));
+  let t = resTargets.get(level);
+  if (!t) {
+    t = new THREE.WebGLRenderTarget(w, hh, { depthBuffer: true });
+    t.texture.colorSpace = THREE.SRGBColorSpace;
+    t.texture.minFilter = t.texture.magFilter = THREE.LinearFilter;
+    t.texture.generateMipmaps = false;
+    t.isXRRenderTarget = true;  // three/Spark write display (sRGB) values, as into the canvas (export-viewer's trick)
+    resTargets.set(level, t);
+  } else if (t.width !== w || t.height !== hh) t.setSize(w, hh);
+  return t;
+}
+const blitCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const blit = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  glslVersion: THREE.GLSL3, depthTest: false, depthWrite: false,
+  uniforms: { map: { value: null }, size: { value: new THREE.Vector2(1, 1) } },
+  vertexShader: "void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }",
+  fragmentShader: "layout(location = 0) out highp vec4 outColor;\nuniform sampler2D map;\nuniform vec2 size;\n" +
+    "void main() { outColor = texture(map, gl_FragCoord.xy / size); }" }));
+function drawSplat(cam, level) {
+  if (level >= 1) { renderer.render(scene, cam); return; }
+  const t = targetFor(level);
+  renderer.setRenderTarget(t);
+  renderer.render(scene, cam);
+  renderer.setRenderTarget(null);
+  blit.material.uniforms.map.value = t.texture;
+  renderer.getDrawingBufferSize(blit.material.uniforms.size.value);
+  renderer.render(blit, blitCam);
+}
+const IDLE = Q.get("idle") !== "0";
+let idleNow = false, sortSeen = "", needSettled = false, lastDrawn = null, dirtyAt = 0;
+const touch = () => { dirtyAt = performance.now(); };
+addEventListener("resize", touch);
+function pace(now, moving) {
+  const dt = now - lastPaceAt; lastPaceAt = now;
+  const consecutive = moving && wasPaceMoving; wasPaceMoving = moving;
+  if (!consecutive) { paceGood = 0; return; }
+  const c = renderer.getSize(cssSize), full = c.x * c.y * DPR * DPR;
+  if (dt > SLOW_FRAME_MS) {
+    movingPixels = Math.max(Math.min(full, MIN_MOVING_PIXELS), full * MOVING_FLOOR * MOVING_FLOOR, movingPixels * 0.8);
+    paceGood = 0;
+  } else if (++paceGood >= 60) {
+    paceGood = 0; movingPixels = Math.min(full, movingPixels * 1.08);
+  }
+}
+let regenPos = null, regenDir = null;
+const statsEl = $("stats");
+let hudFlash = null, hudHit = null, hudText = "";
+function regenDue() {  // Spark regenerates (SH + order) at most per 1 deg turn / 2 cm move, or after an edit
+  const p = camera.position, d = camera.getWorldDirection(_v3);
+  const due = forceRegen || !regenPos || d.angleTo(regenDir) > Math.PI / 180 || p.distanceTo(regenPos) > 0.02 / MPU;
+  if (due) { regenPos = p.clone(); regenDir = d.clone(); forceRegen = false; }
+  return due;
+}
+function frame(now) {
+  const rawDt = lastT === null ? 1 / 60 : (now - lastT) / 1000;
+  lastT = now;
+  const dt = Math.min(0.1, Math.max(0, rawDt));
+  if (rawDt > 0 && rawDt < 1) {
+    emaDt += (rawDt * 1000 - emaDt) * 0.08; fpsSmooth = 1000 / emaDt;
+    for (let i = fpsWindows.length - 1; i >= 0; i--) {
+      const w = fpsWindows[i];
+      w.dts.push(rawDt * 1000);
+      if (now >= w.until) {
+        fpsWindows.splice(i, 1);
+        const s = [...w.dts].sort((a, b) => a - b), sum = w.dts.reduce((a, b) => a + b, 0);
+        w.res({ fps: +(1000 * s.length / sum).toFixed(1), p50ms: +s[Math.floor(s.length * 0.5)].toFixed(2),
+          p95ms: +s[Math.min(s.length - 1, Math.floor(s.length * 0.95))].toFixed(2), frames: s.length });
+      }
+    }
+  }
+  if (G.ready && camPin) {  // SCRIPT CAMERA: exact pose, no input or physics (effects keep running)
+    updateEffects(dt);
+    camera.position.copy(camPin.pos);
+    camera.quaternion.copy(camPin.quat);
+  } else if (G.ready) {
+    const gp = readPad();
+    // look
+    if (gp) {
+      const [rx, ry, rm] = gp.R;
+      if (rm > 0) {
+        const curve = Math.pow(rm, 1.8) / rm;  // keep direction, ease small deflections
+        yaw -= rx * curve * 2.8 * dt;
+        pitch = THREE.MathUtils.clamp(pitch - ry * curve * 2.0 * dt, -PITCH_MAX, PITCH_MAX);
+      }
+    }
+    if (keys.has("ArrowLeft")) yaw += 2.2 * dt;
+    if (keys.has("ArrowRight")) yaw -= 2.2 * dt;
+    // move intent (wish direction in the ground plane)
+    let fx = 0, sx = 0;
+    if (keys.has("KeyW") || keys.has("ArrowUp")) fx += 1;
+    if (keys.has("KeyS") || keys.has("ArrowDown")) fx -= 1;
+    if (keys.has("KeyD")) sx += 1;
+    if (keys.has("KeyA")) sx -= 1;
+    const km = Math.hypot(fx, sx); if (km > 1) { fx /= km; sx /= km; }
+    if (gp && gp.L[2] > 0) { fx = -gp.L[1]; sx = gp.L[0]; }
+    const sy = Math.sin(yaw), cy = Math.cos(yaw);
+    const inp = { wx: -sy * fx + cy * sx, wz: -cy * fx - sy * sx,
+      sprint: keys.has("ShiftLeft") || keys.has("ShiftRight") || (gp && gp.cur[10]),
+      crouch: keys.has("KeyC") || keys.has("ControlLeft") || keys.has("ControlRight") || (gp && gp.cur[1]), jump: false };
+    if (gp && gp.edge[0]) jumpBuffer = 0.15;
+    const holdJump = keys.has("Space") || (gp && gp.cur[0]);
+    if (gp && gp.edge[3]) toggleMode();
+    // physics
+    acc = Math.min(acc + dt, 12 * STEP);
+    while (acc >= STEP) {
+      prevEye[0] = curEye[0]; prevEye[1] = curEye[1]; prevEye[2] = curEye[2];
+      inp.jump = jumpBuffer > 0 || holdJump;
+      const g0 = player.onGround;
+      player.step(STEP, inp);
+      if (g0 && !player.onGround && player.v[1] > 0) jumpBuffer = 0;
+      jumpBuffer = Math.max(0, jumpBuffer - STEP);
+      if (player.p[1] < floorCellY - mToCells(3)) respawn();
+      const e = eyeCell(); curEye[0] = e[0]; curEye[1] = e[1]; curEye[2] = e[2];
+      acc -= STEP;
+    }
+    // fire (RT / held mouse, ~6/s) and place (LT / right click)
+    const t = performance.now();
+    if ((mouseFire || (gp && gp.cur[7])) && t >= nextShotAt) { shoot(); nextShotAt = t + 1000 / 6; }
+    if (gp && gp.cur[6] && t >= nextPlaceAt) { placeVoxel(); nextPlaceAt = t + 250; }
+    updateEffects(dt);
+    const al = acc / STEP;
+    const eye = toWorld([prevEye[0] + (curEye[0] - prevEye[0]) * al, prevEye[1] + (curEye[1] - prevEye[1]) * al, prevEye[2] + (curEye[2] - prevEye[2]) * al]);
+    camera.position.set(eye[0], eye[1], eye[2]);
+    camera.rotation.set(pitch, yaw, 0, "YXZ");
+  }
+  camera.updateMatrixWorld();
+  // still = no pose / projection change (a pinned setCamera counts as still)
+  if (!sameMatrix(camera.matrixWorld, lastView) || !sameMatrix(camera.projectionMatrix, lastProj)) {
+    lastView.copy(camera.matrixWorld); lastProj.copy(camera.projectionMatrix); movedAt = now;
+  }
+  const still = now - movedAt >= SETTLE_MS;
+  // splat mode: hole upload, motion LOD, regen throttle, MOVING RESOLUTION (below).
+  const splatOn = mode === "splat" && !!splatMesh;
+  if (holeData) runHoleJobs();
+  if (splatMesh) checkHoleModifier();
+  let cam = camera, level = 1;
+  if (splatOn) {
+    uploadHoles();
+    syncCams();
+    const was = presented;
+    const lodKey = Math.max(movedAt, lodChangedAt), lodStill = now - lodKey >= SETTLE_MS;
+    if (!meshF || !lodStill) presented = "I";
+    else if (presented === "I") {
+      if (fullKick !== lodKey && !sparkF.sorting) {  // regenerate + sort the full model for this pose, off screen
+        fullKick = lodKey; fullKickAt = performance.now();
+        sparkF.sortDirty = true; sparkF.setDirty();
+        sparkF.update({ scene, camera: camF }).catch((e) => console.error("full sort", e));
+      }
+      if (fullKick === lodKey && fullSorted()) presented = "F";
+    }
+    if (presented !== was) forceRegen = true;
+    const S = presented === "F" ? sparkF : spark;
+    cam = presented === "F" ? camF : camI;
+    const moving = now - movedAt < PACE_SETTLE_MS;
+    // IDLE RULE (as export-viewer): with the camera still and nothing changing, stop redrawing; the canvas keeps
+    // its last frame and the GPU queue stays empty (the next moving frame starts cheap). Held while: the full
+    // model is up and settled, or it is sorting off screen for this pose (<= 4 s; the interactive frame stays).
+    const sortKey = presented + ":" + S.lastSortTime;
+    if (!S.sorting && sortKey !== sortSeen) { sortSeen = sortKey; needSettled = true; }  // POST-SORT FRAME
+    const quiet = now - movedAt > 600 && now - dirtyAt > 600 && !forceRegen && !S.sorting && !S.sortDirty &&
+      !nDebris && !nSparks && !nPuffs && !holeJobs.length && !holesDirty && presented === lastDrawn;
+    const settled = presented === "F" || !meshF || (lodStill && now - lodKey < SETTLE_MS + 4000);
+    idleNow = IDLE && quiet && settled && !needSettled;
+    if (!idleNow) {
+      S.autoUpdate = regenDue();
+      pace(now, moving);
+      level = resolutionLevel(now, moving);
+      const fp = S.material.uniforms.footprintScale;
+      if (fp) fp.value = level < 1 ? MOVING_FOOTPRINT : 1;
+    }
+  } else {
+    wasPaceMoving = false; idleNow = false;
+  }
+  if (!idleNow) {
+    if (splatOn) {
+      drawSplat(cam, level);
+      lastDrawn = presented;
+      const S = presented === "F" ? sparkF : spark;
+      if (!S.sorting && presented + ":" + S.lastSortTime === sortSeen && level === 1) needSettled = false;
+    } else renderer.render(scene, cam);
+  }
+  for (const s of [spark, sparkF]) if (s) s.autoUpdate = true;
+  // HUD
+  // DOM writes only on change (flash, crosshair) and the stats text at 4 Hz, only when it differs
+  const tn = performance.now(), fl = tn < flashUntil, hi = tn < hitUntil;
+  if (fl !== hudFlash) { hudFlash = fl; flashEl.style.opacity = fl ? "1" : "0"; }
+  if (hi !== hudHit) { hudHit = hi; crossEl.classList.toggle("hit", hi); }
+  if (HUD && G.ready && now - hudAt > 250) {
+    hudAt = now;
+    const eh = eyeHeightM();
+    const splatNote = mode !== "splat" ? "" : !splatMesh ? (splatErr ? " unavailable (voxels)" : ` · loading splats ${splatPct}% (voxels meanwhile)`) :
+      CFG.splatFull?.parts && !meshF && !fullErr ? ` (full ${fullPct}%)` : presented === "F" ? " full" : "";
+    const txt = `<b>${broken.toLocaleString()}</b> voxels broken\n` +
+      `${fpsSmooth.toFixed(0)} fps · ${mode.toUpperCase()}${splatNote}\n` +
+      `eye ${eh === null ? "–" : eh.toFixed(2)} m · voxel ${CFG.voxel.cm} cm` +
+      (player.respawns ? `\nrespawns ${player.respawns}` : "");
+    if (txt !== hudText) { hudText = txt; statsEl.innerHTML = txt; }
+  }
+}
+renderer.setAnimationLoop(frame);
+boot().catch(fail);
+</script>
+</body>
+</html>

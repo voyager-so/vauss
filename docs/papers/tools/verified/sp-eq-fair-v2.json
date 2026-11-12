@@ -1,0 +1,776 @@
+{
+ "claim_group": "pubs:p0:SP-EQ-fair-v2",
+ "verifier": "independent recompute (publications verifier), 2026-10-09; no GPU jobs run",
+ "inputs": {
+  "rows": "$SPLAT_DATA/runs/research/gseq-sweep/speqfair-v2/rows.jsonl (270 rows, 18 pair_ids x 15 arms)",
+  "lane_verdict": "$SPLAT_DATA/runs/research/gseq-sweep/sp-eq-fair-v2-verdict.json",
+  "lane_health": "$SPLAT_DATA/runs/research/gseq-sweep/sp-eq-fair-v2-spirula-health.json",
+  "protocol": "docs/papers/claims/protocols/sp-eq-fair-v2.md sha256 68d2e5747921174a... (matches registration) + archived study registry (not distributed) amendments (7 entries)",
+  "scripts": "spq_verdict.py (SPQ_V2=1) at main; spirula_health.py sha256 9ed7214938c8b933... = registered historical-build-025",
+  "submit_meta": "$SPLAT_DATA/runs/fal/submitted.jsonl (per-job env, splat-perf sha, scene_tar sha, arm order)"
+ },
+ "verdict_recomputed": {
+  "PRIMARY": "PARITY (registered reading: FASTER 0 / TIE 6 / SLOWER 0; labels FASTER-TRUNC 5 + TIE 1). Untruncated reading would be FASTER 5 / TIE 1 -> still PARITY under the v2 6/6 rule.",
+  "ROBUSTNESS": "PARITY (worst over 6 caps FASTER 5 / TIE 1; with truncation applied at the 8M cap 0/6/0)",
+  "EQUAL_CAP_500k": "AHEAD 6/0/0 (ratio 0.429-0.653; seed gate on TEST PSNR passes 6/6, +0.60..+1.42 dB)",
+  "EQUAL_CAP_1M": "AHEAD 6/0/0 (ratio 0.438-0.657; seed gate passes 6/6, +0.75..+1.26 dB)",
+  "DEFAULTS": "PARITY 5/1/0 (truck-full 0.987 TIE; others 0.470-0.867)",
+  "wall_s_reading": "identical categories on every readout using whole wall_s instead of train_s (primary wall ratios 0.193-0.314)",
+  "matches_lane": true
+ },
+ "per_scene": {
+  "bicycle": {
+   "spirula_star": "sp8000k",
+   "spirula_star_is_top_rung": true,
+   "ours_star_cap_k": 3000,
+   "ours_star_is_our_top_rung": false,
+   "dev_lpips_margin_ours_minus_sp": -0.0116,
+   "spirula_dev_lpips_gain_5M_to_8M": 0.0104,
+   "ratio_train_s": 0.2985,
+   "ratio_per_run": [
+    0.3039,
+    0.3053,
+    0.2864
+   ],
+   "ratio_wall_s": 0.3002,
+   "test_hold": "3/3",
+   "category_label": "FASTER-TRUNC",
+   "category_registered": "TIE",
+   "lane_ratio": 0.2985,
+   "lane_category": "FASTER-TRUNC",
+   "robust_worst_over_6_caps": "FASTER",
+   "robust_with_truncation_at_8M": "TIE",
+   "per_cap": {
+    "sp300k": {
+     "ours_cap_k": 500,
+     "ratio": 0.5967,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp500k": {
+     "ours_cap_k": 500,
+     "ratio": 0.5362,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp1000k": {
+     "ours_cap_k": 800,
+     "ratio": 0.4782,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp3000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.4403,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp5000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.3224,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp8000k": {
+     "ours_cap_k": 3000,
+     "ratio": 0.2985,
+     "hold": 3,
+     "verdict": "FASTER"
+    }
+   },
+   "equal_cap": {
+    "500k": {
+     "ratio": 0.5362,
+     "wall_ratio": 0.5329,
+     "speed": "FASTER",
+     "d_test_psnr": 0.668,
+     "d_test_lpips": -0.0084,
+     "seed_gate_psnr": true
+    },
+    "1000k": {
+     "ratio": 0.5156,
+     "wall_ratio": 0.5139,
+     "speed": "FASTER",
+     "d_test_psnr": 0.745,
+     "d_test_lpips": -0.0245,
+     "seed_gate_psnr": true
+    }
+   },
+   "defaults": {
+    "ratio": 0.7206,
+    "wall_ratio": 0.7114,
+    "per_run": [
+     0.729,
+     0.767,
+     0.666
+    ],
+    "speed": "FASTER",
+    "d_test_psnr": 0.939,
+    "splats_ours_default": 1928951
+   }
+  },
+  "counter": {
+   "spirula_star": "sp8000k",
+   "spirula_star_is_top_rung": true,
+   "ours_star_cap_k": 4000,
+   "ours_star_is_our_top_rung": true,
+   "dev_lpips_margin_ours_minus_sp": -0.0018,
+   "spirula_dev_lpips_gain_5M_to_8M": 0.0025,
+   "ratio_train_s": 0.312,
+   "ratio_per_run": [
+    0.3001,
+    0.2958,
+    0.3401
+   ],
+   "ratio_wall_s": 0.3136,
+   "test_hold": "3/3",
+   "category_label": "FASTER-TRUNC",
+   "category_registered": "TIE",
+   "lane_ratio": 0.312,
+   "lane_category": "FASTER-TRUNC",
+   "robust_worst_over_6_caps": "FASTER",
+   "robust_with_truncation_at_8M": "TIE",
+   "per_cap": {
+    "sp300k": {
+     "ours_cap_k": 300,
+     "ratio": 0.6249,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp500k": {
+     "ours_cap_k": 500,
+     "ratio": 0.5976,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp1000k": {
+     "ours_cap_k": 1000,
+     "ratio": 0.4701,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp3000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.392,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp5000k": {
+     "ours_cap_k": 3000,
+     "ratio": 0.3501,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp8000k": {
+     "ours_cap_k": 4000,
+     "ratio": 0.312,
+     "hold": 3,
+     "verdict": "FASTER"
+    }
+   },
+   "equal_cap": {
+    "500k": {
+     "ratio": 0.5976,
+     "wall_ratio": 0.5783,
+     "speed": "FASTER",
+     "d_test_psnr": 1.018,
+     "d_test_lpips": -0.0034,
+     "seed_gate_psnr": true
+    },
+    "1000k": {
+     "ratio": 0.4701,
+     "wall_ratio": 0.4612,
+     "speed": "FASTER",
+     "d_test_psnr": 1.133,
+     "d_test_lpips": -0.0049,
+     "seed_gate_psnr": true
+    }
+   },
+   "defaults": {
+    "ratio": 0.5288,
+    "wall_ratio": 0.5173,
+    "per_run": [
+     0.51,
+     0.512,
+     0.565
+    ],
+    "speed": "FASTER",
+    "d_test_psnr": 1.166,
+    "splats_ours_default": 1174946
+   }
+  },
+  "garden": {
+   "spirula_star": "sp8000k",
+   "spirula_star_is_top_rung": true,
+   "ours_star_cap_k": 3000,
+   "ours_star_is_our_top_rung": false,
+   "dev_lpips_margin_ours_minus_sp": -0.0022,
+   "spirula_dev_lpips_gain_5M_to_8M": 0.0045,
+   "ratio_train_s": 0.2942,
+   "ratio_per_run": [
+    0.2647,
+    0.2782,
+    0.3398
+   ],
+   "ratio_wall_s": 0.2961,
+   "test_hold": "3/3",
+   "category_label": "FASTER-TRUNC",
+   "category_registered": "TIE",
+   "lane_ratio": 0.2942,
+   "lane_category": "FASTER-TRUNC",
+   "robust_worst_over_6_caps": "FASTER",
+   "robust_with_truncation_at_8M": "TIE",
+   "per_cap": {
+    "sp300k": {
+     "ours_cap_k": 500,
+     "ratio": 0.6424,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp500k": {
+     "ours_cap_k": 800,
+     "ratio": 0.6204,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp1000k": {
+     "ours_cap_k": 1000,
+     "ratio": 0.5834,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp3000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.4526,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp5000k": {
+     "ours_cap_k": 3000,
+     "ratio": 0.4167,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp8000k": {
+     "ours_cap_k": 3000,
+     "ratio": 0.2942,
+     "hold": 3,
+     "verdict": "FASTER"
+    }
+   },
+   "equal_cap": {
+    "500k": {
+     "ratio": 0.5461,
+     "wall_ratio": 0.5356,
+     "speed": "FASTER",
+     "d_test_psnr": 0.6,
+     "d_test_lpips": -0.0002,
+     "seed_gate_psnr": true
+    },
+    "1000k": {
+     "ratio": 0.5834,
+     "wall_ratio": 0.5707,
+     "speed": "FASTER",
+     "d_test_psnr": 0.772,
+     "d_test_lpips": -0.0151,
+     "seed_gate_psnr": true
+    }
+   },
+   "defaults": {
+    "ratio": 0.8668,
+    "wall_ratio": 0.846,
+    "per_run": [
+     0.762,
+     0.759,
+     1.079
+    ],
+    "speed": "FASTER",
+    "d_test_psnr": 1.035,
+    "splats_ours_default": 1971551
+   }
+  },
+  "playroom": {
+   "spirula_star": "sp8000k",
+   "spirula_star_is_top_rung": true,
+   "ours_star_cap_k": 2000,
+   "ours_star_is_our_top_rung": false,
+   "dev_lpips_margin_ours_minus_sp": -0.0009,
+   "spirula_dev_lpips_gain_5M_to_8M": 0.006,
+   "ratio_train_s": 0.1879,
+   "ratio_per_run": [
+    0.1954,
+    0.1834,
+    0.1849
+   ],
+   "ratio_wall_s": 0.1926,
+   "test_hold": "0/3",
+   "category_label": "TIE",
+   "category_registered": "TIE",
+   "lane_ratio": 0.1879,
+   "lane_category": "TIE",
+   "robust_worst_over_6_caps": "TIE",
+   "robust_with_truncation_at_8M": "TIE",
+   "per_cap": {
+    "sp300k": {
+     "ours_cap_k": 300,
+     "ratio": 0.4393,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp500k": {
+     "ours_cap_k": 300,
+     "ratio": 0.3953,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp1000k": {
+     "ours_cap_k": 500,
+     "ratio": 0.3707,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp3000k": {
+     "ours_cap_k": 1000,
+     "ratio": 0.2598,
+     "hold": 1,
+     "verdict": "TIE"
+    },
+    "sp5000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.2569,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp8000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.1879,
+     "hold": 0,
+     "verdict": "TIE"
+    }
+   },
+   "equal_cap": {
+    "500k": {
+     "ratio": 0.4289,
+     "wall_ratio": 0.4243,
+     "speed": "FASTER",
+     "d_test_psnr": 1.063,
+     "d_test_lpips": -0.0167,
+     "seed_gate_psnr": true
+    },
+    "1000k": {
+     "ratio": 0.4422,
+     "wall_ratio": 0.4436,
+     "speed": "FASTER",
+     "d_test_psnr": 1.017,
+     "d_test_lpips": -0.0166,
+     "seed_gate_psnr": true
+    }
+   },
+   "defaults": {
+    "ratio": 0.4802,
+    "wall_ratio": 0.481,
+    "per_run": [
+     0.407,
+     0.505,
+     0.528
+    ],
+    "speed": "FASTER",
+    "d_test_psnr": 0.939,
+    "splats_ours_default": 1192750
+   }
+  },
+  "drjohnson": {
+   "spirula_star": "sp8000k",
+   "spirula_star_is_top_rung": true,
+   "ours_star_cap_k": 3000,
+   "ours_star_is_our_top_rung": false,
+   "dev_lpips_margin_ours_minus_sp": -0.002,
+   "spirula_dev_lpips_gain_5M_to_8M": 0.0034,
+   "ratio_train_s": 0.2172,
+   "ratio_per_run": [
+    0.2224,
+    0.2153,
+    0.2139
+   ],
+   "ratio_wall_s": 0.2193,
+   "test_hold": "3/3",
+   "category_label": "FASTER-TRUNC",
+   "category_registered": "TIE",
+   "lane_ratio": 0.2172,
+   "lane_category": "FASTER-TRUNC",
+   "robust_worst_over_6_caps": "FASTER",
+   "robust_with_truncation_at_8M": "TIE",
+   "per_cap": {
+    "sp300k": {
+     "ours_cap_k": 300,
+     "ratio": 0.4756,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp500k": {
+     "ours_cap_k": 300,
+     "ratio": 0.4213,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp1000k": {
+     "ours_cap_k": 500,
+     "ratio": 0.3763,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp3000k": {
+     "ours_cap_k": 1200,
+     "ratio": 0.2686,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp5000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.2464,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp8000k": {
+     "ours_cap_k": 3000,
+     "ratio": 0.2172,
+     "hold": 3,
+     "verdict": "FASTER"
+    }
+   },
+   "equal_cap": {
+    "500k": {
+     "ratio": 0.4755,
+     "wall_ratio": 0.466,
+     "speed": "FASTER",
+     "d_test_psnr": 1.421,
+     "d_test_lpips": -0.0195,
+     "seed_gate_psnr": true
+    },
+    "1000k": {
+     "ratio": 0.4375,
+     "wall_ratio": 0.4316,
+     "speed": "FASTER",
+     "d_test_psnr": 1.26,
+     "d_test_lpips": -0.0167,
+     "seed_gate_psnr": true
+    }
+   },
+   "defaults": {
+    "ratio": 0.4702,
+    "wall_ratio": 0.4635,
+    "per_run": [
+     0.473,
+     0.461,
+     0.476
+    ],
+    "speed": "FASTER",
+    "d_test_psnr": 1.351,
+    "splats_ours_default": 1176278
+   }
+  },
+  "truck-full": {
+   "spirula_star": "sp8000k",
+   "spirula_star_is_top_rung": true,
+   "ours_star_cap_k": 2000,
+   "ours_star_is_our_top_rung": false,
+   "dev_lpips_margin_ours_minus_sp": -0.0092,
+   "spirula_dev_lpips_gain_5M_to_8M": 0.0047,
+   "ratio_train_s": 0.2419,
+   "ratio_per_run": [
+    0.2436,
+    0.2406,
+    0.2414
+   ],
+   "ratio_wall_s": 0.244,
+   "test_hold": "3/3",
+   "category_label": "FASTER-TRUNC",
+   "category_registered": "TIE",
+   "lane_ratio": 0.2419,
+   "lane_category": "FASTER-TRUNC",
+   "robust_worst_over_6_caps": "FASTER",
+   "robust_with_truncation_at_8M": "TIE",
+   "per_cap": {
+    "sp300k": {
+     "ours_cap_k": 500,
+     "ratio": 0.7626,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp500k": {
+     "ours_cap_k": 500,
+     "ratio": 0.6534,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp1000k": {
+     "ours_cap_k": 800,
+     "ratio": 0.5941,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp3000k": {
+     "ours_cap_k": 1000,
+     "ratio": 0.3347,
+     "hold": 3,
+     "verdict": "FASTER"
+    },
+    "sp5000k": {
+     "ours_cap_k": 1200,
+     "ratio": 0.258,
+     "hold": 2,
+     "verdict": "FASTER"
+    },
+    "sp8000k": {
+     "ours_cap_k": 2000,
+     "ratio": 0.2419,
+     "hold": 3,
+     "verdict": "FASTER"
+    }
+   },
+   "equal_cap": {
+    "500k": {
+     "ratio": 0.6534,
+     "wall_ratio": 0.6436,
+     "speed": "FASTER",
+     "d_test_psnr": 0.828,
+     "d_test_lpips": -0.0064,
+     "seed_gate_psnr": true
+    },
+    "1000k": {
+     "ratio": 0.6575,
+     "wall_ratio": 0.6527,
+     "speed": "FASTER",
+     "d_test_psnr": 0.91,
+     "d_test_lpips": -0.0177,
+     "seed_gate_psnr": true
+    }
+   },
+   "defaults": {
+    "ratio": 0.9868,
+    "wall_ratio": 0.9738,
+    "per_run": [
+     0.976,
+     0.991,
+     0.994
+    ],
+    "speed": "TIE",
+    "d_test_psnr": 1.021,
+    "splats_ours_default": 1981506
+   }
+  }
+ },
+ "rows": {
+  "primary_registered": {
+   "row": "PARITY",
+   "tally": {
+    "FASTER": 0,
+    "TIE": 6,
+    "SLOWER": 0
+   }
+  },
+  "primary_untruncated": {
+   "row": "PARITY",
+   "tally": {
+    "FASTER": 5,
+    "TIE": 1,
+    "SLOWER": 0
+   }
+  },
+  "primary_wall": {
+   "row": "PARITY",
+   "tally": {
+    "FASTER": 0,
+    "TIE": 6,
+    "SLOWER": 0
+   }
+  },
+  "robust_worst_over_6_caps": {
+   "row": "PARITY",
+   "tally": {
+    "FASTER": 5,
+    "TIE": 1,
+    "SLOWER": 0
+   }
+  },
+  "robust_with_trunc_at_8M": {
+   "row": "PARITY",
+   "tally": {
+    "FASTER": 0,
+    "TIE": 6,
+    "SLOWER": 0
+   }
+  },
+  "equal_500k": {
+   "row": "AHEAD",
+   "tally": {
+    "FASTER": 6,
+    "TIE": 0,
+    "SLOWER": 0
+   }
+  },
+  "equal_1000k": {
+   "row": "AHEAD",
+   "tally": {
+    "FASTER": 6,
+    "TIE": 0,
+    "SLOWER": 0
+   }
+  },
+  "equal_500k_wall": {
+   "row": "AHEAD",
+   "tally": {
+    "FASTER": 6,
+    "TIE": 0,
+    "SLOWER": 0
+   }
+  },
+  "equal_1000k_wall": {
+   "row": "AHEAD",
+   "tally": {
+    "FASTER": 6,
+    "TIE": 0,
+    "SLOWER": 0
+   }
+  },
+  "defaults": {
+   "row": "PARITY",
+   "tally": {
+    "FASTER": 5,
+    "TIE": 1,
+    "SLOWER": 0
+   }
+  },
+  "defaults_wall": {
+   "row": "PARITY",
+   "tally": {
+    "FASTER": 5,
+    "TIE": 1,
+    "SLOWER": 0
+   }
+  }
+ },
+ "checks": {
+  "lane_scripts_reproduce": {
+   "pass": true,
+   "detail": "SPQ_V2=1 spq_verdict.py and spirula_health.py re-run on the rows reproduce the lane JSONs byte-for-byte (dict equality)"
+  },
+  "independent_recompute": {
+   "pass": true,
+   "detail": "own script (arm from engine args, not label; DEV=H[1::2], TEST=H[0::2] of sorted names): max |ratio diff| vs lane < 0.0001, 0 category changes on primary/robust/equal/defaults"
+  },
+  "rule1_speed_wall_spans_and_coplacement": {
+   "pass": true,
+   "detail": "train_s = engine-log wall spans (ours train_only_s, Spirula final-step [elapsed]); whole wall_s gives same categories. All 15 arms of a group in one fal exec (one request_id per pair). Arm order alternated exactly per historical-build-045: runs 11/13 Spirula 300k->8M then ours 300k->4M->default, run 12 reversed; actual execution order (row ts) matches submitted order 18/18. No cotenant_cpu_pct/steal field in rows (max not available) -> rule satisfied via alternation clause only. gpu_util_start max 1, timing_valid 270/270."
+  },
+  "rule1_outlier_1p5x": {
+   "pass": true,
+   "flagged": [
+    [
+     "counter",
+     "ours500k",
+     13,
+     "train_s",
+     1.889
+    ],
+    [
+     "counter",
+     "ours800k",
+     13,
+     "train_s",
+     1.74
+    ],
+    [
+     "counter",
+     "ours1200k",
+     13,
+     "train_s",
+     1.634
+    ],
+    [
+     "garden",
+     "oursdefault",
+     13,
+     "train_s",
+     1.639
+    ],
+    [
+     "playroom",
+     "sp300k",
+     11,
+     "train_s",
+     1.628
+    ],
+    [
+     "playroom",
+     "sp500k",
+     11,
+     "train_s",
+     1.506
+    ],
+    [
+     "playroom",
+     "sp1000k",
+     11,
+     "train_s",
+     1.566
+    ]
+   ],
+   "detail": "7 runs >1.5x their (scene, arm) 3-run median (max 1.889x counter ours500k run13; max within-group spread 2.12x). None touches a primary pair (ours*/sp8000k). Excluding them: counter eq500k 0.514, playroom eq500k 0.449, eq1M 0.472, defaults 0.517, garden defaults 0.760 - no category changes."
+  },
+  "rule2_equal_scored_frames": {
+   "pass": true,
+   "detail": "270/270 n_scored == views_expected == views_scored == len(per_image); one views_hash per scene; identical sorted view list for every arm within each scene; view names disjoint across scenes."
+  },
+  "rule3_runner_reuse_scene_identity": {
+   "pass": true,
+   "caveat": "no in-job input-hash assertion field in rows; evidence is indirect",
+   "detail": "one scene_tar sha256 per scene in all 18 submits; per-scene views_hash, view names, n_train/n_test/width/height all single-valued; per-view eval names match scene. No sign of cross-scene contamination."
+  },
+  "rule4_lpips_scale_full": {
+   "pass": true,
+   "detail": "lpips_scale=full 270/270, eval_device=cuda 270/270"
+  },
+  "rule5_truncation_logic": {
+   "pass": true,
+   "detail": "FASTER-TRUNC = primary FASTER with spirula*=sp8000k (top rung); counted as TIE in the row tally (row_verdict counts only 'FASTER'), as registered. spirula*=8M on 6/6 scenes; Spirula DEV LPIPS still falls 0.0025-0.0104 from 5M to 8M, so its curve is not saturated. Lane's robustness tally does not apply truncation at the 8M per-cap verdict; applying it gives 0/6/0 - PARITY either way."
+  },
+  "rule6_recompute_ratios": {
+   "pass": true,
+   "detail": "primary ratios bicycle 0.2985, counter 0.3120, garden 0.2942, playroom 0.1879, drjohnson 0.2172, truck-full 0.2419 = lane (.299/.312/.294/.188/.217/.242); holds 3/3 x5, playroom 0/3."
+  },
+  "hardware": {
+   "pass": true,
+   "detail": "RTX PRO 6000 Blackwell 270/270; driver {'610.43.02': 165, '610.57.04': 105}; SPLAT_THREAD_CAP=0 and SPLAT_REQUIRE_DRIVER=610 on every submitted job (single env); splat-perf sha256 ae3bcdd4... on all 18 submits; engines 933d67da (ours, 162) / d68620c1 (Spirula, 108). Mixed host CPUs (EPYC 9355 x3 groups, Xeon 8559C x7, Xeon 6962P x8) - within-group paired so ratios are per-runner."
+  },
+  "scored_vs_inrun_psnr": {
+   "pass": true,
+   "detail": "scored minus in-run PSNR -0.299..+0.274 dB, 0 >0.3 (261 rows with a correctly mapped in-run value; see bookkeeping finding for the 9 excluded ours rows)"
+  },
+  "spirula_health": {
+   "pass": "PARTIAL",
+   "detail": "script reproduces 0 unhealthy / 108 (min smoothed peer test fine; min scored TEST-set PSNR 24.08, max dead per log interval 6.9% of cap vs registered 50% collapse threshold). BUT the 6 Spirula arms of drjohnson pair e2a1a5b6 were judged from the WRONG train.log: local job dirs for drjohnson pairs ba2d2d52 and e2a1a5b6 collided (same tag ...-20261009-111941, 13 dirs shared), so the health script read ba2d2d52's logs for both. The rows themselves (train_s, metrics from the remote result) are correct. Mitigation: e2a1a5b6 Spirula scored PSNR 28.5-29.2 and engine in-run PSNR in line with the other two runs (no divergence)."
+  }
+ },
+ "discrepancies": [
+  "No ratio discrepancy >0.005 and no category change vs the lane on any readout.",
+  "Bookkeeping: 13 local job dirs shared by drjohnson pairs ba2d2d52 (run 11) and e2a1a5b6 (run 13); local train.log/splat-perf.log are ba2d2d52's. Affects spirula_health.py input for 6 arms and any log-based audit of e2a1a5b6 (e.g. Spirula 8M log says 599.3 s vs row train_s 572.2 s - that log belongs to the other runner). Rows/verdict unaffected. Ops: drive.py local tag collision when two groups of the same scene/label start in the same second.",
+  "Lane robustness tally reports FASTER 5 at the 8M per-cap verdicts without the truncation relabel; immaterial (PARITY either way) but the quoted '5/1/0' should be described as untruncated.",
+  "Hardware row count in lane note: 610.43.02 x165 / 610.57.04 x105 confirmed from row driver_version (adapter.driver_info exists only on the 162 ours rows: 99/63)."
+ ],
+ "recommended_claim_class": {
+  "primary_equal_lpips_speed": "HEADLINE (historical) for the verdict 'PARITY' only. The 3.2-5.3x speed ratios at equal DEV LPIPS are DESCRIPTIVE (truncated: Spirula's best rung is its top 8M rung on 6/6 scenes and still improving).",
+  "equal_cap_500k_1M": "HEADLINE (historical) (selection-free, 6/6 FASTER incl. a healthy playroom, seed gate passes 6/6)",
+  "defaults": "HEADLINE (historical) as PARITY (5/1/0); per-scene ratios descriptive",
+  "SP-EQ-fair_selected_cap_AHEAD": "must NOT be upgraded: v2 does not confirm it under the registered rule; the PROVISIONAL selected-cap sentence should be withdrawn or restated as PARITY."
+ },
+ "wording_caveats": [
+  "Say: 'At equal LPIPS (best Spirula cap vs our smallest matching cap), the pre-registered verdict is PARITY: on 5 of 6 scenes our run was 3.2-4.6x faster, but Spirula's best quality was at its largest tested budget (8M), so its ladder may be truncated and those scenes count as ties; on playroom our matching cap did not hold on TEST views (0/3).'",
+  "Never say 'faster than Spirula at equal quality' or 'best-tuned Spirula' or 'at any budget' from this run.",
+  "Equal-cap sentence allowed: 'At equal 500k and 1M splat caps, ours trains 1.5-2.3x faster (ratios 0.43-0.66) on 6/6 scenes with +0.6 to +1.4 dB TEST PSNR (3 runs, seed gate passes).'",
+  "Our matching cap was our own top rung (4M) on counter, and DEV margins were thin (<=0.0022 LPIPS) on counter/garden/drjohnson/playroom.",
+  "RTX PRO 6000, drivers 610.43.02/610.57.04, mixed host CPUs; Spirula v2026.10.6 --quality untuned (cap-only ladder; 30k steps for all caps); Spirula has no seed flag (runs are repeats).",
+  "Scorer binary splat-perf historical-build-029 (ae3bcdd4...), metric code identical to e1358e26; same binary scores both arms. Speed from train_s wall spans; arm order alternated by run (no cotenant field).",
+  "Never pooled with SP-EQ-fair or SP-EQ r1-r3. Disclose the drjohnson run-13 log-collision in the health audit."
+ ]
+}

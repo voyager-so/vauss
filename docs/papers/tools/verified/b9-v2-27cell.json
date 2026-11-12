@@ -1,0 +1,1671 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "B9 claim group b9-v2-mcmc7m-m360-3seed (HEADLINE): gsplat-MCMC 7M v2 recipe, 9 M360 scenes x seeds 42/43/44, one arm; packet rows/*/per_view.jsonl with per_view_summary.json as the schema-v1 summary (scratch symlinks), expected views from expected_views.json",
+ "argv": [
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s44/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s42/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s43/per_view.jsonl",
+  "--arm",
+  "b9v2=$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s44/per_view.jsonl",
+  "--metric",
+  "psnr",
+  "--metric",
+  "ssim",
+  "--metric",
+  "lpips_vgg",
+  "--expected-views",
+  "$TMPDIR/scratchpad/b9-expected.json",
+  "--label",
+  "B9 claim group b9-v2-mcmc7m-m360-3seed (HEADLINE): gsplat-MCMC 7M v2 recipe, 9 M360 scenes x seeds 42/43/44, one arm; packet rows/*/per_view.jsonl with per_view_summary.json as the schema-v1 summary (scratch symlinks), expected views from expected_views.json",
+  "--json",
+  "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools/verified/b9-v2-27cell.json"
+ ],
+ "cwd": "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools",
+ "generated_at": "2026-10-08T23:05:50-07:00",
+ "verifier_sha256": "3c70e4841f9909188590fe4a19827f4e4d9f12cc45b03719f7c9088e54930b7d",
+ "verifier_git_head": "historical-build-085",
+ "options": {
+  "common_views": false,
+  "expected_views": "$TMPDIR/scratchpad/b9-expected.json",
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "b9v2": {
+   "specs": [
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s42/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s43/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    },
+    {
+     "glob": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s44/per_view.jsonl",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s42/per_view.jsonl",
+     "sha256": "07ba7c0c284f156306859e80e0e849db1d95b3b0592ed2453a86314512453392"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s43/per_view.jsonl",
+     "sha256": "67e30c8c7dc8e27d3e0b2d45018f0da2fb35843be60ecc69e314becbba342ff2"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s44/per_view.jsonl",
+     "sha256": "b0c48d9e410463bfafdaff8a64385130f3f25ea6348cc2763969043a7aa559e7"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s42/per_view.jsonl",
+     "sha256": "9f08d7ea0765b912a4b1cfd11e68d4bf941f83f8312dd512088aa30aa1fd006f"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s43/per_view.jsonl",
+     "sha256": "f7e0b4390a5a065fa91494f145203ddfdc8671880ba8aec60604a8b8714abb01"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s44/per_view.jsonl",
+     "sha256": "65799d8daedcd4f986817419cbc6fc87c69c62dd654378cf2990153bedd12253"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s42/per_view.jsonl",
+     "sha256": "57ad4627f637ac8fe5e399f0961376ca3aa16593dbcb4c9efcdadf69916491bf"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s43/per_view.jsonl",
+     "sha256": "0145aa663fa077343a62267318250d29159069d9b0e6089bd02397ac8495ee21"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s44/per_view.jsonl",
+     "sha256": "8cea40f2b99e7d0bc3c9505ccf49611a65b391e2381220744ed717236c84fdb6"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s42/per_view.jsonl",
+     "sha256": "a496f6460b58c9de069c15dff54902ddad53c549698872341798480bb69aa75d"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s43/per_view.jsonl",
+     "sha256": "36416030d730a453a412ef0187742ab888dd4499d24cc06123a11f9f9c204e32"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s44/per_view.jsonl",
+     "sha256": "b31f04b29f698c9e4b671bb8c3ebd6fe0ab8e3c264c21572bb4c01d91a5e8ae5"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s42/per_view.jsonl",
+     "sha256": "45ec21f86f2c6e04d388ab386c5719848cf7000314fa222f06ec7938529f2ab8"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s43/per_view.jsonl",
+     "sha256": "54d7f3abeab2c44f2a93c6992df66c9498f1fe36fd9058ed71c5b9d708a7a879"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s44/per_view.jsonl",
+     "sha256": "bb77d2103bfc59182c6e67c33f0db5f2bbff0c59a6a01a7d87d0993ffb7cb077"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s42/per_view.jsonl",
+     "sha256": "146b6476de3994fdfa6ede4b127ad354f7a4b1d037767586fab34c850444da84"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s43/per_view.jsonl",
+     "sha256": "84a6bdee50342905a2a186f2a06359736fd9ebd96d1f988149ae2764f3255f80"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s44/per_view.jsonl",
+     "sha256": "40d456a0783c6d44de72835ddf839578578d59f5497da4fbf9e3e2d8142b4c7c"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s42/per_view.jsonl",
+     "sha256": "eca7628ad619fbd589deb4a375ca4f0d70063480e109e39642cf257466daac44"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s43/per_view.jsonl",
+     "sha256": "7c36b93549576efbb2a7352ad88c194ebc4512ade8e4b8d545d6e7a3ce767cf6"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s44/per_view.jsonl",
+     "sha256": "de2c8fe4bc746f89a03eede3e4aac678d8ef4f280876eeb41f2a353bc6d0ba1f"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s42/per_view.jsonl",
+     "sha256": "54d5c84a9219987ba07658b5198dce0025c408df39dfb97d0f8ed84bdbab2ea8"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s43/per_view.jsonl",
+     "sha256": "2a53dd6c411b4150c4d62f989395c66c5f2547a147afc400711e4a31dbc2b2f9"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s44/per_view.jsonl",
+     "sha256": "70328bacd26573ed6d2d597b965f047db4fc681b53ed84c632b17adf188eea36"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s42/per_view.jsonl",
+     "sha256": "63d54ed17e709ce860a94e6ede4d8b5d0072f1f774cf4bf8b96feeac2c8afc8b"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s43/per_view.jsonl",
+     "sha256": "a01a1a0295909c80a197bc01ddf8f626adcca1d768027dc7e4f2a5317cedd8ca"
+    },
+    {
+     "path": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s44/per_view.jsonl",
+     "sha256": "2963567ee4ba2391611bb3ce15e45d86d83746d70bef2dcf78353fa063985b9c"
+    }
+   ]
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "bicycle": {
+   "n_expected": 25,
+   "n_common": 25,
+   "common_view_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC8679",
+    "_DSC8687",
+    "_DSC8695",
+    "_DSC8703",
+    "_DSC8711",
+    "_DSC8719",
+    "_DSC8727",
+    "_DSC8735",
+    "_DSC8744",
+    "_DSC8752",
+    "_DSC8760",
+    "_DSC8768",
+    "_DSC8776",
+    "_DSC8784",
+    "_DSC8792",
+    "_DSC8800",
+    "_DSC8808",
+    "_DSC8816",
+    "_DSC8824",
+    "_DSC8832",
+    "_DSC8840",
+    "_DSC8848",
+    "_DSC8856",
+    "_DSC8864",
+    "_DSC8872"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 25,
+       "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.657155914306642,
+        "ssim": 0.796412136554718,
+        "lpips_vgg": 0.1830686503648758
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 25,
+       "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.70027862548828,
+        "ssim": 0.7966561794281006,
+        "lpips_vgg": 0.18309552311897279
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bicycle-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 25,
+       "views_hash": "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0",
+       "normalised_views_hash": "3ce6f3e4d5047d242626872814aa4b487f04226f0c28fd2ac6710c3558784127",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.685449752807617,
+        "ssim": 0.7963712143898011,
+        "lpips_vgg": 0.18399618566036224
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 25.680961430867512,
+      "ssim": 0.79647984345754,
+      "lpips_vgg": 0.1833867863814036
+     }
+    }
+   }
+  },
+  "bonsai": {
+   "n_expected": 37,
+   "n_common": 37,
+   "common_view_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF5565",
+    "DSCF5573",
+    "DSCF5581",
+    "DSCF5589",
+    "DSCF5597",
+    "DSCF5605",
+    "DSCF5613",
+    "DSCF5621",
+    "DSCF5629",
+    "DSCF5637",
+    "DSCF5645",
+    "DSCF5653",
+    "DSCF5661",
+    "DSCF5669",
+    "DSCF5677",
+    "DSCF5685",
+    "DSCF5693",
+    "DSCF5701",
+    "DSCF5709",
+    "DSCF5717",
+    "DSCF5725",
+    "DSCF5733",
+    "DSCF5741",
+    "DSCF5749",
+    "DSCF5757",
+    "DSCF5765",
+    "DSCF5773",
+    "DSCF5781",
+    "DSCF5789",
+    "DSCF5797",
+    "DSCF5805",
+    "DSCF5813",
+    "DSCF5821",
+    "DSCF5829",
+    "DSCF5837",
+    "DSCF5845",
+    "DSCF5853"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 37,
+       "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+       "normalised_views_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.45051703581939,
+        "ssim": 0.9544535230945896,
+        "lpips_vgg": 0.2220005662860097
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 37,
+       "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+       "normalised_views_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.46674599518647,
+        "ssim": 0.9543282196328446,
+        "lpips_vgg": 0.2216952445136534
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-bonsai-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 37,
+       "views_hash": "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d",
+       "normalised_views_hash": "47d038b3f6f99c2223c2c8711b58dde121d3cf077327aafe063b7528c7e20288",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 33.36995583611566,
+        "ssim": 0.9535931638769202,
+        "lpips_vgg": 0.22228378379667127
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 33.42907295570717,
+      "ssim": 0.954124968868118,
+      "lpips_vgg": 0.22199319819877814
+     }
+    }
+   }
+  },
+  "counter": {
+   "n_expected": 30,
+   "n_common": 30,
+   "common_view_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF5857",
+    "DSCF5865",
+    "DSCF5873",
+    "DSCF5881",
+    "DSCF5889",
+    "DSCF5897",
+    "DSCF5905",
+    "DSCF5913",
+    "DSCF5921",
+    "DSCF5929",
+    "DSCF5937",
+    "DSCF5945",
+    "DSCF5953",
+    "DSCF5961",
+    "DSCF5969",
+    "DSCF5977",
+    "DSCF5985",
+    "DSCF5993",
+    "DSCF6001",
+    "DSCF6009",
+    "DSCF6017",
+    "DSCF6025",
+    "DSCF6033",
+    "DSCF6041",
+    "DSCF6049",
+    "DSCF6057",
+    "DSCF6065",
+    "DSCF6073",
+    "DSCF6081",
+    "DSCF6089"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.886257553100585,
+        "ssim": 0.9242684205373128,
+        "lpips_vgg": 0.21457875967025758
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.85075397491455,
+        "ssim": 0.9238129099210103,
+        "lpips_vgg": 0.21489979128042858
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-counter-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.881267229715984,
+        "ssim": 0.9240151246388754,
+        "lpips_vgg": 0.2146122028430303
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.872759585910373,
+      "ssim": 0.9240321516990662,
+      "lpips_vgg": 0.2146969179312388
+     }
+    }
+   }
+  },
+  "flowers": {
+   "n_expected": 22,
+   "n_common": 22,
+   "common_view_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC9040",
+    "_DSC9048",
+    "_DSC9056",
+    "_DSC9064",
+    "_DSC9072",
+    "_DSC9080",
+    "_DSC9088",
+    "_DSC9096",
+    "_DSC9104",
+    "_DSC9112",
+    "_DSC9120",
+    "_DSC9128",
+    "_DSC9136",
+    "_DSC9144",
+    "_DSC9152",
+    "_DSC9160",
+    "_DSC9168",
+    "_DSC9176",
+    "_DSC9184",
+    "_DSC9192",
+    "_DSC9200",
+    "_DSC9208"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 22,
+       "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+       "normalised_views_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.823960130864922,
+        "ssim": 0.6404757269404151,
+        "lpips_vgg": 0.2962078276005658
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 22,
+       "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+       "normalised_views_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.868407769636676,
+        "ssim": 0.6412986760789697,
+        "lpips_vgg": 0.2976128580895337
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-flowers-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 22,
+       "views_hash": "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64",
+       "normalised_views_hash": "50c989ff630df2a74aa6a49c6c4cb27e7bebfff5323e28716a95793c57efb2e1",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.851794502951883,
+        "ssim": 0.6416685689579357,
+        "lpips_vgg": 0.29475700990720227
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 21.84805413448449,
+      "ssim": 0.6411476573257735,
+      "lpips_vgg": 0.2961925651991006
+     }
+    }
+   }
+  },
+  "garden": {
+   "n_expected": 24,
+   "n_common": 24,
+   "common_view_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSC07956",
+    "DSC07964",
+    "DSC07972",
+    "DSC07980",
+    "DSC07988",
+    "DSC07996",
+    "DSC08004",
+    "DSC08012",
+    "DSC08020",
+    "DSC08028",
+    "DSC08036",
+    "DSC08044",
+    "DSC08052",
+    "DSC08060",
+    "DSC08068",
+    "DSC08076",
+    "DSC08084",
+    "DSC08092",
+    "DSC08100",
+    "DSC08108",
+    "DSC08116",
+    "DSC08124",
+    "DSC08132",
+    "DSC08140"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 24,
+       "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.062469800313313,
+        "ssim": 0.8799962277213732,
+        "lpips_vgg": 0.10298663595070441
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 24,
+       "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.046560605367024,
+        "ssim": 0.87998416274786,
+        "lpips_vgg": 0.10300492122769356
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-garden-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 24,
+       "views_hash": "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454",
+       "normalised_views_hash": "2b4944d0a0b02adc34179370b4137b0ddb02f1e3ae2233b3f638f6d1b63ab635",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 28.07094097137451,
+        "ssim": 0.8796284596125284,
+        "lpips_vgg": 0.1029805950820446
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 28.05999045901828,
+      "ssim": 0.8798696166939205,
+      "lpips_vgg": 0.10299071742014752
+     }
+    }
+   }
+  },
+  "kitchen": {
+   "n_expected": 35,
+   "n_common": 35,
+   "common_view_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF0656",
+    "DSCF0664",
+    "DSCF0672",
+    "DSCF0680",
+    "DSCF0688",
+    "DSCF0696",
+    "DSCF0704",
+    "DSCF0712",
+    "DSCF0720",
+    "DSCF0728",
+    "DSCF0736",
+    "DSCF0744",
+    "DSCF0752",
+    "DSCF0760",
+    "DSCF0768",
+    "DSCF0776",
+    "DSCF0784",
+    "DSCF0792",
+    "DSCF0800",
+    "DSCF0808",
+    "DSCF0816",
+    "DSCF0824",
+    "DSCF0832",
+    "DSCF0840",
+    "DSCF0848",
+    "DSCF0856",
+    "DSCF0864",
+    "DSCF0872",
+    "DSCF0880",
+    "DSCF0888",
+    "DSCF0896",
+    "DSCF0904",
+    "DSCF0912",
+    "DSCF0920",
+    "DSCF0928"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.68767144339425,
+        "ssim": 0.9388931717191423,
+        "lpips_vgg": 0.13732140851872307
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.7692756652832,
+        "ssim": 0.9389125415257045,
+        "lpips_vgg": 0.13741957864591053
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-kitchen-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 35,
+       "views_hash": "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960",
+       "normalised_views_hash": "45a97b1395588dd42f4d976bb1e811cad1c463671da53293bbc9abd253bc6c9d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.669159589494974,
+        "ssim": 0.9385377049446106,
+        "lpips_vgg": 0.1375863979969706
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.70870223272414,
+      "ssim": 0.9387811393964857,
+      "lpips_vgg": 0.13744246172053473
+     }
+    }
+   }
+  },
+  "room": {
+   "n_expected": 39,
+   "n_common": 39,
+   "common_view_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF4667",
+    "DSCF4675",
+    "DSCF4683",
+    "DSCF4691",
+    "DSCF4699",
+    "DSCF4707",
+    "DSCF4715",
+    "DSCF4723",
+    "DSCF4731",
+    "DSCF4739",
+    "DSCF4747",
+    "DSCF4755",
+    "DSCF4763",
+    "DSCF4771",
+    "DSCF4779",
+    "DSCF4787",
+    "DSCF4795",
+    "DSCF4803",
+    "DSCF4811",
+    "DSCF4819",
+    "DSCF4827",
+    "DSCF4835",
+    "DSCF4843",
+    "DSCF4851",
+    "DSCF4859",
+    "DSCF4867",
+    "DSCF4875",
+    "DSCF4883",
+    "DSCF4891",
+    "DSCF4899",
+    "DSCF4907",
+    "DSCF4915",
+    "DSCF4923",
+    "DSCF4931",
+    "DSCF4939",
+    "DSCF4947",
+    "DSCF4955",
+    "DSCF4963",
+    "DSCF4971"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.389408111572266,
+        "ssim": 0.9327273995448382,
+        "lpips_vgg": 0.2511534973596915
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.448855864696014,
+        "ssim": 0.9319112851069524,
+        "lpips_vgg": 0.24998828959770691
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-room-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 39,
+       "views_hash": "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20",
+       "normalised_views_hash": "669ae687575b50c8b4e803046b78ca87e53b0a9d391a42190a63094d3992d97d",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 32.43283188648713,
+        "ssim": 0.9329721637261219,
+        "lpips_vgg": 0.24997234917604005
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 32.423698620918465,
+      "ssim": 0.9325369494593042,
+      "lpips_vgg": 0.2503713787111462
+     }
+    }
+   }
+  },
+  "stump": {
+   "n_expected": 16,
+   "n_common": 16,
+   "common_view_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC9213",
+    "_DSC9221",
+    "_DSC9229",
+    "_DSC9237",
+    "_DSC9245",
+    "_DSC9253",
+    "_DSC9261",
+    "_DSC9269",
+    "_DSC9277",
+    "_DSC9285",
+    "_DSC9293",
+    "_DSC9301",
+    "_DSC9309",
+    "_DSC9318",
+    "_DSC9326",
+    "_DSC9334"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 16,
+       "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+       "normalised_views_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.255401372909546,
+        "ssim": 0.8008884899318218,
+        "lpips_vgg": 0.2021375708281994
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 16,
+       "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+       "normalised_views_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.23508393764496,
+        "ssim": 0.8008556179702282,
+        "lpips_vgg": 0.20196156203746796
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-stump-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 16,
+       "views_hash": "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8",
+       "normalised_views_hash": "5f7590fba95b5ad6de734f3c7548092c2fc1dd521d75662b03e9e995f3dfe6e0",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 27.21287429332733,
+        "ssim": 0.8002664856612682,
+        "lpips_vgg": 0.20271488092839718
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 27.234453201293945,
+      "ssim": 0.8006701978544394,
+      "lpips_vgg": 0.20227133793135485
+     }
+    }
+   }
+  },
+  "treehill": {
+   "n_expected": 18,
+   "n_common": 18,
+   "common_view_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+   "identical_view_sets": true,
+   "common_views": [
+    "_DSC8874",
+    "_DSC8882",
+    "_DSC8890",
+    "_DSC8898",
+    "_DSC8906",
+    "_DSC8914",
+    "_DSC8922",
+    "_DSC8930",
+    "_DSC8938",
+    "_DSC8946",
+    "_DSC8954",
+    "_DSC8962",
+    "_DSC8970",
+    "_DSC8978",
+    "_DSC8986",
+    "_DSC8994",
+    "_DSC9002",
+    "_DSC9010"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "b9v2": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s42/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 18,
+       "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+       "normalised_views_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.898170683119034,
+        "ssim": 0.6528192328082191,
+        "lpips_vgg": 0.2991265555222829
+       }
+      },
+      {
+       "run": 43,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s43/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 18,
+       "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+       "normalised_views_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.8373597462972,
+        "ssim": 0.652083158493042,
+        "lpips_vgg": 0.29904360903633964
+       }
+      },
+      {
+       "run": 44,
+       "source": "$TMPDIR/scratchpad/b9stage/b9-v2-7m-treehill-s44/per_view.jsonl",
+       "format": "per-view v1",
+       "n_scored": 18,
+       "views_hash": "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861",
+       "normalised_views_hash": "0d98ada36e02e5d0c6ee116fa57c660b81b83077922628fb2da0fa45f9d60a5e",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.914081043667263,
+        "ssim": 0.6537743674384223,
+        "lpips_vgg": 0.2984521264831225
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.883203824361164,
+      "ssim": 0.6528922529132277,
+      "lpips_vgg": 0.29887409701391504
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "b9v2": {
+   "psnr": {
+    "mean_over_scenes": 28.237877382809508,
+    "per_scene": {
+     "bicycle": 25.680961430867512,
+     "bonsai": 33.42907295570717,
+     "counter": 29.872759585910373,
+     "flowers": 21.84805413448449,
+     "garden": 28.05999045901828,
+     "kitchen": 32.70870223272414,
+     "room": 32.423698620918465,
+     "stump": 27.234453201293945,
+     "treehill": 22.883203824361164
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8356149752964305,
+    "per_scene": {
+     "bicycle": 0.79647984345754,
+     "bonsai": 0.954124968868118,
+     "counter": 0.9240321516990662,
+     "flowers": 0.6411476573257735,
+     "garden": 0.8798696166939205,
+     "kitchen": 0.9387811393964857,
+     "room": 0.9325369494593042,
+     "stump": 0.8006701978544394,
+     "treehill": 0.6528922529132277
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.2120243845008466,
+    "per_scene": {
+     "bicycle": 0.1833867863814036,
+     "bonsai": 0.22199319819877814,
+     "counter": 0.2146969179312388,
+     "flowers": 0.2961925651991006,
+     "garden": 0.10299071742014752,
+     "kitchen": 0.13744246172053473,
+     "room": 0.2503713787111462,
+     "stump": 0.20227133793135485,
+     "treehill": 0.29887409701391504
+    }
+   }
+  }
+ },
+ "comparisons": {},
+ "seed_means": {
+  "42": {
+   "psnr": 28.234556893933327,
+   "ssim": 0.8356593698724922,
+   "lpips_vgg": 0.21206460801125668
+  },
+  "43": {
+   "psnr": 28.247035798279377,
+   "ssim": 0.8355380834338569,
+   "lpips_vgg": 0.21208015306085637
+  },
+  "44": {
+   "psnr": 28.232039456215816,
+   "ssim": 0.8356474725829427,
+   "lpips_vgg": 0.2119283924304268
+  }
+ },
+ "three_seed_mean": {
+  "psnr": 28.237877382809508,
+  "ssim": 0.8356149752964306,
+  "lpips_vgg": 0.21202438450084662
+ },
+ "sd_across_seed_means": {
+  "psnr": 0.008030678900594931,
+  "ssim": 6.685548049482624e-05,
+  "lpips_vgg": 8.349413350275864e-05
+ },
+ "coverage_check": {
+  "ok": true,
+  "total_records": 738,
+  "per_scene": {
+   "bicycle": {
+    "n_expected": 25,
+    "n_scored": {
+     "42": 25,
+     "43": 25,
+     "44": 25
+    },
+    "raw_views_hash": [
+     "b497aa25af148a5d6d0bf636cad51116fbb2185673191e1c98b27e3e854561b0"
+    ],
+    "identical_across_seeds": true
+   },
+   "bonsai": {
+    "n_expected": 37,
+    "n_scored": {
+     "42": 37,
+     "43": 37,
+     "44": 37
+    },
+    "raw_views_hash": [
+     "e7530c8f5f56b2bd73d2466726a7f1605f42f426f3e6706fec7bb15fc8e6e16d"
+    ],
+    "identical_across_seeds": true
+   },
+   "counter": {
+    "n_expected": 30,
+    "n_scored": {
+     "42": 30,
+     "43": 30,
+     "44": 30
+    },
+    "raw_views_hash": [
+     "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32"
+    ],
+    "identical_across_seeds": true
+   },
+   "flowers": {
+    "n_expected": 22,
+    "n_scored": {
+     "42": 22,
+     "43": 22,
+     "44": 22
+    },
+    "raw_views_hash": [
+     "88dd53cc35fd05cc4e03bdf3d3da14ff6b88ff44bdc71d899d59913ad36afd64"
+    ],
+    "identical_across_seeds": true
+   },
+   "garden": {
+    "n_expected": 24,
+    "n_scored": {
+     "42": 24,
+     "43": 24,
+     "44": 24
+    },
+    "raw_views_hash": [
+     "37de270739918344ffcddb55039ee15c4d65246a237b505910d2023de9269454"
+    ],
+    "identical_across_seeds": true
+   },
+   "kitchen": {
+    "n_expected": 35,
+    "n_scored": {
+     "42": 35,
+     "43": 35,
+     "44": 35
+    },
+    "raw_views_hash": [
+     "ce42d152d99291489f718023410f5b9398d5b482f29ef1b0b705fc1d822c4960"
+    ],
+    "identical_across_seeds": true
+   },
+   "room": {
+    "n_expected": 39,
+    "n_scored": {
+     "42": 39,
+     "43": 39,
+     "44": 39
+    },
+    "raw_views_hash": [
+     "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20"
+    ],
+    "identical_across_seeds": true
+   },
+   "stump": {
+    "n_expected": 16,
+    "n_scored": {
+     "42": 16,
+     "43": 16,
+     "44": 16
+    },
+    "raw_views_hash": [
+     "65baa0f466d80bed5769aa60a76918c7c11ca1be25cfe82aa7191b7cb889a3e8"
+    ],
+    "identical_across_seeds": true
+   },
+   "treehill": {
+    "n_expected": 18,
+    "n_scored": {
+     "42": 18,
+     "43": 18,
+     "44": 18
+    },
+    "raw_views_hash": [
+     "dee0cb3445b678807c612a2e4de4d687f97a38d0f2fe07bae03419caeebed861"
+    ],
+    "identical_across_seeds": true
+   }
+  }
+ },
+ "duplicate_check": {
+  "duplicate_scene_seed": [],
+  "grid_9x3": true,
+  "exact_duplicate_cells": [],
+  "same_scene_identical_psnr_views": [],
+  "results_jsonl_counts_all_one": true,
+  "results_jsonl_extra_v2_runs": []
+ },
+ "recovery_check": {
+  "n_recoveries": 8,
+  "unique_recovery_run_ids": true,
+  "unique_recovery_experiments": true,
+  "recovery_dirs_on_disk": [
+   "b9-v2-eval-evidence-7m-bicycle-s42",
+   "b9-v2-eval-evidence-7m-bonsai-s42",
+   "b9-v2-eval-evidence-7m-counter-s42",
+   "b9-v2-eval-evidence-7m-flowers-s44",
+   "b9-v2-eval-evidence-7m-garden-s42",
+   "b9-v2-eval-evidence-7m-kitchen-s42",
+   "b9-v2-eval-evidence-7m-room-s42",
+   "b9-v2-eval-evidence-7m-treehill-s42"
+  ],
+  "on_disk_equals_referenced": true,
+  "cells": {
+   "b9-v2-7m-bicycle-s42": {
+    "parent_run": "b9-v2-7m-bicycle-s42",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-bicycle-s42",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f22-cb5f-7881-8977-19ad1826a8f2",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": -7.629394360719743e-08,
+     "ssim": 2.622604367008563e-08,
+     "lpips_vgg": 2.384185793236071e-09
+    },
+    "after_cancellation": false,
+    "transport_recovery": null
+   },
+   "b9-v2-7m-bonsai-s42": {
+    "parent_run": "b9-v2-7m-bonsai-s42",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-bonsai-s42",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f22-cb5f-7881-8977-19ad1826a8f2",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": 1.2887490754565079e-06,
+     "ssim": -6.443745381723431e-08,
+     "lpips_vgg": -1.7720299810841666e-08
+    },
+    "after_cancellation": false,
+    "transport_recovery": null
+   },
+   "b9-v2-7m-counter-s42": {
+    "parent_run": "b9-v2-7m-counter-s42",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-counter-s42",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f22-cb5f-7881-8977-19ad1826a8f2",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": -3.4332275404835855e-06,
+     "ssim": -3.973642970223068e-09,
+     "lpips_vgg": -2.980232227667301e-09
+    },
+    "after_cancellation": false,
+    "transport_recovery": null
+   },
+   "b9-v2-7m-flowers-s44": {
+    "parent_run": "b9-v2-7m-flowers-s44",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-flowers-s44",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f3a-ec6b-7003-8b68-e60730642f81",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": -6.935813203767793e-07,
+     "ssim": -4.876743664450345e-08,
+     "lpips_vgg": 1.3546510024831093e-09
+    },
+    "after_cancellation": true,
+    "transport_recovery": {
+     "source": "original fal worker retained row after cancelled response499",
+     "request_id": "01a11f0a-c3fd-7c20-9c75-098b76412b42",
+     "original_row": "$SPLAT_DATA/research/b9/retained-recovery/b9-v2-7m-flowers-s44/row.json",
+     "probe_request": "01a11f37-8aae-7682-aab8-7d88267a823d",
+     "alias_provenance": "Derived exactly from immutable oracle fields using pinned wrapper semantics; original raw row preserved",
+     "selection": "Only completed original score; no score-based choice among attempts"
+    },
+    "retained_original_row_matches_packet": true
+   },
+   "b9-v2-7m-garden-s42": {
+    "parent_run": "b9-v2-7m-garden-s42",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-garden-s42",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f22-cb5f-7881-8977-19ad1826a8f2",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": 3.1789143761784544e-07,
+     "ssim": -1.2417634365213814e-08,
+     "lpips_vgg": 2.1730860028101873e-09
+    },
+    "after_cancellation": false,
+    "transport_recovery": null
+   },
+   "b9-v2-7m-kitchen-s42": {
+    "parent_run": "b9-v2-7m-kitchen-s42",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-kitchen-s42",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f22-cb5f-7881-8977-19ad1826a8f2",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": -2.179827021109304e-07,
+     "ssim": 3.235680712254663e-08,
+     "lpips_vgg": 1.085656028965154e-08
+    },
+    "after_cancellation": false,
+    "transport_recovery": null
+   },
+   "b9-v2-7m-room-s42": {
+    "parent_run": "b9-v2-7m-room-s42",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-room-s42",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f22-cb5f-7881-8977-19ad1826a8f2",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": 0.0,
+     "ssim": -5.654799628551643e-08,
+     "lpips_vgg": -1.528324244937096e-09
+    },
+    "after_cancellation": false,
+    "transport_recovery": null
+   },
+   "b9-v2-7m-treehill-s42": {
+    "parent_run": "b9-v2-7m-treehill-s42",
+    "parent_experiment": "historical-record",
+    "recovery_run": "b9-v2-eval-evidence-7m-treehill-s42",
+    "recovery_experiment": "historical-record",
+    "recovery_request": "01a11f3a-ec6b-7003-8b68-e60730642f81",
+    "name_matches_parent_scene_seed": true,
+    "summary_run_id_is_recovery": true,
+    "summary_exp_is_recovery": true,
+    "packet_per_view_identical_to_recovery_output": true,
+    "per_view_mean_minus_parent_metric": {
+     "psnr": 2.119276274470394e-07,
+     "ssim": 1.6556845783277652e-08,
+     "lpips_vgg": -9.934107481068821e-09
+    },
+    "after_cancellation": true,
+    "transport_recovery": {
+     "source": "original fal worker retained row after cancelled response499",
+     "request_id": "01a11f0a-c45b-7860-8df8-774377333c0c",
+     "original_row": "$SPLAT_DATA/research/b9/retained-recovery/b9-v2-7m-treehill-s42/row.json",
+     "probe_request": "01a11f37-8aae-7682-aab8-7d88267a823d",
+     "alias_provenance": "Derived exactly from immutable oracle fields using pinned wrapper semantics; original raw row preserved",
+     "selection": "Only completed original score; no score-based choice among attempts"
+    },
+    "retained_original_row_matches_packet": true
+   }
+  }
+ },
+ "lane_check": [
+  {
+   "what": "27-run psnr",
+   "lane": 28.237878,
+   "recomputed": 28.237877382809508,
+   "diff": -6.171904907148473e-07,
+   "ok": true
+  },
+  {
+   "what": "27-run ssim",
+   "lane": 0.835615,
+   "recomputed": 0.8356149752964306,
+   "diff": -2.470356941230989e-08,
+   "ok": true
+  },
+  {
+   "what": "27-run lpips_vgg",
+   "lane": 0.212024,
+   "recomputed": 0.21202438450084662,
+   "diff": 3.84500846634106e-07,
+   "ok": true
+  },
+  {
+   "what": "SD across seed means psnr",
+   "lane": 0.00803,
+   "recomputed": 0.008030678900594931,
+   "diff": 6.78900594930712e-07,
+   "ok": true
+  },
+  {
+   "what": "total per-view records",
+   "lane": 738,
+   "recomputed": 738,
+   "ok": true
+  },
+  {
+   "what": "seed 42 psnr vs packet summary",
+   "lane": 28.234557257758247,
+   "recomputed": 28.234556893933327,
+   "diff": -3.6382492041298065e-07,
+   "ok": true
+  },
+  {
+   "what": "seed 42 ssim vs packet summary",
+   "lane": 0.835659384727478,
+   "recomputed": 0.8356593698724922,
+   "diff": -1.4854985797008169e-08,
+   "ok": true
+  },
+  {
+   "what": "seed 42 lpips_vgg vs packet summary",
+   "lane": 0.21206460893154144,
+   "recomputed": 0.21206460801125668,
+   "diff": -9.202847650602308e-10,
+   "ok": true
+  },
+  {
+   "what": "seed 43 psnr vs packet summary",
+   "lane": 28.247035556369358,
+   "recomputed": 28.247035798279377,
+   "diff": 2.4191001912754473e-07,
+   "ok": true
+  },
+  {
+   "what": "seed 43 ssim vs packet summary",
+   "lane": 0.8355380892753601,
+   "recomputed": 0.8355380834338569,
+   "diff": -5.841503170067597e-09,
+   "ok": true
+  },
+  {
+   "what": "seed 43 lpips_vgg vs packet summary",
+   "lane": 0.21208015498187807,
+   "recomputed": 0.21208015306085637,
+   "diff": -1.9210217028220455e-09,
+   "ok": true
+  },
+  {
+   "what": "seed 44 psnr vs packet summary",
+   "lane": 28.232040617201065,
+   "recomputed": 28.232039456215816,
+   "diff": -1.160985249271107e-06,
+   "ok": true
+  },
+  {
+   "what": "seed 44 ssim vs packet summary",
+   "lane": 0.8356474836667379,
+   "recomputed": 0.8356474725829427,
+   "diff": -1.108379521497227e-08,
+   "ok": true
+  },
+  {
+   "what": "seed 44 lpips_vgg vs packet summary",
+   "lane": 0.21192840072843763,
+   "recomputed": 0.2119283924304268,
+   "diff": -8.298010834018044e-09,
+   "ok": true
+  }
+ ],
+ "notes_pubs": [
+  "LPIPS-Alex is null in every row (not measured by the frozen B9 evaluator); not reported.",
+  "lpips_vgg here is the canonical VGG column of the rows; the packet's lpips_vgg_upstream is not recomputed.",
+  "Tolerance 1e-4 (pubs standard). Packet seed means come from per-cell GPU aggregate metrics; per-view recompute differs by <= 3.4e-6 per cell, so seed-44 PSNR differs by 1.2e-6 and the seed-mean SD is .0080307 vs lane .0080300."
+ ],
+ "verdict": {
+  "claim_group": "b9-v2-mcmc7m-m360-3seed",
+  "class": "HEADLINE (registered pre-launch)",
+  "status": "PASS",
+  "reason": "27/27 cells n_scored == n_expected (738 records), raw views_hash identical across seeds per scene, no duplicate (scene, seed) and no duplicated per-view content, 8 eval-only recoveries map one-to-one to their training rows with identical per-view files, lane means reproduced"
+ }
+}

@@ -1,0 +1,4072 @@
+{
+ "schema": "pubs-verify/xb2-vs3-3seed/v1",
+ "claim_group": "pubs:p2:XB2-VS3",
+ "generated_at": "2026-10-09",
+ "verifier": "independent pubs verifier (no GPU, no tests); all numbers recomputed from perview.jsonl, cross-checked against rows.jsonl metrics/per_image and summary.json runs.*.score (0 mismatches at 1e-9)",
+ "status": "VERIFIED - lane numbers reproduce (no numeric discrepancy above 0.01 dB / 0.001 LPIPS / 2% ratio); several wording/provenance discrepancies listed",
+ "source": {
+  "registration": "historical source archive archived study registry (not distributed) pubs:p2:XB2-VS3: 07:14 registration (protocol research/xb2/VS3-PROTOCOL.md @historical-build-021; class_max PROVISIONAL seed 1, HEADLINE only after 3 seeds under rule:seed-gate), 07:24 scorer amendment (splat-perf historical-build-096, lpips_scale=full), 07:40 VS3b amendment (recipe sources), 08:16 seed-1 VERIFIED PROVISIONAL, 08:21 seeds 2-3 launch (harness historical-build-079, order alternating by seed parity: s2 reversed, s3 forward; class may rise to HEADLINE for registered equal-cap comparisons, quality under rule:seed-gate), 08:34/08:42 INFRA (900 s timer; VS3b garden only), rule:speed-coplacement 09:33-09:48 (incl. 09:40 audit RELEASED XB2-VS3 speed; 09:43 final gate; 09:48 thread_cap addendum)",
+  "lane_report": "research-xb2 historical-build-053 research/xb2/VS3.md section (A3) (+ (A) table and Health)",
+  "data": "$SPLAT_DATA/runs/research/xb2/vs3/<scene>-s<1|2|3>/{summary.json,rows.jsonl,perview.jsonl,harness.log,<arm>.log}",
+  "historical-record": [
+   "$SPLAT_DATA/runs/research/xb2/vs3/bicycle-s1",
+   "$SPLAT_DATA/runs/research/xb2/vs3/bicycle-s2",
+   "$SPLAT_DATA/runs/research/xb2/vs3/bicycle-s3",
+   "$SPLAT_DATA/runs/research/xb2/vs3/bonsai-s1",
+   "$SPLAT_DATA/runs/research/xb2/vs3/bonsai-s2",
+   "$SPLAT_DATA/runs/research/xb2/vs3/bonsai-s3",
+   "$SPLAT_DATA/runs/research/xb2/vs3/counter-s1",
+   "$SPLAT_DATA/runs/research/xb2/vs3/counter-s2",
+   "$SPLAT_DATA/runs/research/xb2/vs3/counter-s3",
+   "$SPLAT_DATA/runs/research/xb2/vs3/garden-s1",
+   "$SPLAT_DATA/runs/research/xb2/vs3/garden-s2",
+   "$SPLAT_DATA/runs/research/xb2/vs3/garden-s3",
+   "$SPLAT_DATA/runs/research/xb2/vs3/kitchen-s1",
+   "$SPLAT_DATA/runs/research/xb2/vs3/kitchen-s2",
+   "$SPLAT_DATA/runs/research/xb2/vs3/kitchen-s3",
+   "$SPLAT_DATA/runs/research/xb2/vs3/room-s1",
+   "$SPLAT_DATA/runs/research/xb2/vs3/room-s2",
+   "$SPLAT_DATA/runs/research/xb2/vs3/room-s3",
+   "$SPLAT_DATA/runs/research/xb2/vs3/stump-s1",
+   "$SPLAT_DATA/runs/research/xb2/vs3/stump-s2",
+   "$SPLAT_DATA/runs/research/xb2/vs3/stump-s3"
+  ],
+  "harness_as_run": {
+   "seed1": "research-xb2 historical-build-091: fal_run.py 4b32807d, gs_run.py d166e5aa (= registered GS-EQ byte-identical), vks_run.py da44a32b",
+   "seeds2_3": "research-xb2 historical-build-079: fal_run.py 5d33d6f3, gs_run.py 76628823, vks_run.py da44a32b (sha256 in every summary.json, matched to git)"
+  },
+  "verifier_scripts": "$TMPDIR/scratchpad/v/recompute.py, $TMPDIR/scratchpad/v/analyze.py (scratchpad; not committed)"
+ },
+ "checks": {
+  "coverage": "21/21 groups; every arm (ours-1000k, gsplat, vksplat; also ladder arms) has identical sorted view-id lists to gsplat in perview.jsonl and rows.jsonl per_image; perview n == held_out == n_scored == n_expected on every arm (bicycle 25, bonsai 37, counter 30, garden 24, kitchen 35, room 39, stump 16 views); no duplicate view ids; lpips_scale 'full' and score ok on every arm; renders_match_heldout true; rc 0 on every arm",
+  "scorer": "splat-perf import historical-build-096 on runner GPU (per registration amendment 07:24)",
+  "seed_labels": "perview seed/scene fields match the group on every row; ours and gsplat receive the seed (brush-cli --seed N; gs_run.py set_random_seed(N), CONFIG line confirms seed N, MCMCStrategy, cap_max 1000000, max_steps 30000, data_factor 1). VkSplat has NO seed input (vks_run.py takes none; VkSplat simple_trainer has no seed config) - its 3 runs are run-to-run repeats, so 'paired by seed' is pairing-by-runner for VkSplat."
+ },
+ "per_scene_means_3seed": {
+  "note": "[mean, SD over seeds] of per-seed per-view means",
+  "table": {
+   "bicycle": {
+    "ours-1000k": {
+     "psnr": [
+      25.91969,
+      0.01875
+     ],
+     "ssim": [
+      0.78539,
+      0.00021
+     ],
+     "lpips_vgg": [
+      0.24132,
+      0.00066
+     ],
+     "lpips_alex": [
+      0.1646,
+      0.00044
+     ]
+    },
+    "gsplat": {
+     "psnr": [
+      25.70306,
+      0.02193
+     ],
+     "ssim": [
+      0.77872,
+      0.00043
+     ],
+     "lpips_vgg": [
+      0.24382,
+      0.00047
+     ],
+     "lpips_alex": [
+      0.18104,
+      0.00019
+     ]
+    },
+    "vksplat": {
+     "psnr": [
+      25.66807,
+      0.01015
+     ],
+     "ssim": [
+      0.77914,
+      0.0004
+     ],
+     "lpips_vgg": [
+      0.2439,
+      0.00101
+     ],
+     "lpips_alex": [
+      0.18067,
+      0.00013
+     ]
+    }
+   },
+   "bonsai": {
+    "ours-1000k": {
+     "psnr": [
+      33.45483,
+      0.04287
+     ],
+     "ssim": [
+      0.95613,
+      0.00014
+     ],
+     "lpips_vgg": [
+      0.20015,
+      0.00013
+     ],
+     "lpips_alex": [
+      0.09294,
+      0.00013
+     ]
+    },
+    "gsplat": {
+     "psnr": [
+      32.60857,
+      0.16763
+     ],
+     "ssim": [
+      0.95226,
+      0.00035
+     ],
+     "lpips_vgg": [
+      0.21163,
+      0.00023
+     ],
+     "lpips_alex": [
+      0.10191,
+      0.00038
+     ]
+    },
+    "vksplat": {
+     "psnr": [
+      32.59381,
+      0.00346
+     ],
+     "ssim": [
+      0.95203,
+      0.00018
+     ],
+     "lpips_vgg": [
+      0.21275,
+      0.00038
+     ],
+     "lpips_alex": [
+      0.10268,
+      0.0003
+     ]
+    }
+   },
+   "counter": {
+    "ours-1000k": {
+     "psnr": [
+      29.89701,
+      0.01677
+     ],
+     "ssim": [
+      0.92687,
+      8e-05
+     ],
+     "lpips_vgg": [
+      0.20755,
+      0.00017
+     ],
+     "lpips_alex": [
+      0.1166,
+      0.0002
+     ]
+    },
+    "gsplat": {
+     "psnr": [
+      29.5274,
+      0.04434
+     ],
+     "ssim": [
+      0.9237,
+      0.0003
+     ],
+     "lpips_vgg": [
+      0.21686,
+      0.00034
+     ],
+     "lpips_alex": [
+      0.12735,
+      0.00047
+     ]
+    },
+    "vksplat": {
+     "psnr": [
+      29.46718,
+      0.03491
+     ],
+     "ssim": [
+      0.92329,
+      0.0001
+     ],
+     "lpips_vgg": [
+      0.21719,
+      0.00019
+     ],
+     "lpips_alex": [
+      0.12787,
+      0.00052
+     ]
+    }
+   },
+   "garden": {
+    "ours-1000k": {
+     "psnr": [
+      27.87523,
+      0.08265
+     ],
+     "ssim": [
+      0.86889,
+      0.00018
+     ],
+     "lpips_vgg": [
+      0.13699,
+      0.00027
+     ],
+     "lpips_alex": [
+      0.0812,
+      0.00027
+     ]
+    },
+    "gsplat": {
+     "psnr": [
+      27.32765,
+      0.02302
+     ],
+     "ssim": [
+      0.85658,
+      0.00024
+     ],
+     "lpips_vgg": [
+      0.15112,
+      0.00027
+     ],
+     "lpips_alex": [
+      0.10219,
+      0.00012
+     ]
+    },
+    "vksplat": {
+     "psnr": [
+      27.37476,
+      0.02821
+     ],
+     "ssim": [
+      0.85767,
+      0.00047
+     ],
+     "lpips_vgg": [
+      0.15068,
+      0.00032
+     ],
+     "lpips_alex": [
+      0.10163,
+      0.00054
+     ]
+    }
+   },
+   "kitchen": {
+    "ours-1000k": {
+     "psnr": [
+      32.34177,
+      0.01549
+     ],
+     "ssim": [
+      0.9401,
+      0.00017
+     ],
+     "lpips_vgg": [
+      0.12746,
+      9e-05
+     ],
+     "lpips_alex": [
+      0.07568,
+      0.00015
+     ]
+    },
+    "gsplat": {
+     "psnr": [
+      31.70117,
+      0.03461
+     ],
+     "ssim": [
+      0.93531,
+      0.00067
+     ],
+     "lpips_vgg": [
+      0.13998,
+      0.00101
+     ],
+     "lpips_alex": [
+      0.0848,
+      0.00073
+     ]
+    },
+    "vksplat": {
+     "psnr": [
+      31.61534,
+      0.07775
+     ],
+     "ssim": [
+      0.93485,
+      0.00051
+     ],
+     "lpips_vgg": [
+      0.14107,
+      0.00078
+     ],
+     "lpips_alex": [
+      0.08573,
+      0.0007
+     ]
+    }
+   },
+   "room": {
+    "ours-1000k": {
+     "psnr": [
+      33.14373,
+      0.0651
+     ],
+     "ssim": [
+      0.94093,
+      4e-05
+     ],
+     "lpips_vgg": [
+      0.23083,
+      0.00011
+     ],
+     "lpips_alex": [
+      0.12297,
+      7e-05
+     ]
+    },
+    "gsplat": {
+     "psnr": [
+      32.45092,
+      0.0314
+     ],
+     "ssim": [
+      0.9373,
+      0.00075
+     ],
+     "lpips_vgg": [
+      0.23766,
+      0.00097
+     ],
+     "lpips_alex": [
+      0.13035,
+      0.00099
+     ]
+    },
+    "vksplat": {
+     "psnr": [
+      32.493,
+      0.00859
+     ],
+     "ssim": [
+      0.93715,
+      0.00012
+     ],
+     "lpips_vgg": [
+      0.23783,
+      0.00074
+     ],
+     "lpips_alex": [
+      0.13009,
+      0.0002
+     ]
+    }
+   },
+   "stump": {
+    "ours-1000k": {
+     "psnr": [
+      26.93399,
+      0.06619
+     ],
+     "ssim": [
+      0.79637,
+      0.0016
+     ],
+     "lpips_vgg": [
+      0.23787,
+      0.00165
+     ],
+     "lpips_alex": [
+      0.14392,
+      0.00111
+     ]
+    },
+    "gsplat": {
+     "psnr": [
+      26.9767,
+      0.04998
+     ],
+     "ssim": [
+      0.78987,
+      0.00093
+     ],
+     "lpips_vgg": [
+      0.2472,
+      0.0011
+     ],
+     "lpips_alex": [
+      0.16271,
+      0.00063
+     ]
+    },
+    "vksplat": {
+     "psnr": [
+      26.98417,
+      0.03978
+     ],
+     "ssim": [
+      0.7915,
+      0.00095
+     ],
+     "lpips_vgg": [
+      0.24566,
+      0.00145
+     ],
+     "lpips_alex": [
+      0.16125,
+      0.00118
+     ]
+    }
+   }
+  }
+ },
+ "per_group": {
+  "bicycle-s1": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/bicycle-s1",
+   "request_id": "01a1210c-4dee-7a11-aaa9-a928e0a612fc",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "4b32807df2e0827f004e179e250c511f0041ac2e61c263efffc1a8bfbd47f282",
+    "gs_run.py": "d166e5aae554a06af0b5d772c63efbd1d513d4dea2d9a556e9ab154aff4c148a",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-crossbackend",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.91006,
+     "ssim": 0.78543,
+     "lpips_vgg": 0.24065,
+     "lpips_alex": 0.16414,
+     "train_s": 96.983,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 100.468,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1121,
+     "nvml_peak_minus_idle_mib": 1121,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 3.233
+    },
+    "gsplat": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.6942,
+     "ssim": 0.77861,
+     "lpips_vgg": 0.24375,
+     "lpips_alex": 0.18125,
+     "train_s": 583.897,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 593.553,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2375,
+     "nvml_peak_minus_idle_mib": 2375,
+     "engine_mem": 1320,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.463
+    },
+    "vksplat": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.65867,
+     "ssim": 0.7796,
+     "lpips_vgg": 0.24277,
+     "lpips_alex": 0.18058,
+     "train_s": 164.386,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 175.719,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 956,
+     "nvml_peak_minus_idle_mib": 956,
+     "engine_mem": 947695904,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.48
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "bicycle-s2": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/bicycle-s2",
+   "request_id": "01a12140-f215-7472-b131-76648e5f0987",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "ours-800k",
+    "ours-500k",
+    "ours-300k",
+    "vksplat",
+    "ours-1000k",
+    "gsplat"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.90771,
+     "ssim": 0.78517,
+     "lpips_vgg": 0.24133,
+     "lpips_alex": 0.16503,
+     "train_s": 98.465,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 101.915,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1194,
+     "nvml_peak_minus_idle_mib": 1194,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 993085,
+     "rc": 0,
+     "s_per_step": 3.282
+    },
+    "gsplat": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.72804,
+     "ssim": 0.77919,
+     "lpips_vgg": 0.24432,
+     "lpips_alex": 0.18093,
+     "train_s": 577.142,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 586.865,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2407,
+     "nvml_peak_minus_idle_mib": 2407,
+     "engine_mem": 1331,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.238
+    },
+    "vksplat": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.67884,
+     "ssim": 0.7789,
+     "lpips_vgg": 0.24421,
+     "lpips_alex": 0.18062,
+     "train_s": 164.712,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 176.041,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 956,
+     "nvml_peak_minus_idle_mib": 956,
+     "engine_mem": 947770288,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.49
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "bicycle-s3": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/bicycle-s3",
+   "request_id": "01a12140-f9c6-7c40-af80-065f8e314f0d",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.9413,
+     "ssim": 0.78559,
+     "lpips_vgg": 0.24197,
+     "lpips_alex": 0.16462,
+     "train_s": 94.231,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 97.7,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1100,
+     "nvml_peak_minus_idle_mib": 1100,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 984798,
+     "rc": 0,
+     "s_per_step": 3.141
+    },
+    "gsplat": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.68695,
+     "ssim": 0.77836,
+     "lpips_vgg": 0.24339,
+     "lpips_alex": 0.18094,
+     "train_s": 586.916,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 596.878,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2341,
+     "nvml_peak_minus_idle_mib": 2341,
+     "engine_mem": 1335,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.564
+    },
+    "vksplat": {
+     "n_scored": 25,
+     "n_expected": 25,
+     "lpips_scale": "full",
+     "perview_n": 25,
+     "psnr": 25.66669,
+     "ssim": 0.77892,
+     "lpips_vgg": 0.24472,
+     "lpips_alex": 0.18081,
+     "train_s": 162.941,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 174.721,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 956,
+     "nvml_peak_minus_idle_mib": 956,
+     "engine_mem": 946579024,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.431
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "bonsai-s1": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/bonsai-s1",
+   "request_id": "01a12114-f799-7442-8968-8390fa29b94b",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "4b32807df2e0827f004e179e250c511f0041ac2e61c263efffc1a8bfbd47f282",
+    "gs_run.py": "d166e5aae554a06af0b5d772c63efbd1d513d4dea2d9a556e9ab154aff4c148a",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-crossbackend",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 33.49867,
+     "ssim": 0.95628,
+     "lpips_vgg": 0.20021,
+     "lpips_alex": 0.09309,
+     "train_s": 148.924,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 154.523,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1145,
+     "nvml_peak_minus_idle_mib": 1145,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 4.964
+    },
+    "gsplat": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 32.69941,
+     "ssim": 0.95246,
+     "lpips_vgg": 0.21184,
+     "lpips_alex": 0.10155,
+     "train_s": 731.393,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 748.827,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2359,
+     "nvml_peak_minus_idle_mib": 2359,
+     "engine_mem": 1407,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.38
+    },
+    "vksplat": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 32.5978,
+     "ssim": 0.95184,
+     "lpips_vgg": 0.21317,
+     "lpips_alex": 0.10302,
+     "train_s": 223.673,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 246.327,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1018,
+     "nvml_peak_minus_idle_mib": 1018,
+     "engine_mem": 1012440880,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.456
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "bonsai-s2": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/bonsai-s2",
+   "request_id": "01a12141-242b-7581-b412-e9d1a0ab66aa",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "ours-800k",
+    "ours-500k",
+    "ours-300k",
+    "vksplat",
+    "ours-1000k",
+    "gsplat"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 33.45282,
+     "ssim": 0.95605,
+     "lpips_vgg": 0.20024,
+     "lpips_alex": 0.09286,
+     "train_s": 151.987,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 157.482,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1145,
+     "nvml_peak_minus_idle_mib": 1145,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.066
+    },
+    "gsplat": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 32.41513,
+     "ssim": 0.95186,
+     "lpips_vgg": 0.21165,
+     "lpips_alex": 0.1023,
+     "train_s": 734.387,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 751.882,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2363,
+     "nvml_peak_minus_idle_mib": 2363,
+     "engine_mem": 1413,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.48
+    },
+    "vksplat": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 32.59163,
+     "ssim": 0.95207,
+     "lpips_vgg": 0.21245,
+     "lpips_alex": 0.10256,
+     "train_s": 227.014,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 249.787,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1020,
+     "nvml_peak_minus_idle_mib": 1020,
+     "engine_mem": 1014171056,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.567
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "bonsai-s3": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/bonsai-s3",
+   "request_id": "01a12141-2c28-7351-b944-8dfb39af7aba",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 33.413,
+     "ssim": 0.95604,
+     "lpips_vgg": 0.2,
+     "lpips_alex": 0.09288,
+     "train_s": 147.592,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 153.08,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1165,
+     "nvml_peak_minus_idle_mib": 1165,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 999972,
+     "rc": 0,
+     "s_per_step": 4.92
+    },
+    "gsplat": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 32.71117,
+     "ssim": 0.95246,
+     "lpips_vgg": 0.21139,
+     "lpips_alex": 0.10186,
+     "train_s": 737.751,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 755.5,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2381,
+     "nvml_peak_minus_idle_mib": 2381,
+     "engine_mem": 1408,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.592
+    },
+    "vksplat": {
+     "n_scored": 37,
+     "n_expected": 37,
+     "lpips_scale": "full",
+     "perview_n": 37,
+     "psnr": 32.59199,
+     "ssim": 0.95219,
+     "lpips_vgg": 0.21264,
+     "lpips_alex": 0.10245,
+     "train_s": 226.032,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 249.134,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1019,
+     "nvml_peak_minus_idle_mib": 1019,
+     "engine_mem": 1012699360,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.534
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "counter-s1": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/counter-s1",
+   "request_id": "01a12114-ff7f-7353-b417-e7ca30a502f9",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "4b32807df2e0827f004e179e250c511f0041ac2e61c263efffc1a8bfbd47f282",
+    "gs_run.py": "d166e5aae554a06af0b5d772c63efbd1d513d4dea2d9a556e9ab154aff4c148a",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-crossbackend",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.88484,
+     "ssim": 0.92681,
+     "lpips_vgg": 0.20762,
+     "lpips_alex": 0.11653,
+     "train_s": 144.7,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 149.314,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1056,
+     "nvml_peak_minus_idle_mib": 1056,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 981659,
+     "rc": 0,
+     "s_per_step": 4.823
+    },
+    "gsplat": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.5199,
+     "ssim": 0.92355,
+     "lpips_vgg": 0.21649,
+     "lpips_alex": 0.12682,
+     "train_s": 796.302,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 810.386,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2365,
+     "nvml_peak_minus_idle_mib": 2365,
+     "engine_mem": 1489,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 26.543
+    },
+    "vksplat": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.42754,
+     "ssim": 0.92318,
+     "lpips_vgg": 0.21714,
+     "lpips_alex": 0.12811,
+     "train_s": 232.071,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 249.403,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1045,
+     "nvml_peak_minus_idle_mib": 1045,
+     "engine_mem": 1040541144,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.736
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "counter-s2": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/counter-s2",
+   "request_id": "01a12141-3414-7721-a6d5-f52ff90cc6d7",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "ours-800k",
+    "ours-500k",
+    "ours-300k",
+    "vksplat",
+    "ours-1000k",
+    "gsplat"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.89004,
+     "ssim": 0.92696,
+     "lpips_vgg": 0.20736,
+     "lpips_alex": 0.11644,
+     "train_s": 145.599,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 150.43,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1142,
+     "nvml_peak_minus_idle_mib": 1142,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 982543,
+     "rc": 0,
+     "s_per_step": 4.853
+    },
+    "gsplat": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.48729,
+     "ssim": 0.9235,
+     "lpips_vgg": 0.21716,
+     "lpips_alex": 0.12774,
+     "train_s": 804.354,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 818.959,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2339,
+     "nvml_peak_minus_idle_mib": 2339,
+     "engine_mem": 1477,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 26.812
+    },
+    "vksplat": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.49332,
+     "ssim": 0.92331,
+     "lpips_vgg": 0.21703,
+     "lpips_alex": 0.12727,
+     "train_s": 234.691,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 254.291,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1045,
+     "nvml_peak_minus_idle_mib": 1045,
+     "engine_mem": 1040651672,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.823
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "counter-s3": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/counter-s3",
+   "request_id": "01a12141-3c7e-7972-af51-6f78e89a6c66",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.91614,
+     "ssim": 0.92683,
+     "lpips_vgg": 0.20767,
+     "lpips_alex": 0.11682,
+     "train_s": 145.836,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 150.473,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1014,
+     "nvml_peak_minus_idle_mib": 1014,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 981076,
+     "rc": 0,
+     "s_per_step": 4.861
+    },
+    "gsplat": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.57502,
+     "ssim": 0.92404,
+     "lpips_vgg": 0.21694,
+     "lpips_alex": 0.12749,
+     "train_s": 788.576,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 802.687,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2367,
+     "nvml_peak_minus_idle_mib": 2367,
+     "engine_mem": 1486,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 26.286
+    },
+    "vksplat": {
+     "n_scored": 30,
+     "n_expected": 30,
+     "lpips_scale": "full",
+     "perview_n": 30,
+     "psnr": 29.48067,
+     "ssim": 0.92337,
+     "lpips_vgg": 0.21739,
+     "lpips_alex": 0.12822,
+     "train_s": 233.61,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 252.796,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1046,
+     "nvml_peak_minus_idle_mib": 1046,
+     "engine_mem": 1042259304,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.787
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "garden-s1": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/garden-s1",
+   "request_id": "01a1210c-56fc-7970-a647-18071309b2d4",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "4b32807df2e0827f004e179e250c511f0041ac2e61c263efffc1a8bfbd47f282",
+    "gs_run.py": "d166e5aae554a06af0b5d772c63efbd1d513d4dea2d9a556e9ab154aff4c148a",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-crossbackend",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.78004,
+     "ssim": 0.86868,
+     "lpips_vgg": 0.13678,
+     "lpips_alex": 0.08147,
+     "train_s": 111.834,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 116.42,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1145,
+     "nvml_peak_minus_idle_mib": 1145,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 3.728
+    },
+    "gsplat": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.31024,
+     "ssim": 0.85686,
+     "lpips_vgg": 0.15088,
+     "lpips_alex": 0.10226,
+     "train_s": 600.936,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 613.291,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2185,
+     "nvml_peak_minus_idle_mib": 2185,
+     "engine_mem": 1328,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 20.031
+    },
+    "vksplat": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.35305,
+     "ssim": 0.85756,
+     "lpips_vgg": 0.15032,
+     "lpips_alex": 0.10124,
+     "train_s": 154.494,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 166.329,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 951,
+     "nvml_peak_minus_idle_mib": 951,
+     "engine_mem": 942108792,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.15
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "garden-s2": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/garden-s2",
+   "request_id": "01a12141-0192-7710-83e6-b79b5b0ff323",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "ours-800k",
+    "ours-500k",
+    "ours-300k",
+    "vksplat",
+    "ours-1000k",
+    "gsplat"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.91704,
+     "ssim": 0.86902,
+     "lpips_vgg": 0.1373,
+     "lpips_alex": 0.08118,
+     "train_s": 110.746,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 114.506,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1145,
+     "nvml_peak_minus_idle_mib": 1145,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 3.692
+    },
+    "gsplat": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.35375,
+     "ssim": 0.85646,
+     "lpips_vgg": 0.15141,
+     "lpips_alex": 0.10226,
+     "train_s": 583.248,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 595.609,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2485,
+     "nvml_peak_minus_idle_mib": 2485,
+     "engine_mem": 1328,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.442
+    },
+    "vksplat": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.40665,
+     "ssim": 0.85819,
+     "lpips_vgg": 0.15092,
+     "lpips_alex": 0.10224,
+     "train_s": 154.371,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 166.101,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 951,
+     "nvml_peak_minus_idle_mib": 951,
+     "engine_mem": 941990744,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.146
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "garden-s3": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/garden-s3",
+   "request_id": "01a12141-0b07-7e81-a5c7-2c3567ffbb39",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.92863,
+     "ssim": 0.86896,
+     "lpips_vgg": 0.1369,
+     "lpips_alex": 0.08093,
+     "train_s": 111.849,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 115.694,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1128,
+     "nvml_peak_minus_idle_mib": 1128,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 3.728
+    },
+    "gsplat": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.31897,
+     "ssim": 0.85643,
+     "lpips_vgg": 0.15108,
+     "lpips_alex": 0.10206,
+     "train_s": 583.176,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 595.598,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2271,
+     "nvml_peak_minus_idle_mib": 2271,
+     "engine_mem": 1326,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.439
+    },
+    "vksplat": {
+     "n_scored": 24,
+     "n_expected": 24,
+     "lpips_scale": "full",
+     "perview_n": 24,
+     "psnr": 27.36458,
+     "ssim": 0.85726,
+     "lpips_vgg": 0.15079,
+     "lpips_alex": 0.10141,
+     "train_s": 155.177,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 167.934,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 951,
+     "nvml_peak_minus_idle_mib": 951,
+     "engine_mem": 941837208,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.173
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "kitchen-s1": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/kitchen-s1",
+   "request_id": "01a12115-06fc-79e1-8416-c3e534a3c3f3",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "4b32807df2e0827f004e179e250c511f0041ac2e61c263efffc1a8bfbd47f282",
+    "gs_run.py": "d166e5aae554a06af0b5d772c63efbd1d513d4dea2d9a556e9ab154aff4c148a",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-crossbackend",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 32.32427,
+     "ssim": 0.93997,
+     "lpips_vgg": 0.12756,
+     "lpips_alex": 0.07575,
+     "train_s": 149.081,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 155.547,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1098,
+     "nvml_peak_minus_idle_mib": 1098,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 988282,
+     "rc": 0,
+     "s_per_step": 4.969
+    },
+    "gsplat": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 31.74113,
+     "ssim": 0.93571,
+     "lpips_vgg": 0.13909,
+     "lpips_alex": 0.08427,
+     "train_s": 748.549,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 767.497,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2381,
+     "nvml_peak_minus_idle_mib": 2381,
+     "engine_mem": 1416,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.952
+    },
+    "vksplat": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 31.53712,
+     "ssim": 0.93457,
+     "lpips_vgg": 0.14164,
+     "lpips_alex": 0.08636,
+     "train_s": 216.094,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 239.35,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1025,
+     "nvml_peak_minus_idle_mib": 1025,
+     "engine_mem": 1020032568,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.203
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "kitchen-s2": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/kitchen-s2",
+   "request_id": "01a12141-4539-7f20-bd7d-ef9d65cb40fd",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "ours-800k",
+    "ours-500k",
+    "ours-300k",
+    "vksplat",
+    "ours-1000k",
+    "gsplat"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 32.3473,
+     "ssim": 0.94003,
+     "lpips_vgg": 0.12745,
+     "lpips_alex": 0.07578,
+     "train_s": 149.716,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 155.359,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1100,
+     "nvml_peak_minus_idle_mib": 1100,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 987650,
+     "rc": 0,
+     "s_per_step": 4.991
+    },
+    "gsplat": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 31.68157,
+     "ssim": 0.93453,
+     "lpips_vgg": 0.14107,
+     "lpips_alex": 0.08564,
+     "train_s": 749.763,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 768.602,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2375,
+     "nvml_peak_minus_idle_mib": 2375,
+     "engine_mem": 1418,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.992
+    },
+    "vksplat": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 31.6163,
+     "ssim": 0.93453,
+     "lpips_vgg": 0.14139,
+     "lpips_alex": 0.08584,
+     "train_s": 217.06,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 240.403,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1026,
+     "nvml_peak_minus_idle_mib": 1026,
+     "engine_mem": 1021131880,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.235
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "kitchen-s3": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/kitchen-s3",
+   "request_id": "01a12141-4d22-7152-a487-c95d42e22563",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 32.35374,
+     "ssim": 0.94029,
+     "lpips_vgg": 0.12738,
+     "lpips_alex": 0.07551,
+     "train_s": 148.794,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 155.537,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1176,
+     "nvml_peak_minus_idle_mib": 1176,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 989889,
+     "rc": 0,
+     "s_per_step": 4.96
+    },
+    "gsplat": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 31.68081,
+     "ssim": 0.93569,
+     "lpips_vgg": 0.13977,
+     "lpips_alex": 0.0845,
+     "train_s": 740.456,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 759.213,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2339,
+     "nvml_peak_minus_idle_mib": 2339,
+     "engine_mem": 1412,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.682
+    },
+    "vksplat": {
+     "n_scored": 35,
+     "n_expected": 35,
+     "lpips_scale": "full",
+     "perview_n": 35,
+     "psnr": 31.69261,
+     "ssim": 0.93543,
+     "lpips_vgg": 0.14017,
+     "lpips_alex": 0.08498,
+     "train_s": 216.213,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 237.048,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1029,
+     "nvml_peak_minus_idle_mib": 1029,
+     "engine_mem": 1023982024,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.207
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "room-s1": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/room-s1",
+   "request_id": "01a12115-0e53-7042-bc44-beb908860df7",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "4b32807df2e0827f004e179e250c511f0041ac2e61c263efffc1a8bfbd47f282",
+    "gs_run.py": "d166e5aae554a06af0b5d772c63efbd1d513d4dea2d9a556e9ab154aff4c148a",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-crossbackend",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 33.19559,
+     "ssim": 0.94092,
+     "lpips_vgg": 0.23091,
+     "lpips_alex": 0.12304,
+     "train_s": 150.025,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 155.184,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1417,
+     "nvml_peak_minus_idle_mib": 1417,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.001
+    },
+    "gsplat": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 32.4402,
+     "ssim": 0.93748,
+     "lpips_vgg": 0.23679,
+     "lpips_alex": 0.12989,
+     "train_s": 727.257,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 742.302,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2517,
+     "nvml_peak_minus_idle_mib": 2517,
+     "engine_mem": 1392,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.242
+    },
+    "vksplat": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 32.48326,
+     "ssim": 0.93713,
+     "lpips_vgg": 0.23711,
+     "lpips_alex": 0.12986,
+     "train_s": 212.25,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 235.667,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1041,
+     "nvml_peak_minus_idle_mib": 1041,
+     "engine_mem": 1035843160,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.075
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "room-s2": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/room-s2",
+   "request_id": "01a12141-556b-7fa3-999b-070dd14468c1",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "ours-800k",
+    "ours-500k",
+    "ours-300k",
+    "vksplat",
+    "ours-1000k",
+    "gsplat"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 33.16492,
+     "ssim": 0.94098,
+     "lpips_vgg": 0.23089,
+     "lpips_alex": 0.1229,
+     "train_s": 148.288,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 153.578,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1320,
+     "nvml_peak_minus_idle_mib": 1320,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 4.943
+    },
+    "gsplat": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 32.42628,
+     "ssim": 0.93647,
+     "lpips_vgg": 0.2387,
+     "lpips_alex": 0.13148,
+     "train_s": 725.869,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 740.884,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2517,
+     "nvml_peak_minus_idle_mib": 2517,
+     "engine_mem": 1425,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.196
+    },
+    "vksplat": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 32.49623,
+     "ssim": 0.93729,
+     "lpips_vgg": 0.23779,
+     "lpips_alex": 0.13018,
+     "train_s": 209.527,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 233.006,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1039,
+     "nvml_peak_minus_idle_mib": 1039,
+     "engine_mem": 1034171528,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 6.984
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "room-s3": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/room-s3",
+   "request_id": "01a12141-5d60-72e1-b107-db27253de58a",
+   "app": "splat-py-l40-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 33.07067,
+     "ssim": 0.9409,
+     "lpips_vgg": 0.2307,
+     "lpips_alex": 0.12297,
+     "train_s": 138.454,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 143.625,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1279,
+     "nvml_peak_minus_idle_mib": 1279,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 4.615
+    },
+    "gsplat": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 32.48627,
+     "ssim": 0.93794,
+     "lpips_vgg": 0.23749,
+     "lpips_alex": 0.12966,
+     "train_s": 720.667,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 735.576,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2583,
+     "nvml_peak_minus_idle_mib": 2583,
+     "engine_mem": 1487,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 24.022
+    },
+    "vksplat": {
+     "n_scored": 39,
+     "n_expected": 39,
+     "lpips_scale": "full",
+     "perview_n": 39,
+     "psnr": 32.4995,
+     "ssim": 0.93705,
+     "lpips_vgg": 0.23859,
+     "lpips_alex": 0.13023,
+     "train_s": 210.928,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 232.552,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1039,
+     "nvml_peak_minus_idle_mib": 1039,
+     "engine_mem": 1034899640,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 7.031
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "stump-s1": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/stump-s1",
+   "request_id": "01a12114-efeb-78c2-95a2-902f13acfcd5",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "4b32807df2e0827f004e179e250c511f0041ac2e61c263efffc1a8bfbd47f282",
+    "gs_run.py": "d166e5aae554a06af0b5d772c63efbd1d513d4dea2d9a556e9ab154aff4c148a",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-crossbackend",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 27.00985,
+     "ssim": 0.79809,
+     "lpips_vgg": 0.23605,
+     "lpips_alex": 0.14265,
+     "train_s": 88.263,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 91.063,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1113,
+     "nvml_peak_minus_idle_mib": 1113,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 979155,
+     "rc": 0,
+     "s_per_step": 2.942
+    },
+    "gsplat": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 26.96554,
+     "ssim": 0.79005,
+     "lpips_vgg": 0.24756,
+     "lpips_alex": 0.16255,
+     "train_s": 583.027,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 591.237,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2267,
+     "nvml_peak_minus_idle_mib": 2267,
+     "engine_mem": 1320,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.434
+    },
+    "vksplat": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 27.01695,
+     "ssim": 0.79247,
+     "lpips_vgg": 0.24469,
+     "lpips_alex": 0.16053,
+     "train_s": 160.334,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 168.637,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 959,
+     "nvml_peak_minus_idle_mib": 959,
+     "engine_mem": 950028848,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.344
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "stump-s2": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/stump-s2",
+   "request_id": "01a12141-137c-7980-a85c-a94ad00ab112",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "ours-800k",
+    "ours-500k",
+    "ours-300k",
+    "vksplat",
+    "ours-1000k",
+    "gsplat"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 26.90414,
+     "ssim": 0.79491,
+     "lpips_vgg": 0.23926,
+     "lpips_alex": 0.14471,
+     "train_s": 93.676,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 96.461,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1135,
+     "nvml_peak_minus_idle_mib": 1135,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 987601,
+     "rc": 0,
+     "s_per_step": 3.123
+    },
+    "gsplat": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 26.93324,
+     "ssim": 0.78886,
+     "lpips_vgg": 0.24808,
+     "lpips_alex": 0.16341,
+     "train_s": 576.539,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 584.82,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2267,
+     "nvml_peak_minus_idle_mib": 2267,
+     "engine_mem": 1340,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.218
+    },
+    "vksplat": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 26.99565,
+     "ssim": 0.79146,
+     "lpips_vgg": 0.24496,
+     "lpips_alex": 0.16061,
+     "train_s": 160.17,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 168.397,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 958,
+     "nvml_peak_minus_idle_mib": 958,
+     "engine_mem": 949976592,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.339
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  },
+  "stump-s3": {
+   "historical-record": "$SPLAT_DATA/runs/research/xb2/vs3/stump-s3",
+   "request_id": "01a12141-1bfc-7420-b8b0-69c78c2083fe",
+   "app": "splat-py-l40-r1-v3-c3-2h-ab",
+   "gpu": "NVIDIA L40S, 610.57.04, 46068 MiB",
+   "cpu": "AMD EPYC 7R13 Processor",
+   "nproc": 16,
+   "affinity_cpus": 6,
+   "harness_sha256": {
+    "fal_run.py": "5d33d6f3b3ed0e626fea8c34cdd550fd97a40264a5fa17590df7d67150a5edc1",
+    "gs_run.py": "76628823536ab930ae79d959623bad6765dce7187fc8d2cc76f3a4c5e2331623",
+    "vks_run.py": "da44a32b8591823755235d11f391eeae71af9d8078611839ea28c5bd4b9f56c4"
+   },
+   "claim_label": "pubs:p2:XB2-VS3",
+   "order": [
+    "gsplat",
+    "ours-1000k",
+    "vksplat",
+    "ours-300k",
+    "ours-500k",
+    "ours-800k"
+   ],
+   "arms": {
+    "ours-1000k": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 26.88797,
+     "ssim": 0.79611,
+     "lpips_vgg": 0.23829,
+     "lpips_alex": 0.14439,
+     "train_s": 88.981,
+     "train_s_src": "ours train_only_s (GPU-synced)",
+     "wall_s": 91.94,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 1175,
+     "nvml_peak_minus_idle_mib": 1175,
+     "engine_mem": null,
+     "engine_mem_unit": null,
+     "splats": 977812,
+     "rc": 0,
+     "s_per_step": 2.966
+    },
+    "gsplat": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 27.03132,
+     "ssim": 0.79069,
+     "lpips_vgg": 0.24597,
+     "lpips_alex": 0.16217,
+     "train_s": 586.637,
+     "train_s_src": "cuda-synced perf_counter bracket",
+     "wall_s": 596.524,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 2247,
+     "nvml_peak_minus_idle_mib": 2247,
+     "engine_mem": 1322,
+     "engine_mem_unit": "torch max_memory_allocated MiB",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 19.555
+    },
+    "vksplat": {
+     "n_scored": 16,
+     "n_expected": 16,
+     "lpips_scale": "full",
+     "perview_n": 16,
+     "psnr": 26.93992,
+     "ssim": 0.79057,
+     "lpips_vgg": 0.24732,
+     "lpips_alex": 0.16261,
+     "train_s": 158.347,
+     "train_s_src": "vksplat perf_counter around step loop",
+     "wall_s": 166.806,
+     "nvml_baseline_mib": 0,
+     "nvml_peak_used_mib": 958,
+     "nvml_peak_minus_idle_mib": 958,
+     "engine_mem": 949988080,
+     "engine_mem_unit": "vksplat get_peak_vram_usage bytes",
+     "splats": 1000000,
+     "rc": 0,
+     "s_per_step": 5.278
+    }
+   },
+   "coplacement_tsv": "NOT IN TSV"
+  }
+ },
+ "quality_gates": {
+  "rule": "rule:seed-gate (registered for VS3 at 07:14 and 08:21): per scene, delta = ours-1000k - competitor per seed (n=3), pass if |mean| > 2 x sample SD (ddof=1); both directions tested. Aggregate = per-seed 7-scene mean. Guards (aggregate claims): no scene seed-mean dPSNR < -0.05 dB; mean dLPIPS <= +0.002.",
+  "vs_gsplat": {
+   "psnr": {
+    "bicycle": {
+     "deltas": [
+      0.21586,
+      0.17967,
+      0.25435
+     ],
+     "mean": 0.21663,
+     "sd": 0.03734,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      0.79926,
+      1.03769,
+      0.70183
+     ],
+     "mean": 0.84626,
+     "sd": 0.1728,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      0.36494,
+      0.40275,
+      0.34113
+     ],
+     "mean": 0.36961,
+     "sd": 0.03108,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      0.4698,
+      0.56328,
+      0.60966
+     ],
+     "mean": 0.54758,
+     "sd": 0.07124,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      0.58314,
+      0.66573,
+      0.67294
+     ],
+     "mean": 0.6406,
+     "sd": 0.04989,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      0.75539,
+      0.73864,
+      0.5844
+     ],
+     "mean": 0.69281,
+     "sd": 0.09426,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      0.04431,
+      -0.0291,
+      -0.14334
+     ],
+     "mean": -0.04271,
+     "sd": 0.09456,
+     "pass_2sd": false,
+     "direction": "no detectable difference"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      0.46181,
+      0.50838,
+      0.43156
+     ],
+     "mean": 0.46725,
+     "sd": 0.0387,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 6,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "ssim": {
+    "bicycle": {
+     "deltas": [
+      0.00681,
+      0.00597,
+      0.00723
+     ],
+     "mean": 0.00667,
+     "sd": 0.00064,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      0.00382,
+      0.0042,
+      0.00358
+     ],
+     "mean": 0.00387,
+     "sd": 0.00031,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      0.00326,
+      0.00345,
+      0.00279
+     ],
+     "mean": 0.00317,
+     "sd": 0.00034,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      0.01181,
+      0.01256,
+      0.01253
+     ],
+     "mean": 0.0123,
+     "sd": 0.00042,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      0.00427,
+      0.0055,
+      0.00459
+     ],
+     "mean": 0.00479,
+     "sd": 0.00064,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      0.00343,
+      0.00451,
+      0.00296
+     ],
+     "mean": 0.00363,
+     "sd": 0.0008,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      0.00803,
+      0.00605,
+      0.00542
+     ],
+     "mean": 0.0065,
+     "sd": 0.00136,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      0.00592,
+      0.00603,
+      0.00559
+     ],
+     "mean": 0.00585,
+     "sd": 0.00023,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 7,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "lpips_vgg": {
+    "bicycle": {
+     "deltas": [
+      -0.0031,
+      -0.00298,
+      -0.00142
+     ],
+     "mean": -0.0025,
+     "sd": 0.00094,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      -0.01163,
+      -0.01141,
+      -0.01139
+     ],
+     "mean": -0.01147,
+     "sd": 0.00013,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      -0.00887,
+      -0.0098,
+      -0.00928
+     ],
+     "mean": -0.00932,
+     "sd": 0.00047,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      -0.01411,
+      -0.01411,
+      -0.01418
+     ],
+     "mean": -0.01413,
+     "sd": 4e-05,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      -0.01153,
+      -0.01362,
+      -0.01239
+     ],
+     "mean": -0.01251,
+     "sd": 0.00105,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      -0.00588,
+      -0.00781,
+      -0.00679
+     ],
+     "mean": -0.00683,
+     "sd": 0.00097,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      -0.01151,
+      -0.00882,
+      -0.00767
+     ],
+     "mean": -0.00933,
+     "sd": 0.00197,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      -0.00952,
+      -0.00979,
+      -0.00902
+     ],
+     "mean": -0.00944,
+     "sd": 0.00039,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 7,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "lpips_alex": {
+    "bicycle": {
+     "deltas": [
+      -0.01711,
+      -0.0159,
+      -0.01632
+     ],
+     "mean": -0.01644,
+     "sd": 0.00062,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      -0.00846,
+      -0.00944,
+      -0.00899
+     ],
+     "mean": -0.00896,
+     "sd": 0.00049,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      -0.01029,
+      -0.0113,
+      -0.01067
+     ],
+     "mean": -0.01075,
+     "sd": 0.00051,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      -0.02079,
+      -0.02107,
+      -0.02112
+     ],
+     "mean": -0.02099,
+     "sd": 0.00018,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      -0.00852,
+      -0.00985,
+      -0.00899
+     ],
+     "mean": -0.00912,
+     "sd": 0.00068,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      -0.00686,
+      -0.00859,
+      -0.00669
+     ],
+     "mean": -0.00738,
+     "sd": 0.00105,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      -0.0199,
+      -0.0187,
+      -0.01778
+     ],
+     "mean": -0.01879,
+     "sd": 0.00106,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      -0.01313,
+      -0.01355,
+      -0.01294
+     ],
+     "mean": -0.01321,
+     "sd": 0.00031,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 7,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "guards": {
+    "min_scene_seedmean_dPSNR": -0.04271,
+    "guard_no_scene_below_-0.05dB": true,
+    "mean_dLPIPS_vgg_aggregate": -0.00944,
+    "guard_mean_dLPIPS<=+0.002": true
+   }
+  },
+  "vs_vksplat": {
+   "psnr": {
+    "bicycle": {
+     "deltas": [
+      0.25139,
+      0.22888,
+      0.27461
+     ],
+     "mean": 0.25163,
+     "sd": 0.02287,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      0.90087,
+      0.86119,
+      0.82101
+     ],
+     "mean": 0.86102,
+     "sd": 0.03993,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      0.4573,
+      0.39672,
+      0.43547
+     ],
+     "mean": 0.42983,
+     "sd": 0.03068,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      0.42698,
+      0.51038,
+      0.56406
+     ],
+     "mean": 0.50048,
+     "sd": 0.06907,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      0.78716,
+      0.731,
+      0.66113
+     ],
+     "mean": 0.72643,
+     "sd": 0.06314,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      0.71233,
+      0.66869,
+      0.57117
+     ],
+     "mean": 0.65073,
+     "sd": 0.07227,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      -0.00711,
+      -0.09152,
+      -0.05194
+     ],
+     "mean": -0.05019,
+     "sd": 0.04223,
+     "pass_2sd": false,
+     "direction": "no detectable difference"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      0.50413,
+      0.47219,
+      0.46793
+     ],
+     "mean": 0.48142,
+     "sd": 0.01979,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 6,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "ssim": {
+    "bicycle": {
+     "deltas": [
+      0.00583,
+      0.00626,
+      0.00667
+     ],
+     "mean": 0.00625,
+     "sd": 0.00042,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      0.00445,
+      0.00398,
+      0.00386
+     ],
+     "mean": 0.00409,
+     "sd": 0.00031,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      0.00363,
+      0.00365,
+      0.00346
+     ],
+     "mean": 0.00358,
+     "sd": 0.0001,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      0.01112,
+      0.01083,
+      0.0117
+     ],
+     "mean": 0.01122,
+     "sd": 0.00044,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      0.0054,
+      0.0055,
+      0.00485
+     ],
+     "mean": 0.00525,
+     "sd": 0.00035,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      0.00379,
+      0.00369,
+      0.00385
+     ],
+     "mean": 0.00378,
+     "sd": 8e-05,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      0.00562,
+      0.00345,
+      0.00554
+     ],
+     "mean": 0.00487,
+     "sd": 0.00123,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      0.00569,
+      0.00534,
+      0.0057
+     ],
+     "mean": 0.00558,
+     "sd": 0.00021,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 7,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "lpips_vgg": {
+    "bicycle": {
+     "deltas": [
+      -0.00212,
+      -0.00288,
+      -0.00275
+     ],
+     "mean": -0.00258,
+     "sd": 0.00041,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      -0.01296,
+      -0.0122,
+      -0.01264
+     ],
+     "mean": -0.0126,
+     "sd": 0.00038,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      -0.00953,
+      -0.00967,
+      -0.00972
+     ],
+     "mean": -0.00964,
+     "sd": 0.0001,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      -0.01354,
+      -0.01363,
+      -0.01389
+     ],
+     "mean": -0.01369,
+     "sd": 0.00018,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      -0.01408,
+      -0.01394,
+      -0.01279
+     ],
+     "mean": -0.0136,
+     "sd": 0.00071,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      -0.0062,
+      -0.0069,
+      -0.00789
+     ],
+     "mean": -0.007,
+     "sd": 0.00084,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      -0.00864,
+      -0.0057,
+      -0.00903
+     ],
+     "mean": -0.00779,
+     "sd": 0.00182,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      -0.00958,
+      -0.00927,
+      -0.00982
+     ],
+     "mean": -0.00956,
+     "sd": 0.00027,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 7,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "lpips_alex": {
+    "bicycle": {
+     "deltas": [
+      -0.01644,
+      -0.01559,
+      -0.0162
+     ],
+     "mean": -0.01607,
+     "sd": 0.00044,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "bonsai": {
+     "deltas": [
+      -0.00994,
+      -0.0097,
+      -0.00957
+     ],
+     "mean": -0.00974,
+     "sd": 0.00018,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "counter": {
+     "deltas": [
+      -0.01157,
+      -0.01084,
+      -0.0114
+     ],
+     "mean": -0.01127,
+     "sd": 0.00038,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "garden": {
+     "deltas": [
+      -0.01977,
+      -0.02106,
+      -0.02048
+     ],
+     "mean": -0.02043,
+     "sd": 0.00065,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "kitchen": {
+     "deltas": [
+      -0.01061,
+      -0.01006,
+      -0.00947
+     ],
+     "mean": -0.01005,
+     "sd": 0.00057,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "room": {
+     "deltas": [
+      -0.00683,
+      -0.00728,
+      -0.00726
+     ],
+     "mean": -0.00712,
+     "sd": 0.00026,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "stump": {
+     "deltas": [
+      -0.01787,
+      -0.01589,
+      -0.01821
+     ],
+     "mean": -0.01733,
+     "sd": 0.00125,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "aggregate_7scene_per_seed_mean": {
+     "deltas": [
+      -0.01329,
+      -0.01292,
+      -0.01323
+     ],
+     "mean": -0.01314,
+     "sd": 0.0002,
+     "pass_2sd": true,
+     "direction": "ours better"
+    },
+    "tally": {
+     "ours_better": 7,
+     "ours_worse": 0,
+     "n": 7
+    }
+   },
+   "guards": {
+    "min_scene_seedmean_dPSNR": -0.05019,
+    "guard_no_scene_below_-0.05dB": false,
+    "mean_dLPIPS_vgg_aggregate": -0.00956,
+    "guard_mean_dLPIPS<=+0.002": true
+   }
+  },
+  "summary": "vs gsplat: LPIPS-VGG 7/7 ours better, SSIM 7/7, LPIPS-Alex 7/7, PSNR 6/7 (stump -0.043 +/- 0.095, no detectable difference); no scene ours-worse on any metric; aggregate passes all 4 metrics, guards pass (min scene dPSNR -0.0427). vs VkSplat: LPIPS-VGG 7/7, SSIM 7/7, LPIPS-Alex 7/7, PSNR 6/7 (stump -0.0502 +/- 0.042, no detectable difference); no scene ours-worse; aggregate passes all 4 metrics BUT the -0.05 dB scene guard fails by 0.0002 dB (stump -0.0502), so an aggregate PSNR claim vs VkSplat is not permitted under rule:seed-gate."
+ },
+ "health": {
+  "criterion": "collapsed if any NaN/inf token in the training log, final splats < 0.9 x cap, a >10% splat-count drop between successive refine windows (ours 'Refine iter', VkSplat '-> N splats'), or PSNR > 1 dB below the worst peer in the same group. gsplat has no count trajectory in the log (MCMC 'Relocated N GSs' only); its final count is from @@ TRAIN_ONLY_S.",
+  "collapsed": {
+   "ours-1000k": "0/21",
+   "gsplat": "0/21",
+   "vksplat": "0/21"
+  },
+  "notes": "No NaN/inf in any log; gsplat and VkSplat end at exactly 1,000,000 on 21/21; ours ends under the 1M cap on 12/21 groups (bicycle s2/s3, bonsai s3, counter s1-3, kitchen s1-3, stump s1-3; min 977,812 = stump-s3, 2.2% under) - a cap, not a target, but wording must stay 'equal 1M cap'. Lane health.py (relocated fractions) also flags none; asymmetry: ours logs only a count trajectory at historical-build-096.",
+  "per_run": {
+   "bicycle-s1:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.251,
+    "collapsed": false
+   },
+   "bicycle-s1:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 45733,
+    "psnr_minus_worst_peer": 0.036,
+    "collapsed": false
+   },
+   "bicycle-s1:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.036,
+    "collapsed": false
+   },
+   "bicycle-s2:ours-1000k": {
+    "final_splats": 993085,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.229,
+    "collapsed": false
+   },
+   "bicycle-s2:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 52676,
+    "psnr_minus_worst_peer": 0.049,
+    "collapsed": false
+   },
+   "bicycle-s2:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.049,
+    "collapsed": false
+   },
+   "bicycle-s3:ours-1000k": {
+    "final_splats": 984798,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.275,
+    "collapsed": false
+   },
+   "bicycle-s3:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 45717,
+    "psnr_minus_worst_peer": 0.02,
+    "collapsed": false
+   },
+   "bicycle-s3:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.02,
+    "collapsed": false
+   },
+   "bonsai-s1:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.901,
+    "collapsed": false
+   },
+   "bonsai-s1:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 56793,
+    "psnr_minus_worst_peer": 0.102,
+    "collapsed": false
+   },
+   "bonsai-s1:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.102,
+    "collapsed": false
+   },
+   "bonsai-s2:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 1.038,
+    "collapsed": false
+   },
+   "bonsai-s2:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 56069,
+    "psnr_minus_worst_peer": -0.177,
+    "collapsed": false
+   },
+   "bonsai-s2:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.177,
+    "collapsed": false
+   },
+   "bonsai-s3:ours-1000k": {
+    "final_splats": 999972,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.821,
+    "collapsed": false
+   },
+   "bonsai-s3:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 51509,
+    "psnr_minus_worst_peer": 0.119,
+    "collapsed": false
+   },
+   "bonsai-s3:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.119,
+    "collapsed": false
+   },
+   "counter-s1:ours-1000k": {
+    "final_splats": 981659,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.457,
+    "collapsed": false
+   },
+   "counter-s1:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 49547,
+    "psnr_minus_worst_peer": 0.092,
+    "collapsed": false
+   },
+   "counter-s1:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.092,
+    "collapsed": false
+   },
+   "counter-s2:ours-1000k": {
+    "final_splats": 982543,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.403,
+    "collapsed": false
+   },
+   "counter-s2:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 46234,
+    "psnr_minus_worst_peer": -0.006,
+    "collapsed": false
+   },
+   "counter-s2:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.006,
+    "collapsed": false
+   },
+   "counter-s3:ours-1000k": {
+    "final_splats": 981076,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.435,
+    "collapsed": false
+   },
+   "counter-s3:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 47709,
+    "psnr_minus_worst_peer": 0.094,
+    "collapsed": false
+   },
+   "counter-s3:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.094,
+    "collapsed": false
+   },
+   "garden-s1:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.47,
+    "collapsed": false
+   },
+   "garden-s1:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 15920,
+    "psnr_minus_worst_peer": -0.043,
+    "collapsed": false
+   },
+   "garden-s1:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.043,
+    "collapsed": false
+   },
+   "garden-s2:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.563,
+    "collapsed": false
+   },
+   "garden-s2:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 16057,
+    "psnr_minus_worst_peer": -0.053,
+    "collapsed": false
+   },
+   "garden-s2:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.053,
+    "collapsed": false
+   },
+   "garden-s3:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.61,
+    "collapsed": false
+   },
+   "garden-s3:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 15989,
+    "psnr_minus_worst_peer": -0.046,
+    "collapsed": false
+   },
+   "garden-s3:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.046,
+    "collapsed": false
+   },
+   "kitchen-s1:ours-1000k": {
+    "final_splats": 988282,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.787,
+    "collapsed": false
+   },
+   "kitchen-s1:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 23034,
+    "psnr_minus_worst_peer": 0.204,
+    "collapsed": false
+   },
+   "kitchen-s1:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.204,
+    "collapsed": false
+   },
+   "kitchen-s2:ours-1000k": {
+    "final_splats": 987650,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.731,
+    "collapsed": false
+   },
+   "kitchen-s2:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 23453,
+    "psnr_minus_worst_peer": 0.065,
+    "collapsed": false
+   },
+   "kitchen-s2:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.065,
+    "collapsed": false
+   },
+   "kitchen-s3:ours-1000k": {
+    "final_splats": 989889,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.673,
+    "collapsed": false
+   },
+   "kitchen-s3:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 22751,
+    "psnr_minus_worst_peer": -0.012,
+    "collapsed": false
+   },
+   "kitchen-s3:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.012,
+    "collapsed": false
+   },
+   "room-s1:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.755,
+    "collapsed": false
+   },
+   "room-s1:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 67876,
+    "psnr_minus_worst_peer": -0.043,
+    "collapsed": false
+   },
+   "room-s1:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.043,
+    "collapsed": false
+   },
+   "room-s2:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.739,
+    "collapsed": false
+   },
+   "room-s2:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 69342,
+    "psnr_minus_worst_peer": -0.07,
+    "collapsed": false
+   },
+   "room-s2:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.07,
+    "collapsed": false
+   },
+   "room-s3:ours-1000k": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.584,
+    "collapsed": false
+   },
+   "room-s3:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 70260,
+    "psnr_minus_worst_peer": -0.013,
+    "collapsed": false
+   },
+   "room-s3:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.013,
+    "collapsed": false
+   },
+   "stump-s1:ours-1000k": {
+    "final_splats": 979155,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.044,
+    "collapsed": false
+   },
+   "stump-s1:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 44335,
+    "psnr_minus_worst_peer": -0.044,
+    "collapsed": false
+   },
+   "stump-s1:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.051,
+    "collapsed": false
+   },
+   "stump-s2:ours-1000k": {
+    "final_splats": 987601,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.029,
+    "collapsed": false
+   },
+   "stump-s2:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 44100,
+    "psnr_minus_worst_peer": 0.029,
+    "collapsed": false
+   },
+   "stump-s2:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.092,
+    "collapsed": false
+   },
+   "stump-s3:ours-1000k": {
+    "final_splats": 977812,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 142,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": -0.052,
+    "collapsed": false
+   },
+   "stump-s3:gsplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 0,
+    "max_count_drop_frac": 0,
+    "max_relocated_per_100": 41958,
+    "psnr_minus_worst_peer": 0.143,
+    "collapsed": false
+   },
+   "stump-s3:vksplat": {
+    "final_splats": 1000000,
+    "nan_inf_tokens": 0,
+    "count_traj_windows": 244,
+    "max_count_drop_frac": 0.0,
+    "max_relocated_per_100": null,
+    "psnr_minus_worst_peer": 0.052,
+    "collapsed": false
+   }
+  }
+ },
+ "speed": {
+  "clock_fields": {
+   "ours-1000k": "train_s = brush-cli 'train_only_s' = Instant wall span first->last optimizer step minus in-loop eval/export (in_loop_eval_export_s = 0.000 here; eval only after the last step) - wall-clock span, GPU-synced",
+   "gsplat": "train_s = torch.cuda.synchronize()+perf_counter bracket from step-0 rasterize to after the last step - wall-clock span",
+   "vksplat": "train_s = VkSplat's own train.json time_elapsed (perf_counter around its step loop) - wall-clock span, engine-reported",
+   "wall_s": "harness monotonic wall per process (includes load/warm/render) - reported as cross-check",
+   "rule_1_wall_span": "PASS (no per-step averages used)"
+  },
+  "ratios_train_s": {
+   "ours-1000k/gsplat": {
+    "mean": 0.1853,
+    "sd": 0.0182,
+    "min": 0.1514,
+    "max": 0.207,
+    "n": 21,
+    "per_scene": {
+     "bicycle": [
+      0.1658,
+      0.005
+     ],
+     "bonsai": [
+      0.2035,
+      0.0035
+     ],
+     "counter": [
+      0.1826,
+      0.0021
+     ],
+     "garden": [
+      0.1893,
+      0.0029
+     ],
+     "kitchen": [
+      0.1999,
+      0.0009
+     ],
+     "room": [
+      0.2009,
+      0.0077
+     ],
+     "stump": [
+      0.1552,
+      0.0063
+     ]
+    }
+   },
+   "ours-1000k/vksplat": {
+    "mean": 0.6486,
+    "sd": 0.0559,
+    "min": 0.5505,
+    "max": 0.7239,
+    "n": 21,
+    "per_scene": {
+     "bicycle": [
+      0.5887,
+      0.0098
+     ],
+     "bonsai": [
+      0.6628,
+      0.0087
+     ],
+     "counter": [
+      0.6227,
+      0.0021
+     ],
+     "garden": [
+      0.7207,
+      0.0032
+     ],
+     "kitchen": [
+      0.6893,
+      0.0009
+     ],
+     "room": [
+      0.6903,
+      0.0294
+     ],
+     "stump": [
+      0.5658,
+      0.0175
+     ]
+    }
+   },
+   "vksplat/gsplat": {
+    "mean": 0.2857,
+    "sd": 0.0139,
+    "min": 0.2571,
+    "max": 0.3091,
+    "n": 21,
+    "per_scene": {
+     "bicycle": [
+      0.2815,
+      0.0039
+     ],
+     "bonsai": [
+      0.3071,
+      0.0018
+     ],
+     "counter": [
+      0.2932,
+      0.0027
+     ],
+     "garden": [
+      0.2626,
+      0.0048
+     ],
+     "kitchen": [
+      0.2901,
+      0.0017
+     ],
+     "room": [
+      0.2911,
+      0.0021
+     ],
+     "stump": [
+      0.2742,
+      0.004
+     ]
+    }
+   }
+  },
+  "ratios_wall_s": {
+   "ours-1000k/gsplat": {
+    "mean": 0.1881,
+    "sd": 0.0182,
+    "min": 0.154,
+    "max": 0.2095,
+    "n": 21,
+    "per_scene": {
+     "bicycle": [
+      0.1689,
+      0.005
+     ],
+     "bonsai": [
+      0.2061,
+      0.0034
+     ],
+     "counter": [
+      0.1851,
+      0.002
+     ],
+     "garden": [
+      0.1921,
+      0.0022
+     ],
+     "kitchen": [
+      0.2032,
+      0.0014
+     ],
+     "room": [
+      0.2039,
+      0.0075
+     ],
+     "stump": [
+      0.1577,
+      0.0063
+     ]
+    }
+   },
+   "ours-1000k/vksplat": {
+    "mean": 0.6189,
+    "sd": 0.0474,
+    "min": 0.54,
+    "max": 0.6999,
+    "n": 21,
+    "per_scene": {
+     "bicycle": [
+      0.57,
+      0.01
+     ],
+     "bonsai": [
+      0.6241,
+      0.0085
+     ],
+     "counter": [
+      0.5952,
+      0.0036
+     ],
+     "garden": [
+      0.6927,
+      0.0062
+     ],
+     "kitchen": [
+      0.6508,
+      0.005
+     ],
+     "room": [
+      0.6451,
+      0.0238
+     ],
+     "stump": [
+      0.5547,
+      0.0167
+     ]
+    }
+   },
+   "vksplat/gsplat": {
+    "mean": 0.3039,
+    "sd": 0.018,
+    "min": 0.2712,
+    "max": 0.3322,
+    "n": 21,
+    "per_scene": {
+     "bicycle": [
+      0.2962,
+      0.0036
+     ],
+     "bonsai": [
+      0.3303,
+      0.0017
+     ],
+     "counter": [
+      0.3111,
+      0.0036
+     ],
+     "garden": [
+      0.2773,
+      0.0055
+     ],
+     "kitchen": [
+      0.3123,
+      0.0005
+     ],
+     "room": [
+      0.316,
+      0.0015
+     ],
+     "stump": [
+      0.2843,
+      0.0042
+     ]
+    }
+   }
+  },
+  "per_seed_mean_train_ratio": {
+   "ours/gsplat": {
+    "s1": 0.1849,
+    "s2": 0.1879,
+    "s3": 0.1832
+   },
+   "ours/vksplat": {
+    "s1": 0.6501,
+    "s2": 0.6553,
+    "s3": 0.6404
+   },
+   "vksplat/gsplat": {
+    "s1": 0.2845,
+    "s2": 0.2867,
+    "s3": 0.2858
+   },
+   "note": "s2 (reversed order) within 1-2% of s1/s3 (forward): no visible order effect"
+  },
+  "same_runner_in_exec": "YES: each (scene, seed) group is one fal request (1 submit per drive log) running all arms sequentially in one process tree on one runner; max_multiplexing=1 (09:40 audit)",
+  "ordering_status": "ALTERNATED BY SEED PARITY (as registered 08:21): s1 and s3 forward [gsplat, ours-1000k, vksplat, ladder], s2 reversed [ladder, vksplat, ours-1000k, gsplat]. Unbalanced 2:1 (gsplat precedes ours in 2/3 seeds), and ours-1000k is always between the two competitors. Satisfies rule:speed-coplacement condition (2) 'order alternating by seed'.",
+  "cotenant_cpu_pct": "NOT RECORDED (runs started 07:23-08:2x PT and finished by 09:42 PT, all submitted before the historical-build-064 host-facts landing (09:48)); relies on alternation per addendum (d)",
+  "thread_cap": "not recorded; all 21 groups pre-historical-build-064 (no cap env), affinity_cpus 6 and nproc 16 on every group - same condition for all arms within each pair; not pooled across thread_cap values",
+  "outlier_test_1p5x": {
+   "method": "per arm per scene: each seed's train_s vs median of the other two seeds (all L40S)",
+   "max_deviation": {
+    "ours-1000k:bicycle": 1.037,
+    "ours-1000k:bonsai": 1.025,
+    "ours-1000k:counter": 1.007,
+    "ours-1000k:garden": 1.01,
+    "ours-1000k:kitchen": 1.005,
+    "ours-1000k:room": 1.077,
+    "ours-1000k:stump": 1.057,
+    "gsplat:bicycle": 1.014,
+    "gsplat:bonsai": 1.007,
+    "gsplat:counter": 1.015,
+    "gsplat:garden": 1.03,
+    "gsplat:kitchen": 1.012,
+    "gsplat:room": 1.008,
+    "gsplat:stump": 1.014,
+    "vksplat:bicycle": 1.01,
+    "vksplat:bonsai": 1.013,
+    "vksplat:counter": 1.009,
+    "vksplat:garden": 1.005,
+    "vksplat:kitchen": 1.004,
+    "vksplat:room": 1.01,
+    "vksplat:stump": 1.012
+   },
+   "outliers": [],
+   "result": "0 outliers; worst 1.077x (ours room)"
+  },
+  "coplacement_tsv": "$SPLAT_DATA/devtools/fal-coplacement-2026-10-09.tsv (outlier list, 10-08 19:02 - 10-09 09:15): none of the 21 VS3 request ids appear (the 5 xb2 rows listed are other XB2 requests). Not flagged.",
+  "gpu_driver": "NVIDIA L40S 46068 MiB, driver 610.57.04 (Vulkan 1.4.341) on 21/21; CPU AMD EPYC 7R13 on 21/21; apps splat-py-l40-v3-c3-2h-ab (8 groups) and splat-py-l40-r1-v3-c3-2h-ab (13 groups) - single GPU model",
+  "timer_risk": "900 s per-run kill timer was still in fal_run.py for these runs; max gsplat wall 818.96 s (< 900), rc 0 on all"
+ },
+ "memory": {
+  "method": "Both arms: harness NVML board memory.used polled every 50 ms, peak minus idle baseline, MiB (same Mem class, same runner). Idle baseline read 0 MiB before every arm in all 21 groups (no setup offset to subtract; no prior-process contamination). Engine counters (gsplat torch max_memory_allocated MiB; VkSplat get_peak_vram_usage BYTES) are reported separately and never mixed. NVML peaks include each runtime's context (CUDA/torch for gsplat; Vulkan for ours and VkSplat).",
+  "na_cells": "none in VS3. The garden s1/s3 n/a flag applies to VS3b own-default groups (garden-s1-own/s3-own gsplat-MCMC), not to VS3 garden-s1/s3.",
+  "ratios": {
+   "ours-1000k/gsplat": {
+    "per_scene": {
+     "bicycle": [
+      0.479,
+      0.015
+     ],
+     "bonsai": [
+      0.486,
+      0.003
+     ],
+     "counter": [
+      0.454,
+      0.031
+     ],
+     "garden": [
+      0.494,
+      0.032
+     ],
+     "kitchen": [
+      0.476,
+      0.023
+     ],
+     "room": [
+      0.528,
+      0.034
+     ],
+     "stump": [
+      0.505,
+      0.016
+     ]
+    },
+    "min": 0.428,
+    "max": 0.563
+   },
+   "vksplat/ours-1000k": {
+    "per_scene": {
+     "bicycle": [
+      0.841,
+      0.036
+     ],
+     "bonsai": [
+      0.885,
+      0.009
+     ],
+     "counter": [
+      0.979,
+      0.059
+     ],
+     "garden": [
+      0.835,
+      0.007
+     ],
+     "kitchen": [
+      0.914,
+      0.034
+     ],
+     "room": [
+      0.778,
+      0.04
+     ],
+     "stump": [
+      0.84,
+      0.023
+     ]
+    },
+    "min": 0.735,
+    "max": 1.032
+   },
+   "baselines_nonzero": [],
+   "vks_lower_than_ours_scene_tally": 7,
+   "vks_lower_than_ours_group_tally": 20
+  },
+  "summary": "ours/gsplat NVML 0.43-0.56x (21/21 lower). VkSplat/ours 0.74-1.03x: VkSplat lower on 7/7 scenes by 3-seed mean, 20/21 groups (exception counter-s3: VkSplat 1046 vs ours 1014 MiB)."
+ },
+ "competitors": {
+  "gsplat": {
+   "label": "gsplat 1.5.3 (source build of git tag v1.5.3, fal/app_py.py GSPLAT_REF; not the PyPI wheel), torch 2.7.1+cu128",
+   "recipe": "simple_trainer.py mcmc preset exactly (init_opa 0.5, init_scale 0.1, opacity_reg 0.01, scale_reg 0.01, MCMCStrategy default cap_max 1M), max_steps 30000, data_factor 1 on pre-resized PNGs. Harness-only changes: seed override (upstream hard-codes 42), in-run eval/ckpt/ply/video disabled, timing hooks. Upstream default apart from matched cap (which equals its default).",
+   "note": "VkSplat's paper used gsplat b60e917, not 1.5.3 (08:16 disclosure)"
+  },
+  "vksplat": {
+   "label": "VkSplat b3ad2b0 (harry7557558/vksplat b3ad2b048918496616e0e9346e35c606d813ab55, Apache-2.0), built on runner against Vulkan-Headers v1.4.312",
+   "recipe": "MCMCTrainerConfig() unchanged except dataset/output/image_dir/sparse_dir/mask_dir paths; train_steps 30000, max_steps 30000, cap_max 1000000 are its upstream defaults (simple_trainer.py l.32/53/86, checked at b3ad2b0); refine_stop_iter 25000. Build-only CMake patch removes VK_USE_PLATFORM_XLIB_KHR (headless). No seed input exists."
+  },
+  "ours": {
+   "label": "ours main historical-build-096 (brush-cli sha256 933d67da) at --max-splats 1000000 (not our default config)"
+  }
+ },
+ "discrepancies_vs_lane": {
+  "numeric": "NONE above threshold. Every (A3) per-scene dPSNR/dLPIPS-VGG/dLPIPS-Alex mean+-SD and train_s ratio reproduces to the printed precision; overall train_s ratios 0.1853+-0.0182 / 0.6486+-0.0559 / VkSplat/gsplat 0.2857 match the lane's 0.185+-0.018 / 0.649+-0.056 / 0.286.",
+  "wording_provenance": [
+   "Lane: seeds 2-3 harness historical-build-079 'adds the claim label XB2_CLAIM only'. FALSE as stated: vs historical-build-091 the as-run fal_run.py also adds brush / gsplat-default / Spirula-default code paths and log timestamps, and gs_run.py changed (sha256 76628823 vs registered byte-identical d166e5aa: env-gated DefaultStrategy branch + CONFIG print). The MCMC path, ours command and VkSplat path are functionally unchanged (CONFIG lines confirm MCMCStrategy/1M/30k/data_factor 1). Disclose; verdict unaffected.",
+   "Lane: 'three scenes ended slightly under 1M for ours' - seed-1 statement; over 3 seeds ours ended under the cap on 12/21 groups across 5 scenes (min 977,812).",
+   "Lane section (A) heading says 'seed 1, PROVISIONAL' but the table holds all 3 seeds.",
+   "Lane: 'paired by seed' - VkSplat takes no seed; its runs are unseeded repeats.",
+   "Lane: VkSplat NVML lower 'on 7/7 scenes (1.01-1.36x)' - true by scene mean; per group 20/21 (counter-s3 exception), ours/VkSplat range 0.97-1.36x over 3 seeds.",
+   "Lane did not report SSIM gates (7/7 ours better vs both) or the seed-gate guards; stump dPSNR vs VkSplat -0.0502 trips the -0.05 dB guard (aggregate PSNR vs VkSplat not claimable)."
+  ]
+ },
+ "verdicts": {
+  "quality_vs_gsplat": "HEADLINE - at an equal 1M cap and 30k steps on 7 M360 scenes (3 seeds, same runner), ours has lower LPIPS-VGG on 7/7 scenes, higher SSIM on 7/7, higher PSNR on 6/7 (stump: no detectable difference), all under rule:seed-gate; never worse on any scene/metric; aggregate passes with guards.",
+  "quality_vs_vksplat": "HEADLINE for the per-scene tallies (LPIPS-VGG 7/7, SSIM 7/7, PSNR 6/7; stump no detectable difference). An AGGREGATE mean-PSNR claim vs VkSplat is NOT SUPPORTED (stump guard -0.0502 < -0.05 dB). Disclose VkSplat runs are unseeded repeats.",
+  "speed_vs_gsplat": "HEADLINE - train_s ratio ours/gsplat 0.185 +/- 0.018 (0.151-0.207, n=21; wall 0.188). In-exec same-runner pairs, order alternated by seed parity (2:1), 0 outliers >1.5x, single GPU model L40S/610.57.04, not in coplacement outlier TSV; cotenant not recorded. Wording: 'at an equal 1M cap, fixed 30k steps'; clocks defined per engine (disclose). Not 'faster to equal quality'.",
+  "speed_vs_vksplat": "HEADLINE - train_s ratio ours/VkSplat 0.649 +/- 0.056 (0.551-0.724, n=21; wall 0.619), same conditions/disclosures as above; VkSplat clock is its own engine-reported perf_counter span.",
+  "speed_vksplat_vs_gsplat": "DESCRIPTIVE harness validation: 0.286 +/- 0.014 (paper 0.29 on RTX 3090; context only).",
+  "memory_vs_gsplat": "HEADLINE - NVML board peak minus idle, ours 0.43-0.56x gsplat-MCMC on 21/21 groups (same monitor both arms, MiB). Name the measure; never mix with engine counters.",
+  "memory_vs_vksplat": "NOT SUPPORTED for 'less memory than VkSplat': VkSplat uses less NVML board memory than ours on 7/7 scenes (20/21 groups; VkSplat/ours 0.74-1.03x). The reverse statement is the supported one."
+ },
+ "note_on_class": "HEADLINE classes above are what the data and registered rules support (08:21 amendment allows HEADLINE after 3 seeds for registered equal-cap comparisons). The equal-LPIPS ladder (section B) remains DESCRIPTIVE only per registration."
+}

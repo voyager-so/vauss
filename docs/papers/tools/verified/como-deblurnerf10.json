@@ -1,0 +1,47 @@
+{
+ "kind": "render",
+ "claim": "como-released-deblurnerf10-v1",
+ "verified_by": "publications (recompute from per-scene rows in como-comparison-summary.json; own bootstrap 10000/seed0)",
+ "verified_at": "2026-10-09T01:46-07:00",
+ "inputs": "$SPLAT_DATA/research/b1a/como-comparison-summary.json; B1c per-view rows $SPLAT_DATA/research/b1a/per-view-v1/como-comparison/",
+ "no_fit_png": {
+  "b1c": 27.062,
+  "como_released": 27.558,
+  "delta": -0.496,
+  "ci95": [
+   -0.903,
+   -0.133
+  ],
+  "wins_parity_losses": "2/1/7",
+  "ssim_delta": -0.024,
+  "alex_delta": 0.036
+ },
+ "pose_fitted_png": {
+  "b1c": 27.737,
+  "como_released": 28.337,
+  "delta": -0.6,
+  "ci95": [
+   -0.88,
+   -0.303
+  ],
+  "wins_parity_losses": "1/0/9"
+ },
+ "per_scene_no_fit": {
+  "blurball": -0.08,
+  "blurbasket": -0.7,
+  "blurbuick": -0.28,
+  "blurcoffee": -1.87,
+  "blurdecoration": -1.12,
+  "blurgirl": 0.35,
+  "blurheron": -0.13,
+  "blurparterre": 0.13,
+  "blurpuppet": -0.4,
+  "blurstair": -0.85
+ },
+ "verdict": "BEHIND same-run released CoMoGaussian by 0.50 dB (no-fit, CI excludes 0; 7/10 losses) and 0.60 dB (fitted). SSIM/LPIPS also behind. Published 27.85 lies between CoMo's no-fit and fitted, so the published-protocol question is moot. HEADLINE (negative).",
+ "disclosures": [
+  "seed mismatch: B1c mean of s42/s43 vs CoMo s0",
+  "ball observed and girl running before registration"
+ ],
+ "per_view_check": "01:46: pubs recomputed from per-view rows of BOTH arms (CoMo schema-v1 under como-full-suite-blur*-v1 / como-reference-blur{ball,girl}-r4; B1c per-view-v1/como-comparison): identical view-id sets per scene, N/N, mean no-fit delta -0.496 exact."
+}

@@ -1,0 +1,55 @@
+# Derived from Brush (https://github.com/ArthurBrussee/brush) commit 1388f74c, Apache-2.0.
+# Forked into voyager-so/vauss; see crates/splat-train/NOTICE.
+[package]
+name = "splat-train-vfs"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0"
+
+[lib]
+name = "brush_vfs"
+
+[dependencies]
+rrfd = { path = "../splat-train-rrfd", package = "splat-train-rrfd" }
+
+thiserror.workspace = true
+async_zip.workspace = true
+serde.workspace = true
+log.workspace = true
+
+tokio-stream.workspace = true
+path-clean = "1.0.1"
+tokio-util = { workspace = true, features = ["compat"] }
+brush-async = { path = "../splat-train-async", package = "splat-train-async" }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+web-sys = { workspace = true, features = [
+    "Window",
+    "Location",
+    "Request",
+    "RequestInit",
+    "RequestCredentials",
+    "RequestMode",
+    "Response",
+    "Headers",
+    "File",
+    "ReadableStream",
+] }
+
+tokio = { version = "1", features = ["io-util", "macros", "rt", "time"] }
+
+wasm-bindgen-futures.workspace = true
+wasm-streams.workspace = true
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+futures-util = "0.3"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+tokio = { workspace = true, features = ["io-util", "fs", "macros", "rt"] }
+reqwest = { version = "0.13", default-features = false, features = ["stream"] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[lints]
+workspace = true

@@ -1,0 +1,1572 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "parity-casual 3g LPIPS screen (EXPLORATORY, 1 seed): main historical-build-006 + B13 person masks + B13_HPCMASK=1 B13_NO_ROBUST=1 (3g recipe minus O7 affine), --min-scale-factor 0.1 (ctl) vs 0.03 vs 0, 6 Dataverse On-the-go scenes, HPC's split, 30k",
+ "argv": [
+  "--arm",
+  "ctl=$SPLAT_DATA/research/parity-casual/exec/s3-dv-*/ctl-s42.json",
+  "--arm",
+  "ms03=$SPLAT_DATA/research/parity-casual/exec/s3-dv-*/ms03-s42.json",
+  "--arm",
+  "ms0=$SPLAT_DATA/research/parity-casual/exec/s3-dv-*/ms0-s42.json",
+  "--metric",
+  "psnr",
+  "--metric",
+  "lpips_alex",
+  "--metric",
+  "ssim",
+  "--label",
+  "parity-casual 3g LPIPS screen (EXPLORATORY, 1 seed): main historical-build-006 + B13 person masks + B13_HPCMASK=1 B13_NO_ROBUST=1 (3g recipe minus O7 affine), --min-scale-factor 0.1 (ctl) vs 0.03 vs 0, 6 Dataverse On-the-go scenes, HPC's split, 30k",
+  "--json",
+  "verified/pc-3g-lpips-minscale-screen.json"
+ ],
+ "cwd": "$HOME/fast/worktrees/splat/parity-tonight/docs/papers/tools",
+ "generated_at": "2026-10-24T04:10:50-07:00",
+ "verifier_sha256": "f62670c4129df45c64c04fc58d04aa163c29ea61df798f67568d3ed4c10d89b7",
+ "verifier_git_head": "historical-build-061",
+ "options": {
+  "common_views": false,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "ctl": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-*/ctl-s42.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-corner/ctl-s42.json",
+     "sha256": "6987dcfd43994ed9d5318ad91ed8652d0e316a1c0a7e6be149e5078b32d38f0c"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-fountain/ctl-s42.json",
+     "sha256": "dec011ae56d5acdbe6a8aaefd8b77eca5ed556085321d1971b1952676e2c2722"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-mountain/ctl-s42.json",
+     "sha256": "3be51cd4107af974073ade1b9e3c310d53b57b4dc7bc917cb184d91d8d9e9e8f"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio-high/ctl-s42.json",
+     "sha256": "ada906134ef4b10d508f6780d7a46a76b8ffe5afdcbc35ca484e869d0b54a98e"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio/ctl-s42.json",
+     "sha256": "fd4fc6e04742089251a0be30a9986482f0f86c29caebdef8f55d47b0514d7a76"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-spot/ctl-s42.json",
+     "sha256": "1ad37d299454b9223a6c034529d125201a730db40389f540fec8f3cd5fa1b879"
+    }
+   ],
+   "engine_sha256": [
+    "e74762a26ba69c369a3fcf05649360064ed594cb9610f0febdf4f748881e96d3"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  },
+  "ms03": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-*/ms03-s42.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-corner/ms03-s42.json",
+     "sha256": "4de07e828b62caa0bf1b23857c1db5bd7a87272d92b6713113a13ea6f0d3d846"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-fountain/ms03-s42.json",
+     "sha256": "d99ee3ecdb252927d6bb4dec7d6fb346dbdfa9f51c26cd003923671cf00d1a47"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-mountain/ms03-s42.json",
+     "sha256": "aebfa485d4dbad04b698db513ba7fc0bb32c7ac0798f6efbae0c10b03f4416de"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio-high/ms03-s42.json",
+     "sha256": "29f2d2bd6ee359d1e759389ea0fe757dcc9c10c4e4dc2b66a053fc6a50df6388"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio/ms03-s42.json",
+     "sha256": "5b1e54a611ec2909b3447be8f23e0d63bc5f6eadc12f155133d1465fe76f5506"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-spot/ms03-s42.json",
+     "sha256": "70a5867f4e36db2ab7fe87f2a64b714b52af0cfb569943b6a02f92aaa763ff43"
+    }
+   ],
+   "engine_sha256": [
+    "e74762a26ba69c369a3fcf05649360064ed594cb9610f0febdf4f748881e96d3"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  },
+  "ms0": {
+   "specs": [
+    {
+     "glob": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-*/ms0-s42.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-corner/ms0-s42.json",
+     "sha256": "dd2212538122a78a9deb1ba4a51fcef7c83dc0adef43f1a78333bce34457310d"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-fountain/ms0-s42.json",
+     "sha256": "d346355dc93802c323945325a50f37addc61c73664dd055728e821c5d560d4ed"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-mountain/ms0-s42.json",
+     "sha256": "a824b8e214d3c5bb28261795e99a612ac7b36f31f249f97a1120a11107946ecd"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio-high/ms0-s42.json",
+     "sha256": "bfed047afc325d29ab3eff414405c11481c15e6367edc4cd45ea7fc78caa9717"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio/ms0-s42.json",
+     "sha256": "49b3cdb8c28dc9523ed37848123753b0c450880f7d6ad402f30c95a73ef5d086"
+    },
+    {
+     "path": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-spot/ms0-s42.json",
+     "sha256": "4eff17024e86930140d0b05c3f834f0357154ecab40cf164e1e7872cacf96698"
+    }
+   ],
+   "engine_sha256": [
+    "e74762a26ba69c369a3fcf05649360064ed594cb9610f0febdf4f748881e96d3"
+   ],
+   "engine_commit": [],
+   "engine_sha_unrecorded": 0
+  }
+ },
+ "notes": [],
+ "per_scene": {
+  "onthego-dv-corner-clean": {
+   "n_expected": 20,
+   "n_common": 20,
+   "common_view_hash": "b4a81e7e1a3e571f34715237158dd46b08580a377e5932830211df2a8570d3a6",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra000",
+    "1extra001",
+    "1extra002",
+    "1extra003",
+    "1extra004",
+    "1extra005",
+    "1extra006",
+    "1extra007",
+    "1extra008",
+    "1extra009",
+    "1extra010",
+    "1extra011",
+    "1extra113",
+    "1extra114",
+    "1extra115",
+    "1extra116",
+    "1extra117",
+    "1extra118",
+    "1extra119",
+    "1extra120"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "ctl": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-corner/ctl-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 20,
+       "views_hash": "290e0e70e1478c058be36e7a8c5efd87f42c2a03c8b06c2a808ffa8aa843b391",
+       "normalised_views_hash": "b4a81e7e1a3e571f34715237158dd46b08580a377e5932830211df2a8570d3a6",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 26.31980653955214,
+        "lpips_alex": 0.07573804389685393,
+        "ssim": 0.9102693013971989
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 26.31980653955214,
+      "lpips_alex": 0.07573804389685393,
+      "ssim": 0.9102693013971989
+     }
+    },
+    "ms03": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-corner/ms03-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 20,
+       "views_hash": "290e0e70e1478c058be36e7a8c5efd87f42c2a03c8b06c2a808ffa8aa843b391",
+       "normalised_views_hash": "b4a81e7e1a3e571f34715237158dd46b08580a377e5932830211df2a8570d3a6",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.852209043686788,
+        "lpips_alex": 0.09108650088310241,
+        "ssim": 0.8820379283515306
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 25.852209043686788,
+      "lpips_alex": 0.09108650088310241,
+      "ssim": 0.8820379283515306
+     }
+    },
+    "ms0": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-corner/ms0-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 20,
+       "views_hash": "290e0e70e1478c058be36e7a8c5efd87f42c2a03c8b06c2a808ffa8aa843b391",
+       "normalised_views_hash": "b4a81e7e1a3e571f34715237158dd46b08580a377e5932830211df2a8570d3a6",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.053848011631437,
+        "lpips_alex": 0.10939316041767597,
+        "ssim": 0.8411459347846346
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 25.053848011631437,
+      "lpips_alex": 0.10939316041767597,
+      "ssim": 0.8411459347846346
+     }
+    }
+   }
+  },
+  "onthego-dv-fountain-clean": {
+   "n_expected": 16,
+   "n_common": 16,
+   "common_view_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra000",
+    "1extra001",
+    "1extra002",
+    "1extra003",
+    "1extra004",
+    "1extra005",
+    "1extra006",
+    "1extra007",
+    "1extra175",
+    "1extra176",
+    "1extra177",
+    "1extra178",
+    "1extra179",
+    "1extra180",
+    "1extra181",
+    "1extra183"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "ctl": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-fountain/ctl-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 23.459844400546345,
+        "lpips_alex": 0.13137615518644452,
+        "ssim": 0.8204221704945072
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 23.459844400546345,
+      "lpips_alex": 0.13137615518644452,
+      "ssim": 0.8204221704945072
+     }
+    },
+    "ms03": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-fountain/ms03-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 23.384333070020705,
+        "lpips_alex": 0.12111068470403552,
+        "ssim": 0.8214660324057423
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 23.384333070020705,
+      "lpips_alex": 0.12111068470403552,
+      "ssim": 0.8214660324057423
+     }
+    },
+    "ms0": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-fountain/ms0-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 16,
+       "views_hash": "60965213ac9f4d8276109e0980be58824cf4e28a0efc42b3dd83a76ba9bd3fa0",
+       "normalised_views_hash": "86235cdc2b3e1c80967486317bb7478688e4413b6e5b873892bc82aa78bdf1aa",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 23.188352264814007,
+        "lpips_alex": 0.11549243447370827,
+        "ssim": 0.8173385597000704
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 23.188352264814007,
+      "lpips_alex": 0.11549243447370827,
+      "ssim": 0.8173385597000704
+     }
+    }
+   }
+  },
+  "onthego-dv-mountain-clean": {
+   "n_expected": 11,
+   "n_common": 11,
+   "common_view_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra117",
+    "1extra118",
+    "1extra119",
+    "1extra120",
+    "1extra121",
+    "1extra124",
+    "1extra125",
+    "1extra126",
+    "1extra127",
+    "1extra128",
+    "1extra129"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "ctl": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-mountain/ctl-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 11,
+       "views_hash": "b7e9a2a64e416ec2e7bc1b06d3a344956a23a3fda86d158f4bceb7c59e6254e2",
+       "normalised_views_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.965770688615716,
+        "lpips_alex": 0.16311715949665417,
+        "ssim": 0.7706586915609812
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 21.965770688615716,
+      "lpips_alex": 0.16311715949665417,
+      "ssim": 0.7706586915609812
+     }
+    },
+    "ms03": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-mountain/ms03-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 11,
+       "views_hash": "b7e9a2a64e416ec2e7bc1b06d3a344956a23a3fda86d158f4bceb7c59e6254e2",
+       "normalised_views_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.99042713009108,
+        "lpips_alex": 0.15899106724695725,
+        "ssim": 0.7689450575797537
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 21.99042713009108,
+      "lpips_alex": 0.15899106724695725,
+      "ssim": 0.7689450575797537
+     }
+    },
+    "ms0": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-mountain/ms0-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 11,
+       "views_hash": "b7e9a2a64e416ec2e7bc1b06d3a344956a23a3fda86d158f4bceb7c59e6254e2",
+       "normalised_views_hash": "00bda29bc7b028722bebfc45857805738803ca03d5f777918068e88220817b83",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 21.596113570226542,
+        "lpips_alex": 0.1579969498244199,
+        "ssim": 0.7649244359903871
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 21.596113570226542,
+      "lpips_alex": 0.1579969498244199,
+      "ssim": 0.7649244359903871
+     }
+    }
+   }
+  },
+  "onthego-dv-patio-clean": {
+   "n_expected": 26,
+   "n_common": 26,
+   "common_view_hash": "0774b2f1f3428ef53aba15ce86384cee2b0ccb4db21c3adbe252102ac538cafe",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra077",
+    "1extra078",
+    "1extra079",
+    "1extra080",
+    "1extra081",
+    "1extra082",
+    "1extra083",
+    "1extra084",
+    "1extra085",
+    "1extra086",
+    "1extra087",
+    "1extra088",
+    "1extra089",
+    "1extra090",
+    "1extra091",
+    "1extra092",
+    "1extra093",
+    "1extra094",
+    "1extra095",
+    "1extra096",
+    "1extra097",
+    "1extra098",
+    "1extra099",
+    "1extra100",
+    "1extra101",
+    "1extra102"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "ctl": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio/ctl-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 26,
+       "views_hash": "4ae57f3247fddc246e389271c757adadf00af0669ae5b6fb2612994cd8361c04",
+       "normalised_views_hash": "0774b2f1f3428ef53aba15ce86384cee2b0ccb4db21c3adbe252102ac538cafe",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.87520693578471,
+        "lpips_alex": 0.10212267877963874,
+        "ssim": 0.8634879325230759
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.87520693578471,
+      "lpips_alex": 0.10212267877963874,
+      "ssim": 0.8634879325230759
+     }
+    },
+    "ms03": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio/ms03-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 26,
+       "views_hash": "4ae57f3247fddc246e389271c757adadf00af0669ae5b6fb2612994cd8361c04",
+       "normalised_views_hash": "0774b2f1f3428ef53aba15ce86384cee2b0ccb4db21c3adbe252102ac538cafe",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.60118567339132,
+        "lpips_alex": 0.09607270145072387,
+        "ssim": 0.8626572810549474
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.60118567339132,
+      "lpips_alex": 0.09607270145072387,
+      "ssim": 0.8626572810549474
+     }
+    },
+    "ms0": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio/ms0-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 26,
+       "views_hash": "4ae57f3247fddc246e389271c757adadf00af0669ae5b6fb2612994cd8361c04",
+       "normalised_views_hash": "0774b2f1f3428ef53aba15ce86384cee2b0ccb4db21c3adbe252102ac538cafe",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 22.546561235613883,
+        "lpips_alex": 0.08879612758755684,
+        "ssim": 0.8578898426472775
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 22.546561235613883,
+      "lpips_alex": 0.08879612758755684,
+      "ssim": 0.8578898426472775
+     }
+    }
+   }
+  },
+  "onthego-dv-patio-high-clean": {
+   "n_expected": 45,
+   "n_common": 45,
+   "common_view_hash": "ba9603545a25b7d029c9b04dd53229f07783c15b19170213d43334bab680e512",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra000",
+    "1extra001",
+    "1extra002",
+    "1extra003",
+    "1extra004",
+    "1extra005",
+    "1extra006",
+    "1extra007",
+    "1extra008",
+    "1extra009",
+    "1extra010",
+    "1extra011",
+    "1extra012",
+    "1extra013",
+    "1extra014",
+    "1extra015",
+    "1extra016",
+    "1extra017",
+    "1extra018",
+    "1extra019",
+    "1extra020",
+    "1extra021",
+    "1extra022",
+    "1extra023",
+    "1extra024",
+    "1extra025",
+    "1extra026",
+    "1extra027",
+    "1extra028",
+    "1extra029",
+    "1extra030",
+    "1extra031",
+    "1extra032",
+    "1extra033",
+    "1extra034",
+    "1extra035",
+    "1extra036",
+    "1extra037",
+    "1extra038",
+    "1extra039",
+    "1extra040",
+    "1extra041",
+    "1extra042",
+    "1extra043",
+    "1extra044"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "ctl": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio-high/ctl-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 45,
+       "views_hash": "f7255a5aa98454504e67d42e617383309145db06d049944322c1be3c3cbec2bd",
+       "normalised_views_hash": "ba9603545a25b7d029c9b04dd53229f07783c15b19170213d43334bab680e512",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 23.587533235149447,
+        "lpips_alex": 0.13702618901928265,
+        "ssim": 0.8602478434793782
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 23.587533235149447,
+      "lpips_alex": 0.13702618901928265,
+      "ssim": 0.8602478434793782
+     }
+    },
+    "ms03": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio-high/ms03-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 45,
+       "views_hash": "f7255a5aa98454504e67d42e617383309145db06d049944322c1be3c3cbec2bd",
+       "normalised_views_hash": "ba9603545a25b7d029c9b04dd53229f07783c15b19170213d43334bab680e512",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 23.68752133414213,
+        "lpips_alex": 0.12891995534300804,
+        "ssim": 0.8650368105377173
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 23.68752133414213,
+      "lpips_alex": 0.12891995534300804,
+      "ssim": 0.8650368105377173
+     }
+    },
+    "ms0": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-patio-high/ms0-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 45,
+       "views_hash": "f7255a5aa98454504e67d42e617383309145db06d049944322c1be3c3cbec2bd",
+       "normalised_views_hash": "ba9603545a25b7d029c9b04dd53229f07783c15b19170213d43334bab680e512",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 23.720101507117064,
+        "lpips_alex": 0.1214217007988029,
+        "ssim": 0.8626546622251134
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 23.720101507117064,
+      "lpips_alex": 0.1214217007988029,
+      "ssim": 0.8626546622251134
+     }
+    }
+   }
+  },
+  "onthego-dv-spot-clean": {
+   "n_expected": 10,
+   "n_common": 10,
+   "common_view_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+   "identical_view_sets": true,
+   "common_views": [
+    "1extra168",
+    "1extra169",
+    "1extra170",
+    "1extra171",
+    "1extra172",
+    "1extra173",
+    "1extra174",
+    "1extra175",
+    "1extra176",
+    "1extra177"
+   ],
+   "metrics": [
+    "psnr",
+    "lpips_alex",
+    "ssim"
+   ],
+   "arms": {
+    "ctl": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-spot/ctl-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 24.628642719367047,
+        "lpips_alex": 0.1077813170850277,
+        "ssim": 0.8996393378360616
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 24.628642719367047,
+      "lpips_alex": 0.1077813170850277,
+      "ssim": 0.8996393378360616
+     }
+    },
+    "ms03": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-spot/ms03-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 25.283178852284333,
+        "lpips_alex": 0.08920227363705635,
+        "ssim": 0.9063744764611441
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 25.283178852284333,
+      "lpips_alex": 0.08920227363705635,
+      "ssim": 0.9063744764611441
+     }
+    },
+    "ms0": {
+     "n_runs": 1,
+     "runs": [
+      {
+       "run": 42,
+       "source": "$SPLAT_DATA/research/parity-casual/exec/s3-dv-spot/ms0-s42.json",
+       "format": "splat-perf Row per_image",
+       "n_scored": 10,
+       "views_hash": "b2d3891609a91922dba90855ee0b225b3e8429d28ff35a61ea8840c367390231",
+       "normalised_views_hash": "7c8a0d1184e7c1abe54d49767dcc0c3c6ce8605d70ab32cbaff42d602bd63452",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 24.94182924637756,
+        "lpips_alex": 0.09373105093836784,
+        "ssim": 0.9007877056558427
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 24.94182924637756,
+      "lpips_alex": 0.09373105093836784,
+      "ssim": 0.9007877056558427
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "ctl": {
+   "psnr": {
+    "mean_over_scenes": 23.806134086502567,
+    "per_scene": {
+     "onthego-dv-corner-clean": 26.31980653955214,
+     "onthego-dv-fountain-clean": 23.459844400546345,
+     "onthego-dv-mountain-clean": 21.965770688615716,
+     "onthego-dv-patio-clean": 22.87520693578471,
+     "onthego-dv-patio-high-clean": 23.587533235149447,
+     "onthego-dv-spot-clean": 24.628642719367047
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.11952692391065028,
+    "per_scene": {
+     "onthego-dv-corner-clean": 0.07573804389685393,
+     "onthego-dv-fountain-clean": 0.13137615518644452,
+     "onthego-dv-mountain-clean": 0.16311715949665417,
+     "onthego-dv-patio-clean": 0.10212267877963874,
+     "onthego-dv-patio-high-clean": 0.13702618901928265,
+     "onthego-dv-spot-clean": 0.1077813170850277
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8541208795485339,
+    "per_scene": {
+     "onthego-dv-corner-clean": 0.9102693013971989,
+     "onthego-dv-fountain-clean": 0.8204221704945072,
+     "onthego-dv-mountain-clean": 0.7706586915609812,
+     "onthego-dv-patio-clean": 0.8634879325230759,
+     "onthego-dv-patio-high-clean": 0.8602478434793782,
+     "onthego-dv-spot-clean": 0.8996393378360616
+    }
+   }
+  },
+  "ms03": {
+   "psnr": {
+    "mean_over_scenes": 23.79980918393606,
+    "per_scene": {
+     "onthego-dv-corner-clean": 25.852209043686788,
+     "onthego-dv-fountain-clean": 23.384333070020705,
+     "onthego-dv-mountain-clean": 21.99042713009108,
+     "onthego-dv-patio-clean": 22.60118567339132,
+     "onthego-dv-patio-high-clean": 23.68752133414213,
+     "onthego-dv-spot-clean": 25.283178852284333
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.11423053054414724,
+    "per_scene": {
+     "onthego-dv-corner-clean": 0.09108650088310241,
+     "onthego-dv-fountain-clean": 0.12111068470403552,
+     "onthego-dv-mountain-clean": 0.15899106724695725,
+     "onthego-dv-patio-clean": 0.09607270145072387,
+     "onthego-dv-patio-high-clean": 0.12891995534300804,
+     "onthego-dv-spot-clean": 0.08920227363705635
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8510862643984725,
+    "per_scene": {
+     "onthego-dv-corner-clean": 0.8820379283515306,
+     "onthego-dv-fountain-clean": 0.8214660324057423,
+     "onthego-dv-mountain-clean": 0.7689450575797537,
+     "onthego-dv-patio-clean": 0.8626572810549474,
+     "onthego-dv-patio-high-clean": 0.8650368105377173,
+     "onthego-dv-spot-clean": 0.9063744764611441
+    }
+   }
+  },
+  "ms0": {
+   "psnr": {
+    "mean_over_scenes": 23.50780097263008,
+    "per_scene": {
+     "onthego-dv-corner-clean": 25.053848011631437,
+     "onthego-dv-fountain-clean": 23.188352264814007,
+     "onthego-dv-mountain-clean": 21.596113570226542,
+     "onthego-dv-patio-clean": 22.546561235613883,
+     "onthego-dv-patio-high-clean": 23.720101507117064,
+     "onthego-dv-spot-clean": 24.94182924637756
+    }
+   },
+   "lpips_alex": {
+    "mean_over_scenes": 0.11447190400675529,
+    "per_scene": {
+     "onthego-dv-corner-clean": 0.10939316041767597,
+     "onthego-dv-fountain-clean": 0.11549243447370827,
+     "onthego-dv-mountain-clean": 0.1579969498244199,
+     "onthego-dv-patio-clean": 0.08879612758755684,
+     "onthego-dv-patio-high-clean": 0.1214217007988029,
+     "onthego-dv-spot-clean": 0.09373105093836784
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.8407901901672208,
+    "per_scene": {
+     "onthego-dv-corner-clean": 0.8411459347846346,
+     "onthego-dv-fountain-clean": 0.8173385597000704,
+     "onthego-dv-mountain-clean": 0.7649244359903871,
+     "onthego-dv-patio-clean": 0.8578898426472775,
+     "onthego-dv-patio-high-clean": 0.8626546622251134,
+     "onthego-dv-spot-clean": 0.9007877056558427
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "ms03": {
+   "a": "ctl",
+   "b": "ms03",
+   "metrics": {
+    "psnr": {
+     "mean_delta": -0.006324902566507973,
+     "ci95": [
+      -0.27125014450645263,
+      0.2898166698848665
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 3,
+      "=": 0,
+      "L": 3
+     },
+     "n_scenes": 6,
+     "positive_scenes": 3,
+     "scenes": [
+      {
+       "scene": "onthego-dv-corner-clean",
+       "delta": -0.46759749586535193,
+       "a": 26.31980653955214,
+       "b": 25.852209043686788,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 20,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.46759749586535193
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-fountain-clean",
+       "delta": -0.07551133052563941,
+       "a": 23.459844400546345,
+       "b": 23.384333070020705,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.07551133052563941
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-mountain-clean",
+       "delta": 0.024656441475364943,
+       "a": 21.965770688615716,
+       "b": 21.99042713009108,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 11,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.024656441475364943
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-clean",
+       "delta": -0.27402126239339,
+       "a": 22.87520693578471,
+       "b": 22.60118567339132,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 26,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.27402126239339
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-high-clean",
+       "delta": 0.09998809899268224,
+       "a": 23.587533235149447,
+       "b": 23.68752133414213,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 45,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.09998809899268224
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-spot-clean",
+       "delta": 0.6545361329172863,
+       "a": 24.628642719367047,
+       "b": 25.283178852284333,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.6545361329172863
+       },
+       "seed_sd": null
+      }
+     ]
+    },
+    "lpips_alex": {
+     "mean_delta": -0.005296393366503044,
+     "ci95": [
+      -0.012657219779669729,
+      0.003946657636417786
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 5,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 6,
+     "positive_scenes": 5,
+     "scenes": [
+      {
+       "scene": "onthego-dv-corner-clean",
+       "delta": 0.015348456986248482,
+       "a": 0.07573804389685393,
+       "b": 0.09108650088310241,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 20,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.015348456986248482
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-fountain-clean",
+       "delta": -0.010265470482409,
+       "a": 0.13137615518644452,
+       "b": 0.12111068470403552,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.010265470482409
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-mountain-clean",
+       "delta": -0.004126092249696928,
+       "a": 0.16311715949665417,
+       "b": 0.15899106724695725,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 11,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.004126092249696928
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-clean",
+       "delta": -0.006049977328914866,
+       "a": 0.10212267877963874,
+       "b": 0.09607270145072387,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 26,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.006049977328914866
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-high-clean",
+       "delta": -0.00810623367627461,
+       "a": 0.13702618901928265,
+       "b": 0.12891995534300804,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 45,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.00810623367627461
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-spot-clean",
+       "delta": -0.018579043447971344,
+       "a": 0.1077813170850277,
+       "b": 0.08920227363705635,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.018579043447971344
+       },
+       "seed_sd": null
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": -0.003034615150061241,
+     "ci95": [
+      -0.013564374745729543,
+      0.003918881089645813
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 3,
+      "=": 0,
+      "L": 3
+     },
+     "n_scenes": 6,
+     "positive_scenes": 3,
+     "scenes": [
+      {
+       "scene": "onthego-dv-corner-clean",
+       "delta": -0.02823137304566825,
+       "a": 0.9102693013971989,
+       "b": 0.8820379283515306,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 20,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.02823137304566825
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-fountain-clean",
+       "delta": 0.0010438619112351777,
+       "a": 0.8204221704945072,
+       "b": 0.8214660324057423,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.0010438619112351777
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-mountain-clean",
+       "delta": -0.0017136339812274803,
+       "a": 0.7706586915609812,
+       "b": 0.7689450575797537,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 11,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.0017136339812274803
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-clean",
+       "delta": -0.0008306514681284405,
+       "a": 0.8634879325230759,
+       "b": 0.8626572810549474,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 26,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.0008306514681284405
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-high-clean",
+       "delta": 0.004788967058339089,
+       "a": 0.8602478434793782,
+       "b": 0.8650368105377173,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 45,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.004788967058339089
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-spot-clean",
+       "delta": 0.00673513862508246,
+       "a": 0.8996393378360616,
+       "b": 0.9063744764611441,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.00673513862508246
+       },
+       "seed_sd": null
+      }
+     ]
+    }
+   }
+  },
+  "ms0": {
+   "a": "ctl",
+   "b": "ms0",
+   "metrics": {
+    "psnr": {
+     "mean_delta": -0.29833311387248546,
+     "ci95": [
+      -0.7177427609860002,
+      0.06230417240652505
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 0,
+      "L": 4
+     },
+     "n_scenes": 6,
+     "positive_scenes": 2,
+     "scenes": [
+      {
+       "scene": "onthego-dv-corner-clean",
+       "delta": -1.2659585279207022,
+       "a": 26.31980653955214,
+       "b": 25.053848011631437,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 20,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -1.2659585279207022
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-fountain-clean",
+       "delta": -0.27149213573233766,
+       "a": 23.459844400546345,
+       "b": 23.188352264814007,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.27149213573233766
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-mountain-clean",
+       "delta": -0.36965711838917414,
+       "a": 21.965770688615716,
+       "b": 21.596113570226542,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 11,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.36965711838917414
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-clean",
+       "delta": -0.32864570017082784,
+       "a": 22.87520693578471,
+       "b": 22.546561235613883,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 26,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.32864570017082784
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-high-clean",
+       "delta": 0.13256827196761733,
+       "a": 23.587533235149447,
+       "b": 23.720101507117064,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 45,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.13256827196761733
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-spot-clean",
+       "delta": 0.31318652701051164,
+       "a": 24.628642719367047,
+       "b": 24.94182924637756,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.31318652701051164
+       },
+       "seed_sd": null
+      }
+     ]
+    },
+    "lpips_alex": {
+     "mean_delta": -0.005055019903894999,
+     "ci95": [
+      -0.015012333785486207,
+      0.010985192171805954
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 5,
+      "=": 0,
+      "L": 1
+     },
+     "n_scenes": 6,
+     "positive_scenes": 5,
+     "scenes": [
+      {
+       "scene": "onthego-dv-corner-clean",
+       "delta": 0.03365511652082204,
+       "a": 0.07573804389685393,
+       "b": 0.10939316041767597,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 20,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.03365511652082204
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-fountain-clean",
+       "delta": -0.01588372071273625,
+       "a": 0.13137615518644452,
+       "b": 0.11549243447370827,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.01588372071273625
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-mountain-clean",
+       "delta": -0.005120209672234283,
+       "a": 0.16311715949665417,
+       "b": 0.1579969498244199,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 11,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.005120209672234283
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-clean",
+       "delta": -0.013326551192081898,
+       "a": 0.10212267877963874,
+       "b": 0.08879612758755684,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 26,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.013326551192081898
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-high-clean",
+       "delta": -0.015604488220479745,
+       "a": 0.13702618901928265,
+       "b": 0.1214217007988029,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 45,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.015604488220479745
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-spot-clean",
+       "delta": -0.014050266146659857,
+       "a": 0.1077813170850277,
+       "b": 0.09373105093836784,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.014050266146659857
+       },
+       "seed_sd": null
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": -0.013330689381312877,
+     "ci95": [
+      -0.036049271089725,
+      -0.0002568180345234843
+     ],
+     "ci_unit": "scene-clustered bootstrap (resample scenes)",
+     "tally": {
+      "W": 2,
+      "=": 0,
+      "L": 4
+     },
+     "n_scenes": 6,
+     "positive_scenes": 2,
+     "scenes": [
+      {
+       "scene": "onthego-dv-corner-clean",
+       "delta": -0.06912336661256424,
+       "a": 0.9102693013971989,
+       "b": 0.8411459347846346,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 20,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.06912336661256424
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-fountain-clean",
+       "delta": -0.003083610794436753,
+       "a": 0.8204221704945072,
+       "b": 0.8173385597000704,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 16,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.003083610794436753
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-mountain-clean",
+       "delta": -0.005734255570594149,
+       "a": 0.7706586915609812,
+       "b": 0.7649244359903871,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 11,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.005734255570594149
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-clean",
+       "delta": -0.005598089875798351,
+       "a": 0.8634879325230759,
+       "b": 0.8578898426472775,
+       "call": "L",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 26,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": -0.005598089875798351
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-patio-high-clean",
+       "delta": 0.0024068187457352286,
+       "a": 0.8602478434793782,
+       "b": 0.8626546622251134,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 45,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.0024068187457352286
+       },
+       "seed_sd": null
+      },
+      {
+       "scene": "onthego-dv-spot-clean",
+       "delta": 0.0011483678197810043,
+       "a": 0.8996393378360616,
+       "b": 0.9007877056558427,
+       "call": "W",
+       "n_runs_a": 1,
+       "n_runs_b": 1,
+       "n_views": 10,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "42": 0.0011483678197810043
+       },
+       "seed_sd": null
+      }
+     ]
+    }
+   }
+  }
+ }
+}

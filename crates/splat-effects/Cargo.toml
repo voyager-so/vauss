@@ -1,0 +1,31 @@
+[package]
+name = "splat-effects"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+# Programmable splat effects: effect graph v1, CPU reference evaluator, wgpu (WGSL) evaluator.
+# Deps (licenses): glam MIT/Apache-2.0, rayon MIT/Apache-2.0, serde MIT/Apache-2.0.
+[dependencies]
+splat-webexport.workspace = true
+glam.workspace = true
+rayon.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+brush-cube = { path = "../splat-train-cube", package = "splat-train-cube", optional = true }
+brush-render = { workspace = true, optional = true }
+burn = { workspace = true, optional = true }
+burn-cubecl = { workspace = true, features = ["template"], optional = true }
+tokio = { workspace = true, optional = true }
+
+[features]
+default = ["gpu"]
+gpu = ["dep:brush-cube", "dep:brush-render", "dep:burn", "dep:burn-cubecl", "dep:tokio"]
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "splat-effects-golden"
+path = "src/bin/splat-effects-golden.rs"

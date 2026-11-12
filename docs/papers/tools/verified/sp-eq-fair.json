@@ -1,0 +1,1446 @@
+{
+ "schema": "independently verified/v1",
+ "label": "SP-EQ-fair tuned-vs-tuned training speed at equal LPIPS, ours historical-build-096 vs Spirula 2026.10.6 cap ladder, RTX PRO 6000",
+ "claim_id": "pubs:p0:SP-EQ-fair",
+ "generated_at": "2026-10-09",
+ "verifier_script_sha256": "642fc2a0d875a9c898338ba652ba648ab950acca1a5be6b7adc340844fb94be2",
+ "method": "Independent recompute from rows.jsonl per_image (not the lane's spq_verdict.py). Group = pair_id (one fal request each); seed = ours --seed. H = per_image names sorted (every8_idx0_sorted); DEV=H[1::2], TEST=H[0::2]. spirula* = Spirula cap with lowest 3-run mean DEV LPIPS-VGG; ours* = smallest ours cap (300k..2M) with 3-seed mean DEV <= spirula* (no tolerance); ratio = mean of paired per-group train_s ratios; TEST hold = #groups ours* TEST LPIPS <= spirula* TEST LPIPS, need >=2/3; FASTER <0.95 + hold, SLOWER >1.05 or not reached, else TIE; AHEAD iff FASTER>=4 and SLOWER 0. Robustness = worst verdict over Spirula's 4 caps. Equal cap 500k/1M and defaults (ours --max-splats 0 vs Spirula 1M): ratio verdict + seed-gate on TEST PSNR (mean>2xSD, dLPIPS<=+0.002).",
+ "data": "$SPLAT_DATA/runs/research/gseq-sweep/speqfair-rtx/rows.jsonl (198 rows, historical-record); lane output $SPLAT_DATA/runs/research/gseq-sweep/sp-eq-fair-verdict.json; lane script research/gseq-sweep/spq_verdict.py @ research-gseq-sweep historical-build-049",
+ "checks": {
+  "groups": 18,
+  "arms_per_group": 11,
+  "one_fal_request_per_group": true,
+  "n_scored_eq_expected": "198/198",
+  "lpips_scale": "full",
+  "eval_device": "cuda",
+  "views_hash_identical_within_scene": true,
+  "gpu": "RTX PRO 6000 96GB (fal GPU-RTXPRO6000; apps rtxpro6000-v14 / -r1-v14 / -r2-v14)",
+  "ours_binary_sha256": "933d67da8fe447d9233e8df2cc783c411074c830379d8abc8c12859eb3fde66f (all 126 ours arms)",
+  "spirula_binary_sha256": "d68620c134b1b65d5456f6f7728de5ca531012f8af2b2fd7ce3fa0d502d9420a (all 72; = registered build/release/spirula v2026.10.6 b9c8042)",
+  "spirula_args": "train 3dgs, defaults except --cap-max 300k/500k/1M(=default, passed explicitly)/3M; --quality untouched",
+  "scorer_sha256": "e1358e267d83864a3e361fd307ac64cc8307ea290a14dc20917596a896c914bc (historical-record splat_perf; matches binding amendment)",
+  "spirula_cap_took_effect": "peak_splats == cap on 72/72 Spirula arms; final 'splats' (post-prune) 0.997-0.9999 x cap on healthy runs, 0.87-0.96 x cap on collapsed playroom runs",
+  "warmups": "warmup_arms=11 on all 198 rows (untimed)",
+  "clocks": "train_s = Spirula final-step elapsed (matches own train.log to 1 ms where the local log copy belongs to that run); ours train_only_s. timing_valid all, gpu_util_start <=1",
+  "ladder_matches_registration": true
+ },
+ "lane_report_matches": true,
+ "verdicts": {
+  "all_groups": {
+   "primary": [
+    "5/1/0",
+    "AHEAD"
+   ],
+   "robustness": [
+    "5/1/0",
+    "AHEAD"
+   ],
+   "scenes": {
+    "bicycle": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.3551,
+      "500000": 0.3198,
+      "1000000": 0.277,
+      "3000000": 0.2272
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 2000000,
+      "s_dev": 0.2272,
+      "o_dev": 0.2069,
+      "ratio": 0.449,
+      "ratios": [
+       0.45,
+       0.441,
+       0.455
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.2338,
+      "o_test": 0.2139,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 500000,
+       "ratio": 0.549,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 500000,
+       "ratio": 0.491,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 800000,
+       "ratio": 0.475,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 2000000,
+       "ratio": 0.449,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    },
+    "counter": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.2699,
+      "500000": 0.2542,
+      "1000000": 0.2385,
+      "3000000": 0.2244
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 2000000,
+      "s_dev": 0.2244,
+      "o_dev": 0.2236,
+      "ratio": 0.378,
+      "ratios": [
+       0.35,
+       0.373,
+       0.412
+      ],
+      "test_hold": "1/3",
+      "s_test": 0.2084,
+      "o_test": 0.2082,
+      "verdict": "TIE"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 300000,
+       "ratio": 0.628,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 500000,
+       "ratio": 0.597,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 1000000,
+       "ratio": 0.603,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 2000000,
+       "ratio": 0.378,
+       "test_hold": "1/3",
+       "verdict": "TIE"
+      }
+     ],
+     "robust_worst": "TIE"
+    },
+    "garden": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.2594,
+      "500000": 0.2089,
+      "1000000": 0.1595,
+      "3000000": 0.1197
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 2000000,
+      "s_dev": 0.1197,
+      "o_dev": 0.1146,
+      "ratio": 0.41,
+      "ratios": [
+       0.42,
+       0.42,
+       0.39
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.1234,
+      "o_test": 0.1148,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 500000,
+       "ratio": 0.629,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 800000,
+       "ratio": 0.638,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 1000000,
+       "ratio": 0.538,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 2000000,
+       "ratio": 0.41,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    },
+    "playroom": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.6196,
+      "500000": 0.6013,
+      "1000000": 0.5947,
+      "3000000": 0.6106
+     },
+     "spirula_star": 1000000,
+     "spirula_star_is_top_rung_3M": false,
+     "primary": {
+      "ostar": 300000,
+      "s_dev": 0.5947,
+      "o_dev": 0.3131,
+      "ratio": 0.318,
+      "ratios": [
+       0.315,
+       0.297,
+       0.343
+      ],
+      "test_hold": "2/3",
+      "s_test": 0.5889,
+      "o_test": 0.3089,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 300000,
+       "ratio": 0.481,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 300000,
+       "ratio": 0.418,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 300000,
+       "ratio": 0.318,
+       "test_hold": "2/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 300000,
+       "ratio": 0.179,
+       "test_hold": "2/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    },
+    "drjohnson": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.3428,
+      "500000": 0.3291,
+      "1000000": 0.3136,
+      "3000000": 0.2992
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 1200000,
+      "s_dev": 0.2992,
+      "o_dev": 0.2983,
+      "ratio": 0.281,
+      "ratios": [
+       0.286,
+       0.294,
+       0.264
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.3059,
+      "o_test": 0.3019,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 300000,
+       "ratio": 0.502,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 300000,
+       "ratio": 0.447,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 500000,
+       "ratio": 0.389,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 1200000,
+       "ratio": 0.281,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    },
+    "truck-full": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.1918,
+      "500000": 0.1744,
+      "1000000": 0.1585,
+      "3000000": 0.1412
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 1000000,
+      "s_dev": 0.1412,
+      "o_dev": 0.1385,
+      "ratio": 0.343,
+      "ratios": [
+       0.335,
+       0.348,
+       0.347
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.1349,
+      "o_test": 0.1336,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 500000,
+       "ratio": 0.713,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 500000,
+       "ratio": 0.631,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 800000,
+       "ratio": 0.595,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 1000000,
+       "ratio": 0.343,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    }
+   }
+  },
+  "excluding_playroom": {
+   "primary": [
+    "4/1/0",
+    "AHEAD"
+   ],
+   "robustness": [
+    "4/1/0",
+    "AHEAD"
+   ]
+  },
+  "playroom_healthy_group_only": {
+   "primary": [
+    "4/2/0",
+    "AHEAD"
+   ],
+   "robustness": [
+    "4/2/0",
+    "AHEAD"
+   ],
+   "scenes": {
+    "bicycle": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.3551,
+      "500000": 0.3198,
+      "1000000": 0.277,
+      "3000000": 0.2272
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 2000000,
+      "s_dev": 0.2272,
+      "o_dev": 0.2069,
+      "ratio": 0.449,
+      "ratios": [
+       0.45,
+       0.441,
+       0.455
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.2338,
+      "o_test": 0.2139,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 500000,
+       "ratio": 0.549,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 500000,
+       "ratio": 0.491,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 800000,
+       "ratio": 0.475,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 2000000,
+       "ratio": 0.449,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    },
+    "counter": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.2699,
+      "500000": 0.2542,
+      "1000000": 0.2385,
+      "3000000": 0.2244
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 2000000,
+      "s_dev": 0.2244,
+      "o_dev": 0.2236,
+      "ratio": 0.378,
+      "ratios": [
+       0.35,
+       0.373,
+       0.412
+      ],
+      "test_hold": "1/3",
+      "s_test": 0.2084,
+      "o_test": 0.2082,
+      "verdict": "TIE"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 300000,
+       "ratio": 0.628,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 500000,
+       "ratio": 0.597,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 1000000,
+       "ratio": 0.603,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 2000000,
+       "ratio": 0.378,
+       "test_hold": "1/3",
+       "verdict": "TIE"
+      }
+     ],
+     "robust_worst": "TIE"
+    },
+    "garden": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.2594,
+      "500000": 0.2089,
+      "1000000": 0.1595,
+      "3000000": 0.1197
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 2000000,
+      "s_dev": 0.1197,
+      "o_dev": 0.1146,
+      "ratio": 0.41,
+      "ratios": [
+       0.42,
+       0.42,
+       0.39
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.1234,
+      "o_test": 0.1148,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 500000,
+       "ratio": 0.629,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 800000,
+       "ratio": 0.638,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 1000000,
+       "ratio": 0.538,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 2000000,
+       "ratio": 0.41,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    },
+    "playroom": {
+     "n_groups": 1,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.33,
+      "500000": 0.3213,
+      "1000000": 0.3074,
+      "3000000": 0.2888
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 1000000,
+      "s_dev": 0.2888,
+      "o_dev": 0.2868,
+      "ratio": 0.247,
+      "ratios": [
+       0.247
+      ],
+      "test_hold": "0/1",
+      "s_test": 0.2847,
+      "o_test": 0.2869,
+      "verdict": "TIE"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 300000,
+       "ratio": 0.487,
+       "test_hold": "1/1",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 300000,
+       "ratio": 0.432,
+       "test_hold": "1/1",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 500000,
+       "ratio": 0.378,
+       "test_hold": "1/1",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 1000000,
+       "ratio": 0.247,
+       "test_hold": "0/1",
+       "verdict": "TIE"
+      }
+     ],
+     "robust_worst": "TIE"
+    },
+    "drjohnson": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.3428,
+      "500000": 0.3291,
+      "1000000": 0.3136,
+      "3000000": 0.2992
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 1200000,
+      "s_dev": 0.2992,
+      "o_dev": 0.2983,
+      "ratio": 0.281,
+      "ratios": [
+       0.286,
+       0.294,
+       0.264
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.3059,
+      "o_test": 0.3019,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 300000,
+       "ratio": 0.502,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 300000,
+       "ratio": 0.447,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 500000,
+       "ratio": 0.389,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 1200000,
+       "ratio": 0.281,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    },
+    "truck-full": {
+     "n_groups": 3,
+     "spirula_dev_lpips_by_cap": {
+      "300000": 0.1918,
+      "500000": 0.1744,
+      "1000000": 0.1585,
+      "3000000": 0.1412
+     },
+     "spirula_star": 3000000,
+     "spirula_star_is_top_rung_3M": true,
+     "primary": {
+      "ostar": 1000000,
+      "s_dev": 0.1412,
+      "o_dev": 0.1385,
+      "ratio": 0.343,
+      "ratios": [
+       0.335,
+       0.348,
+       0.347
+      ],
+      "test_hold": "3/3",
+      "s_test": 0.1349,
+      "o_test": 0.1336,
+      "verdict": "FASTER"
+     },
+     "robust_per_cap": [
+      {
+       "scap": 300000,
+       "ostar": 500000,
+       "ratio": 0.713,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 500000,
+       "ostar": 500000,
+       "ratio": 0.631,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 1000000,
+       "ostar": 800000,
+       "ratio": 0.595,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      },
+      {
+       "scap": 3000000,
+       "ostar": 1000000,
+       "ratio": 0.343,
+       "test_hold": "3/3",
+       "verdict": "FASTER"
+      }
+     ],
+     "robust_worst": "FASTER"
+    }
+   }
+  },
+  "equal_cap_500k": {
+   "row": [
+    "6/0/0",
+    "AHEAD"
+   ],
+   "scenes": {
+    "bicycle": {
+     "ratio": 0.491,
+     "ratios": [
+      0.451,
+      0.52,
+      0.502
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 0.7,
+     "dPSNR_sd": 0.038,
+     "dLPIPS_test": -0.0101,
+     "quality_seed_gate": true,
+     "splats_o": [
+      500000,
+      500000,
+      500000
+     ],
+     "splats_s": [
+      499832,
+      499829,
+      499832
+     ],
+     "wall_ratio": 0.482,
+     "vram_o": [
+      656,
+      656,
+      656
+     ],
+     "vram_s": [
+      784,
+      784,
+      786
+     ]
+    },
+    "counter": {
+     "ratio": 0.597,
+     "ratios": [
+      0.504,
+      0.562,
+      0.725
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 1.024,
+     "dPSNR_sd": 0.032,
+     "dLPIPS_test": -0.0033,
+     "quality_seed_gate": true,
+     "splats_o": [
+      500000,
+      500000,
+      498748
+     ],
+     "splats_s": [
+      499869,
+      499862,
+      499859
+     ],
+     "wall_ratio": 0.576,
+     "vram_o": [
+      778,
+      842,
+      808
+     ],
+     "vram_s": [
+      961,
+      929,
+      981
+     ]
+    },
+    "garden": {
+     "ratio": 0.562,
+     "ratios": [
+      0.551,
+      0.585,
+      0.55
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 0.625,
+     "dPSNR_sd": 0.071,
+     "dLPIPS_test": -0.0007,
+     "quality_seed_gate": true,
+     "splats_o": [
+      500000,
+      500000,
+      500000
+     ],
+     "splats_s": [
+      499870,
+      499891,
+      499861
+     ],
+     "wall_ratio": 0.551,
+     "vram_o": [
+      744,
+      744,
+      714
+     ],
+     "vram_s": [
+      739,
+      770,
+      778
+     ]
+    },
+    "playroom": {
+     "ratio": 0.461,
+     "ratios": [
+      0.446,
+      0.461,
+      0.477
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 12.524,
+     "dPSNR_sd": 9.998,
+     "dLPIPS_test": -0.2884,
+     "quality_seed_gate": false,
+     "splats_o": [
+      500000,
+      500000,
+      500000
+     ],
+     "splats_s": [
+      476005,
+      475780,
+      499786
+     ],
+     "wall_ratio": 0.457,
+     "vram_o": [
+      696,
+      680,
+      650
+     ],
+     "vram_s": [
+      541,
+      630,
+      846
+     ]
+    },
+    "drjohnson": {
+     "ratio": 0.5,
+     "ratios": [
+      0.491,
+      0.525,
+      0.483
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 1.408,
+     "dPSNR_sd": 0.285,
+     "dLPIPS_test": -0.0181,
+     "quality_seed_gate": true,
+     "splats_o": [
+      500000,
+      500000,
+      500000
+     ],
+     "splats_s": [
+      499934,
+      499933,
+      499936
+     ],
+     "wall_ratio": 0.487,
+     "vram_o": [
+      720,
+      656,
+      690
+     ],
+     "vram_s": [
+      778,
+      857,
+      864
+     ]
+    },
+    "truck-full": {
+     "ratio": 0.631,
+     "ratios": [
+      0.636,
+      0.615,
+      0.64
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 0.819,
+     "dPSNR_sd": 0.053,
+     "dLPIPS_test": -0.0076,
+     "quality_seed_gate": true,
+     "splats_o": [
+      500000,
+      500000,
+      500000
+     ],
+     "splats_s": [
+      499546,
+      499570,
+      499509
+     ],
+     "wall_ratio": 0.623,
+     "vram_o": [
+      608,
+      605,
+      672
+     ],
+     "vram_s": [
+      731,
+      748,
+      746
+     ]
+    }
+   }
+  },
+  "equal_cap_500k_playroom_healthy_only": [
+   "6/0/0",
+   "AHEAD"
+  ],
+  "equal_cap_1M": {
+   "row": [
+    "6/0/0",
+    "AHEAD"
+   ],
+   "scenes": {
+    "bicycle": {
+     "ratio": 0.522,
+     "ratios": [
+      0.5,
+      0.539,
+      0.526
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 0.756,
+     "dPSNR_sd": 0.039,
+     "dLPIPS_test": -0.0248,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1000000,
+      990320,
+      998965
+     ],
+     "splats_s": [
+      999391,
+      999353,
+      999339
+     ],
+     "wall_ratio": 0.515,
+     "vram_o": [
+      1159,
+      1136,
+      1138
+     ],
+     "vram_s": [
+      986,
+      970,
+      968
+     ]
+    },
+    "counter": {
+     "ratio": 0.603,
+     "ratios": [
+      0.442,
+      0.471,
+      0.896
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 1.088,
+     "dPSNR_sd": 0.039,
+     "dLPIPS_test": -0.0043,
+     "quality_seed_gate": true,
+     "splats_o": [
+      980800,
+      981843,
+      981017
+     ],
+     "splats_s": [
+      999243,
+      999252,
+      999203
+     ],
+     "wall_ratio": 0.592,
+     "vram_o": [
+      1064,
+      1064,
+      1095
+     ],
+     "vram_s": [
+      1236,
+      1238,
+      1243
+     ]
+    },
+    "garden": {
+     "ratio": 0.538,
+     "ratios": [
+      0.541,
+      0.554,
+      0.519
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 0.837,
+     "dPSNR_sd": 0.056,
+     "dLPIPS_test": -0.0164,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1000000,
+      1000000,
+      1000000
+     ],
+     "splats_s": [
+      998916,
+      998880,
+      998798
+     ],
+     "wall_ratio": 0.531,
+     "vram_o": [
+      1183,
+      1183,
+      1089
+     ],
+     "vram_s": [
+      972,
+      981,
+      972
+     ]
+    },
+    "playroom": {
+     "ratio": 0.436,
+     "ratios": [
+      0.44,
+      0.424,
+      0.445
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 12.482,
+     "dPSNR_sd": 10.034,
+     "dLPIPS_test": -0.3027,
+     "quality_seed_gate": false,
+     "splats_o": [
+      1000000,
+      998370,
+      1000000
+     ],
+     "splats_s": [
+      915590,
+      906903,
+      999327
+     ],
+     "wall_ratio": 0.434,
+     "vram_o": [
+      1135,
+      1147,
+      1131
+     ],
+     "vram_s": [
+      869,
+      951,
+      1104
+     ]
+    },
+    "drjohnson": {
+     "ratio": 0.462,
+     "ratios": [
+      0.462,
+      0.487,
+      0.436
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 1.44,
+     "dPSNR_sd": 0.121,
+     "dLPIPS_test": -0.0176,
+     "quality_seed_gate": true,
+     "splats_o": [
+      988497,
+      986907,
+      989631
+     ],
+     "splats_s": [
+      999704,
+      999772,
+      999743
+     ],
+     "wall_ratio": 0.454,
+     "vram_o": [
+      1161,
+      1140,
+      1081
+     ],
+     "vram_s": [
+      1092,
+      1084,
+      1085
+     ]
+    },
+    "truck-full": {
+     "ratio": 0.662,
+     "ratios": [
+      0.642,
+      0.67,
+      0.675
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 0.972,
+     "dPSNR_sd": 0.01,
+     "dLPIPS_test": -0.0189,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1000000,
+      1000000,
+      1000000
+     ],
+     "splats_s": [
+      997542,
+      997484,
+      997430
+     ],
+     "wall_ratio": 0.655,
+     "vram_o": [
+      1008,
+      1230,
+      1166
+     ],
+     "vram_s": [
+      937,
+      955,
+      938
+     ]
+    }
+   }
+  },
+  "equal_cap_1M_playroom_healthy_only": [
+   "6/0/0",
+   "AHEAD"
+  ],
+  "defaults_vs_defaults": {
+   "row": [
+    "5/1/0",
+    "AHEAD"
+   ],
+   "scenes": {
+    "bicycle": {
+     "ratio": 0.76,
+     "ratios": [
+      0.755,
+      0.764,
+      0.763
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 0.937,
+     "dPSNR_sd": 0.053,
+     "dLPIPS_test": -0.0689,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1943695,
+      1934895,
+      1931225
+     ],
+     "splats_s": [
+      999391,
+      999353,
+      999339
+     ],
+     "wall_ratio": 0.754,
+     "vram_o": [
+      1664,
+      1679,
+      1672
+     ],
+     "vram_s": [
+      986,
+      970,
+      968
+     ]
+    },
+    "counter": {
+     "ratio": 0.494,
+     "ratios": [
+      0.482,
+      0.505,
+      0.494
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 1.134,
+     "dPSNR_sd": 0.064,
+     "dLPIPS_test": -0.0081,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1175233,
+      1173146,
+      1172718
+     ],
+     "splats_s": [
+      999243,
+      999252,
+      999203
+     ],
+     "wall_ratio": 0.487,
+     "vram_o": [
+      1185,
+      1182,
+      1215
+     ],
+     "vram_s": [
+      1236,
+      1238,
+      1243
+     ]
+    },
+    "garden": {
+     "ratio": 0.737,
+     "ratios": [
+      0.758,
+      0.759,
+      0.693
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 1.126,
+     "dPSNR_sd": 0.035,
+     "dLPIPS_test": -0.0484,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1974745,
+      1959254,
+      1965696
+     ],
+     "splats_s": [
+      998916,
+      998880,
+      998798
+     ],
+     "wall_ratio": 0.725,
+     "vram_o": [
+      1566,
+      1711,
+      1749
+     ],
+     "vram_s": [
+      972,
+      981,
+      972
+     ]
+    },
+    "playroom": {
+     "ratio": 0.471,
+     "ratios": [
+      0.477,
+      0.456,
+      0.479
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 12.551,
+     "dPSNR_sd": 10.068,
+     "dLPIPS_test": -0.3064,
+     "quality_seed_gate": false,
+     "splats_o": [
+      1194948,
+      1197183,
+      1191885
+     ],
+     "splats_s": [
+      915590,
+      906903,
+      999327
+     ],
+     "wall_ratio": 0.468,
+     "vram_o": [
+      1236,
+      1207,
+      1192
+     ],
+     "vram_s": [
+      869,
+      951,
+      1104
+     ]
+    },
+    "drjohnson": {
+     "ratio": 0.498,
+     "ratios": [
+      0.487,
+      0.476,
+      0.53
+     ],
+     "verdict": "FASTER",
+     "dPSNR_test": 1.466,
+     "dPSNR_sd": 0.097,
+     "dLPIPS_test": -0.0207,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1176187,
+      1177701,
+      1177336
+     ],
+     "splats_s": [
+      999704,
+      999772,
+      999743
+     ],
+     "wall_ratio": 0.49,
+     "vram_o": [
+      1035,
+      1161,
+      1073
+     ],
+     "vram_s": [
+      1092,
+      1084,
+      1085
+     ]
+    },
+    "truck-full": {
+     "ratio": 0.982,
+     "ratios": [
+      0.97,
+      0.975,
+      1.002
+     ],
+     "verdict": "TIE",
+     "dPSNR_test": 1.049,
+     "dPSNR_sd": 0.058,
+     "dLPIPS_test": -0.0366,
+     "quality_seed_gate": true,
+     "splats_o": [
+      1989770,
+      1964945,
+      1966871
+     ],
+     "splats_s": [
+      997542,
+      997484,
+      997430
+     ],
+     "wall_ratio": 0.97,
+     "vram_o": [
+      1712,
+      1629,
+      1711
+     ],
+     "vram_s": [
+      937,
+      955,
+      938
+     ]
+    }
+   }
+  },
+  "defaults_playroom_healthy_only": [
+   "5/1/0",
+   "AHEAD"
+  ],
+  "summary": {
+   "PRIMARY all groups": "5/1/0 AHEAD (counter TIE: ratio 0.378, TEST hold 1/3)",
+   "PRIMARY excluding playroom": "4/1/0 AHEAD",
+   "PRIMARY playroom on healthy group 7bfa6188 only": "4/2/0 AHEAD (playroom: spirula*=3M, ours*=1M, ratio 0.247, TEST hold 0/1 -> TIE)",
+   "ROBUSTNESS": "5/1/0 all; 4/1/0 excl playroom; 4/2/0 healthy-only -> AHEAD in every reading",
+   "EQUAL CAP 500k": "6/0/0 (ratios 0.461-0.631; healthy-only playroom 0.477)",
+   "EQUAL CAP 1M": "6/0/0 (0.436-0.662; healthy-only playroom 0.445)",
+   "DEFAULTS": "5/1/0 (truck-full TIE 0.982; others 0.494-0.760)",
+   "primary_FASTER_ratio_range_excl_playroom": [
+    0.281,
+    0.449
+   ],
+   "seed_gate_quality_at_equal_cap": "passes on bicycle/counter/garden/drjohnson/truck-full at 500k and 1M (TEST dPSNR +0.63..+1.44 dB, dLPIPS<0); playroom fails (collapse / n=1)"
+  }
+ },
+ "playroom_collapse": {
+  "groups_collapsed": [
+   "pair-20261009-071725-491f4dc7 (seed 1)",
+   "pair-20261009-071726-5483d04b (seed 2)"
+  ],
+  "healthy": "pair-20261009-071725-7bfa6188 (seed 3): TEST-all PSNR 29.7-29.8 at all caps",
+  "spirula_own_log_evidence": "train.log training-batch PSNR (10-entry rolling) rises to ~27 by step 6-8k then falls to ~14-16 by 11k and stays; rgb_loss at 27-30k 0.146-0.193 vs 0.015-0.019 in the healthy group and 0.019-0.028 on counter. Same at all 4 caps in both groups. Ground-truth-free signal also: final post-prune splats 0.87-0.96 x cap vs ~0.999 healthy. Engine-reported eval PSNR agrees (10.8-12.3).",
+  "effect": "With collapse included, Spirula playroom 3-run DEV LPIPS ~0.59-0.62 at every cap, so ours* = 300k and FASTER rests on the collapse. Excluded or healthy-only: verdict still AHEAD; playroom healthy-only is TIE (TEST hold 0/1). Principle satisfied: AHEAD does not depend on the collapse.",
+  "cause": "not diagnosed (2 of 3 repeat runs, runners r1/r2 apps; other scenes on the same apps healthy). Infra rule not triggered (exit 0, all arms scored)."
+ },
+ "ladder_truncation": {
+  "flag": "Spirula ladder may be truncated",
+  "scenes": [
+   "bicycle",
+   "counter",
+   "garden",
+   "drjohnson",
+   "truck-full"
+  ],
+  "also": "playroom on the healthy group only (spirula*=3M)",
+  "detail": "spirula* = top rung 3M on every non-collapsed scene; Spirula DEV LPIPS still improving 1M->3M by 0.050 bicycle, 0.040 garden, 0.017 truck-full, 0.014 counter, 0.014 drjohnson. ours* is at OUR top rung 2M on bicycle/counter/garden with DEV margins 0.0203 / 0.0008 / 0.0051 (ours2M vs sp3M). A Spirula 5M rung improving by a similar step would likely be 'not reached' (SLOWER) on counter and garden, and possibly bicycle, under the registered rule unless ours' ladder is also extended. Compare GS-EQ-SWEEP: bicycle not reached at gsplat 3M by 0.0038. Speed context: Spirula 3M train_s 261-473 s vs ours 2M 108-179 s.",
+  "consequence": "The verdict is 'best over caps 300k-3M'; it does not establish Spirula's tuned optimum. Any wording must state the tested ladder top. Recommended before a 'best-tuned' claim: registered extension Spirula 4-6M + ours 3M on bicycle/counter/garden."
+ },
+ "mismatches": [
+  "None against the lane: all primary/robust/equal-cap/defaults verdicts and per-scene ratios reproduce exactly.",
+  "Rows don't record the scorer sha (scorer='splat-perf-scorer/1'); sha confirmed via historical-record registry only.",
+  "Local fal job dirs collide for garden groups 9a9b6e88 and a9951019 (same dir name, -075224); local train.log belongs to a9951019, so 9a9b6e88's Spirula log copy is missing locally. The rows' train_s are unaffected.",
+  "Spirula rows say cache_state=cold on all 72 arms (autotune warm=False 52/72) even though 11 warm-up arms ran. Step-1 elapsed <=3.2 s; within-scene variation follows the runner, not the cache flag; any penalty is <=~1-3% of train_s, not enough to change any ratio band.",
+  "Spirula peak_vram_mib low (521-1243 MiB) with baseline 0; memory is outside the verdict, so not re-audited here."
+ ],
+ "class": "HEADLINE (registered class_max), with mandatory qualifiers: RTX PRO 6000 only; Spirula cap ladder 300k-3M with --quality untuned; DEV-best Spirula cap = top tested rung on 5/6 scenes (truncation disclosed); playroom collapse disclosed, and the result stated as unchanged without it. Never pooled with SP-EQ r1-r3 (L40S).",
+ "permitted_wording": "On an RTX PRO 6000 (6 scenes x 3 runs, 30k steps), with both trainers' splat budgets selected on held-out DEV views (Spirula 2026.10.6 --cap-max 300k-3M, its --quality setting untuned; ours 300k-2M) and scored on disjoint TEST views, our trainer matched Spirula's best LPIPS in 0.28-0.45x its training time (about 2.2-3.6x faster) on 4 of 5 scenes where Spirula trained normally, and tied on counter. At equal splat caps (500k and 1M) it was 1.5-2.3x faster on all 6 scenes, with +0.6 to +1.4 dB TEST PSNR on the 5 normal scenes. Spirula diverged in 2 of 3 playroom runs; the verdict is the same with playroom excluded. Spirula's best tested cap was its largest (3M) on every scene where it trained normally, so larger Spirula budgets were not tested.",
+ "forbidden": [
+  "'best-tuned Spirula' or 'at any budget' without the 3M ladder top",
+  "any playroom speed or quality number from the collapsed runs",
+  "pooling with SP-EQ r1-r3 or L40S ratios",
+  "quality-at-equal-cap claim on playroom"
+ ]
+}

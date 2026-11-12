@@ -1,0 +1,11 @@
+# Native archive pipeline; not a cargo-dist generated workflow.
+# Keep the target matrix in .github/workflows/release.yml in sync.
+[dist]
+package = "splat-cli"
+binary = "splat"
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
+unix-archive = ".tar.gz"
+windows-archive = ".zip"
+installers = ["shell", "powershell"]
+publish = false
+include = ["THIRD_PARTY_LICENSES.txt", "LICENSE.txt", "distribution.md", "assets.json"]

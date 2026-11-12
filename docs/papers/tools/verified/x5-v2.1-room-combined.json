@@ -1,0 +1,631 @@
+{
+ "schema": 1,
+ "label": "x5-v2.1-room-combined",
+ "generated_at": "2026-10-09",
+ "claim_ids": [
+  "x5-stack-vs-nht-m360-room-v2.1",
+  "x5-stack-vs-nht-m360-3seed-b16-v2 (combined table)"
+ ],
+ "claims_source": "historical source archive historical-build-075 archived study registry (not distributed) lines 370,371,484,623 (v2.1); v2 lines 178,179,188,203,204,206,208,220,228,236,263,268,311,323,340,386 ; v1 rule line 85; sampler-gap rule line 150 (1-based)",
+ "verifier": "independent pubs verifier; recomputed from raw per-view rows (stack-per-view.jsonl / nht-per-view.jsonl, summary rows excluded), pair-nvml-series.jsonl, {nht,stack}/torch-series.jsonl, NHT child.log, stack/result.json; lane summaries not used except for comparison",
+ "verifier_script_sha256": "16dd11665548181407872e29a0c84d8f457c0e16fae6514a36df05ae5d595074",
+ "verifier_script": "import json, statistics as st, hashlib, sys, re\nfrom pathlib import Path\nR = Path('$SPLAT_DATA/research/r-oracle/stack-vs-nht')\nGiB = 2**30\nSCENES = [\"bicycle\", \"bonsai\", \"counter\", \"flowers\", \"garden\", \"kitchen\", \"room\", \"stump\", \"treehill\"]\n\ndef rows(p):\n    return [r for r in (json.loads(l) for l in open(p) if l.strip()) if r.get('type') != 'summary']\n\ndef pair(root, scene, seed):\n    o = R / root / 'jobs' / f'stack-vs-nht-{scene}-s{seed}' / 'out'\n    s = {r['view_id']: r for r in rows(o / 'stack-per-view.jsonl')}\n    n = {r['view_id']: r for r in rows(o / 'nht-per-view.jsonl')}\n    chk = dict(same_view_set=set(s) == set(n), n_views=(len(s), len(n)),\n               targets_equal=all(s[v]['decoded_target_sha256'] == n[v]['decoded_target_sha256'] for v in s if v in n),\n               image_sha_equal=all(s[v]['image_sha256'] == n[v]['image_sha256'] for v in s if v in n),\n               dims_equal=all(s[v]['dimensions'] == n[v]['dimensions'] for v in s if v in n),\n               views_hash={r['views_hash'] for r in list(s.values()) + list(n.values())},\n               scorer={r['scorer_sha256'] for r in list(s.values()) + list(n.values())},\n               gpu_uuid={r['gpu_uuid'] for r in list(s.values()) + list(n.values())})\n    chk['views_hash'] = sorted(chk['views_hash']); chk['scorer'] = sorted(chk['scorer']); chk['gpu_uuid'] = sorted(chk['gpu_uuid'])\n    m = {}\n    for k in ['psnr', 'ssim', 'lpips_vgg', 'lpips_alex']:\n        a = st.mean(s[v][k] for v in s); b = st.mean(n[v][k] for v in n)\n        m[k] = dict(stack=a, nht=b, delta=a - b)\n    # cross-check vs common-scores summary\n    cs = json.load(open(o / 'common-scores.json'))\n    summ = {r['arm']: r for r in cs if r.get('type') == 'summary'}\n    chk['summary_psnr_absdiff'] = max(abs(summ['stack']['psnr'] - m['psnr']['stack']), abs(summ['nht']['psnr'] - m['psnr']['nht']))\n    return str(o.parent.parent), chk, m, o\n\ndef memory(o):\n    ser = [json.loads(l) for l in open(o / 'pair-nvml-series.jsonl') if l.strip()]\n    setup = max(b for t, b, ph in ser if ph == 'setup')\n    out = {}\n    for arm in ['nht', 'stack']:\n        a = [(t, b) for t, b, ph in ser if ph == arm]\n        peak = max(b for _, b in a)\n        ts = [json.loads(l) for l in open(o / arm / 'torch-series.jsonl') if l.strip()]\n        tr_alloc = max((x[1] for x in ts if x[3] == 'train'), default=0)\n        all_alloc = max(x[1] for x in ts)\n        gaps = []\n        for i in range(1, len(a)):\n            g = a[i][0] - a[i - 1][0]\n            if g > 1.0:\n                lvl = max(a[i - 1][1], a[i][1])\n                near = (peak - lvl) / GiB <= 1.0 or (15 - (lvl - setup) / GiB) <= 1.0\n                ins = [x for x in ts if a[i - 1][0] < x[0] < a[i][0]]\n                info = dict(t_into_arm_s=round(a[i - 1][0] - a[0][0], 2), gap_s=round(g, 3),\n                            nvml_before_gib=a[i - 1][1] / GiB, nvml_after_gib=a[i][1] / GiB,\n                            level_minus_setup_gib=(lvl - setup) / GiB, near_peak_or_guard=near)\n                if near:\n                    res = [x[2] for x in ins]; al = [x[1] for x in ins]\n                    before = [b for t, b in a if a[i - 1][0] - 2 <= t <= a[i - 1][0]]\n                    after = [b for t, b in a if a[i][0] <= t <= a[i][0] + 2]\n                    info.update(n_inproc_samples_inside=len(ins),\n                                reserved_range_gib=[min(res) / GiB, max(res) / GiB] if res else None,\n                                reserved_span_gib=(max(res) - min(res)) / GiB if res else None,\n                                allocated_range_gib=[min(al) / GiB, max(al) / GiB] if al else None,\n                                allocated_span_gib=(max(al) - min(al)) / GiB if al else None,\n                                nvml_2s_before_gib=sorted({b / GiB for b in before}), nvml_2s_after_gib=sorted({b / GiB for b in after}),\n                                peak_minus_setup_gib=(peak - setup) / GiB)\n                    info['admissible_historical-build-043'] = bool(len(ins) >= 10 and (max(res) - min(res)) / GiB < 0.25\n                                                      and a[i - 1][1] == a[i][1] and (15 - (peak - setup) / GiB) >= 2)\n                gaps.append(info)\n        out[arm] = dict(setup_gib=setup / GiB, nvml_peak_gib=peak / GiB, nvml_minus_setup_gib=(peak - setup) / GiB,\n                        torch_train_alloc_peak_gib=tr_alloc / GiB, torch_whole_alloc_peak_gib=all_alloc / GiB,\n                        n_nvml=len(a), max_gap_s=max(a[i][0] - a[i - 1][0] for i in range(1, len(a))), gaps_over_1s=gaps)\n    # registered guards: training torch peak from result files as well\n    sr = json.load(open(o / 'stack' / 'result.json'))\n    out['stack']['true_peaks_train_alloc_gib'] = sr['true_peaks']['phases']['train']['torch_max_allocated_bytes'] / GiB\n    out['stack']['memtrim_training_max_alloc_gib'] = sr['memtrim']['training_max_alloc_gib']\n    out['stack']['whole_process_torch_peak_gib_reported'] = sr['whole_process_torch_peak_gib']\n    nr = json.load(open(o / 'nht' / 'row.json'))\n    out['nht']['row_peak_vram_gb'] = nr.get('peak_vram_gb'); out['nht']['row_eval_peak_vram_gb'] = nr.get('eval_peak_vram_gb')\n    for arm in ['nht', 'stack']:\n        x = out[arm]\n        tr = x.get('true_peaks_train_alloc_gib', x['torch_train_alloc_peak_gib'])\n        wp = max(x['torch_whole_alloc_peak_gib'], x.get('whole_process_torch_peak_gib_reported') or 0, tr)\n        x['guard_a_pass'] = tr <= 15; x['guard_b_pass'] = x['nvml_minus_setup_gib'] <= 15; x['whole_torch_pass'] = wp <= 16\n        x['whole_process_torch_used_gib'] = wp\n        near = [g for g in x['gaps_over_1s'] if g['near_peak_or_guard']]\n        x['gap_letter_invalid'] = bool(near)\n        x['gap_amended_ok'] = all(g.get('admissible_historical-build-043') for g in near)\n    # health\n    txt = (o / 'nht' / 'child.log').read_text(errors='replace').replace('\\r', '\\n')\n    rel = [int(m.group(2)) for m in re.finditer(r'Step (\\d+): Relocated (\\d+) GSs', txt)]\n    nf = nr.get('oracle_health', {}).get('final')\n    sh = sr.get('oracle_health', {})\n    sd = [d for d, n, c in sh.get('densify', [])]; sf = sh.get('final')\n    health = dict(nht=dict(peak=max(rel) / 2e6, late=rel[-1] / 2e6, final=(nf['dead_lt_0p005'] / nf['count']) if nf else None, n=len(rel)),\n                  stack=dict(peak=max(sd) / 11e6, late=sd[-1] / 11e6, final=(sf['dead_lt_0p005'] / sf['count']) if sf else None, n=len(sd)))\n    return out, health\n\ndef verdict(seed_means, scene_deltas, vgg):\n    mu = st.mean(seed_means); sd = st.stdev(seed_means); pos = sum(1 for d in scene_deltas.values() if d > 0)\n    if mu > 2 * sd and pos >= 6 and vgg <= 0: v = 'AHEAD'\n    elif abs(mu) <= 2 * sd: v = 'PARITY'\n    else: v = 'BEHIND'\n    return dict(seed_means=seed_means, mean=mu, sd=sd, two_sd=2 * sd, scenes_positive=pos, n_scenes=len(scene_deltas), dvgg=vgg, verdict=v)\n\nres = dict(room={}, v2={})\nfor s in [54, 55, 56]:\n    d, chk, m, o = pair('x5v21', 'room', s)\n    mem, h = memory(o)\n    res['room'][s] = dict(dir=d + f'/stack-vs-nht-room-s{s}', checks=chk, metrics=m, memory=mem, health=h)\nfor sc in SCENES:\n    if sc == 'room': continue\n    for s in [45, 46, 47]:\n        d, chk, m, o = pair('x5v2', sc, s)\n        res['v2'][f'{sc}-s{s}'] = dict(dir=d + f'/stack-vs-nht-{sc}-s{s}', checks=chk, metrics=m)\n\ndef combined(slots):\n    seed_means = []; vgg_means = []\n    per_scene = {sc: [] for sc in SCENES}; per_scene_vgg = {sc: [] for sc in SCENES}\n    for k in slots:\n        ds = []; vs = []\n        for sc in SCENES:\n            r = res['room'][54 + k] if sc == 'room' else res['v2'][f'{sc}-s{45 + k}']\n            ds.append(r['metrics']['psnr']['delta']); vs.append(r['metrics']['lpips_vgg']['delta'])\n            per_scene[sc].append(ds[-1]); per_scene_vgg[sc].append(vs[-1])\n        seed_means.append(st.mean(ds)); vgg_means.append(st.mean(vs))\n    sd = {sc: st.mean(v) for sc, v in per_scene.items()}\n    out = verdict(seed_means, sd, st.mean(vgg_means))\n    out['vgg_seed_means'] = vgg_means; out['per_scene_dpsnr'] = sd; out['per_scene_dvgg'] = {sc: st.mean(v) for sc, v in per_scene_vgg.items()}\n    return out\n\nroom_seed = [res['room'][s]['metrics']['psnr']['delta'] for s in [54, 55, 56]]\nres['room_summary'] = dict(dpsnr=room_seed, mean=st.mean(room_seed), sd=st.stdev(room_seed),\n                           dvgg=[res['room'][s]['metrics']['lpips_vgg']['delta'] for s in [54, 55, 56]])\nres['combined_primary'] = combined([0, 1, 2])\nres['combined_letter'] = combined([0, 1])\njson.dump(res, open(sys.argv[1], 'w'), indent=1, default=str)\n",
+ "inputs": {
+  "root_v21": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v21",
+  "root_v2": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2",
+  "lane_report": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v21/report.json",
+  "lane_report_sha256": "e34300e49fa5eb43e4c6283c53392196d986b0c24b0c1cd77f851c4d106c68b5",
+  "registered_jsonl_sha256": "2f6f8d0aa4c6418c94ac70bd654b3171223894b9dcedfdc6da9b907a9b5e26ac",
+  "report_code": "main historical-build-063"
+ },
+ "checks": {
+  "views_targets": "PASS: all 27 pairs (3 room v2.1 + 24 v2) have identical 39/N view sets per arm, identical decoded_target_sha256 and image_sha256 per view, one views_hash, scorer 6fac406b, one GPU UUID per pair; per-view means reproduce common-scores summaries exactly",
+  "guards": "PASS all 3 room pairs both arms: (a) torch training peak <=15 (STACK 13.46/13.16/13.52, NHT ~3.3); (b) NVML peak minus own setup <=15 (STACK 14.283/14.029/14.617, NHT 9.751/9.744/9.781); whole-process torch <=16",
+  "sampler_gaps": "Only near-peak/guard gap >1 s across all 6 arms: s56 NHT. Other gaps >1 s (s54 NHT 1.97,2.66 s; s55 NHT 3.04,5.91 s; s55 STACK 3.03 s at +0.67 GiB) are >=2 GiB from peak and from guard: disclose only (09:00 amendment). STACK s56 at 14.617 GiB (within 1 GiB of guard) has max gap 0.209 s: verified.",
+  "s56_gap": {
+   "t_into_nht_arm_s": 3084.55,
+   "gap_s": 3.164,
+   "nvml_minus_setup_both_sides_gib": 9.7806,
+   "nvml_before_eq_after": true,
+   "nvml_raw_gib": 89.376953125,
+   "inproc_samples_inside": 31,
+   "torch_reserved_range_gib": [
+    6.228515625,
+    6.228515625
+   ],
+   "reserved_span_gib": 0.0,
+   "torch_allocated_span_gib": 0.0497,
+   "peak_minus_setup_gib": 9.7806,
+   "headroom_to_guard_gib": 5.2194,
+   "admissible_under_historical-build-043": true,
+   "note": ">=10 samples (31), span 0.000 <0.25 GiB, NVML equal both sides (89.377 raw = 9.781 over setup), peak 5.22 GiB under guard (>=2): ADMISSIBLE. Letter of original rule: invalid."
+  },
+  "abab_gate": "v2.1 uses the same MEMTRIM=full harness as v2 with NO allocator cap (registration line 370), so the v2 A/B/A same-model gate (line 228, PASS) is the applicable bar; no separate v2.1 A/B/A was registered."
+ },
+ "room_table": [
+  {
+   "seed": 54,
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v21/jobs/stack-vs-nht-room-s54",
+   "gpu_uuid": "1d8883c3-581d-c2c4-d2c9-caf8a52cb186",
+   "n_views": 39,
+   "psnr_stack": 33.2036,
+   "psnr_nht": 33.3403,
+   "dpsnr": -0.1367,
+   "dssim": -0.0006,
+   "dvgg": -0.0039,
+   "dalex": 0.0017,
+   "guard": {
+    "nht": {
+     "torch_train_peak_gib": 3.2616,
+     "nvml_minus_setup_gib": 9.7513,
+     "max_gap_s": 2.6594,
+     "guard_a": true,
+     "guard_b": true,
+     "whole_torch_le16": true,
+     "gap_letter_invalid": false,
+     "gap_historical-build-043_ok": true,
+     "gaps_over_1s": [
+      {
+       "t_into_arm_s": 203.86,
+       "gap_s": 1.971,
+       "nvml_before_gib": 86.048828125,
+       "nvml_after_gib": 86.05078125,
+       "level_minus_setup_gib": 6.4544677734375,
+       "near_peak_or_guard": false
+      },
+      {
+       "t_into_arm_s": 260.7,
+       "gap_s": 2.659,
+       "nvml_before_gib": 86.806640625,
+       "nvml_after_gib": 86.806640625,
+       "level_minus_setup_gib": 7.2103271484375,
+       "near_peak_or_guard": false
+      }
+     ],
+     "whole_process_torch_gib_row": 5.729637145996094
+    },
+    "stack": {
+     "torch_train_peak_gib": 13.4619,
+     "nvml_minus_setup_gib": 14.2826,
+     "max_gap_s": 0.1209,
+     "guard_a": true,
+     "guard_b": true,
+     "whole_torch_le16": true,
+     "gap_letter_invalid": false,
+     "gap_historical-build-043_ok": true,
+     "gaps_over_1s": [],
+     "whole_process_torch_gib": 13.4619
+    }
+   },
+   "health": {
+    "nht": {
+     "peak": 0.2511,
+     "late": 0.1649,
+     "final": 0.6051,
+     "n": 244
+    },
+    "stack": {
+     "peak": 0.2042,
+     "late": 0.0544,
+     "final": 0.0419,
+     "n": 244
+    }
+   },
+   "checks": {
+    "same_view_set": true,
+    "n_views": [
+     39,
+     39
+    ],
+    "targets_equal": true,
+    "image_sha_equal": true,
+    "dims_equal": true,
+    "views_hash": [
+     "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20"
+    ],
+    "scorer": [
+     "6fac406b86cacb8f981b91f99913ab11b63234999002e586ac8663d57da3cc25"
+    ],
+    "gpu_uuid": [
+     "1d8883c3-581d-c2c4-d2c9-caf8a52cb186"
+    ],
+    "summary_psnr_absdiff": 0.0
+   }
+  },
+  {
+   "seed": 55,
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v21/jobs/stack-vs-nht-room-s55",
+   "gpu_uuid": "2fcd72cd-8bbd-b059-ad24-7f6ec17ed544",
+   "n_views": 39,
+   "psnr_stack": 33.1768,
+   "psnr_nht": 33.0111,
+   "dpsnr": 0.1657,
+   "dssim": 0.0022,
+   "dvgg": -0.0104,
+   "dalex": -0.003,
+   "guard": {
+    "nht": {
+     "torch_train_peak_gib": 3.2266,
+     "nvml_minus_setup_gib": 9.7435,
+     "max_gap_s": 5.9096,
+     "guard_a": true,
+     "guard_b": true,
+     "whole_torch_le16": true,
+     "gap_letter_invalid": false,
+     "gap_historical-build-043_ok": true,
+     "gaps_over_1s": [
+      {
+       "t_into_arm_s": 557.05,
+       "gap_s": 3.044,
+       "nvml_before_gib": 87.34765625,
+       "nvml_after_gib": 87.34765625,
+       "level_minus_setup_gib": 7.7513427734375,
+       "near_peak_or_guard": false
+      },
+      {
+       "t_into_arm_s": 749.53,
+       "gap_s": 5.91,
+       "nvml_before_gib": 87.3359375,
+       "nvml_after_gib": 87.3359375,
+       "level_minus_setup_gib": 7.7396240234375,
+       "near_peak_or_guard": false
+      }
+     ],
+     "whole_process_torch_gib_row": 5.72959566116333
+    },
+    "stack": {
+     "torch_train_peak_gib": 13.1549,
+     "nvml_minus_setup_gib": 14.0287,
+     "max_gap_s": 3.029,
+     "guard_a": true,
+     "guard_b": true,
+     "whole_torch_le16": true,
+     "gap_letter_invalid": false,
+     "gap_historical-build-043_ok": true,
+     "gaps_over_1s": [
+      {
+       "t_into_arm_s": 10.15,
+       "gap_s": 3.029,
+       "nvml_before_gib": 80.26165771484375,
+       "nvml_after_gib": 80.26165771484375,
+       "level_minus_setup_gib": 0.66534423828125,
+       "near_peak_or_guard": false
+      }
+     ],
+     "whole_process_torch_gib": 13.1549
+    }
+   },
+   "health": {
+    "nht": {
+     "peak": 0.2579,
+     "late": 0.1786,
+     "final": 0.6289,
+     "n": 244
+    },
+    "stack": {
+     "peak": 0.2081,
+     "late": 0.0601,
+     "final": 0.0408,
+     "n": 244
+    }
+   },
+   "checks": {
+    "same_view_set": true,
+    "n_views": [
+     39,
+     39
+    ],
+    "targets_equal": true,
+    "image_sha_equal": true,
+    "dims_equal": true,
+    "views_hash": [
+     "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20"
+    ],
+    "scorer": [
+     "6fac406b86cacb8f981b91f99913ab11b63234999002e586ac8663d57da3cc25"
+    ],
+    "gpu_uuid": [
+     "2fcd72cd-8bbd-b059-ad24-7f6ec17ed544"
+    ],
+    "summary_psnr_absdiff": 0.0
+   }
+  },
+  {
+   "seed": 56,
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v21/jobs/stack-vs-nht-room-s56",
+   "gpu_uuid": "7a531a3c-1368-b00e-1d27-7b120196829b",
+   "n_views": 39,
+   "psnr_stack": 32.2541,
+   "psnr_nht": 33.2853,
+   "dpsnr": -1.0311,
+   "dssim": -0.0042,
+   "dvgg": 0.0006,
+   "dalex": 0.0069,
+   "guard": {
+    "nht": {
+     "torch_train_peak_gib": 3.266,
+     "nvml_minus_setup_gib": 9.7806,
+     "max_gap_s": 3.5281,
+     "guard_a": true,
+     "guard_b": true,
+     "whole_torch_le16": true,
+     "gap_letter_invalid": true,
+     "gap_historical-build-043_ok": true,
+     "gaps_over_1s": [
+      {
+       "t_into_arm_s": 2529.89,
+       "gap_s": 3.528,
+       "nvml_before_gib": 87.189453125,
+       "nvml_after_gib": 87.189453125,
+       "level_minus_setup_gib": 7.5931396484375,
+       "near_peak_or_guard": false
+      },
+      {
+       "t_into_arm_s": 3084.55,
+       "gap_s": 3.164,
+       "nvml_before_gib": 89.376953125,
+       "nvml_after_gib": 89.376953125,
+       "level_minus_setup_gib": 9.7806396484375,
+       "near_peak_or_guard": true,
+       "n_inproc_samples_inside": 31,
+       "reserved_range_gib": [
+        6.228515625,
+        6.228515625
+       ],
+       "reserved_span_gib": 0.0,
+       "allocated_range_gib": [
+        1.9535140991210938,
+        2.0031862258911133
+       ],
+       "allocated_span_gib": 0.04967212677001953,
+       "nvml_2s_before_gib": [
+        89.279296875,
+        89.376953125
+       ],
+       "nvml_2s_after_gib": [
+        89.376953125
+       ],
+       "peak_minus_setup_gib": 9.7806396484375,
+       "admissible_historical-build-043": true
+      }
+     ],
+     "whole_process_torch_gib_row": 5.72965669631958
+    },
+    "stack": {
+     "torch_train_peak_gib": 13.5231,
+     "nvml_minus_setup_gib": 14.6166,
+     "max_gap_s": 0.2088,
+     "guard_a": true,
+     "guard_b": true,
+     "whole_torch_le16": true,
+     "gap_letter_invalid": false,
+     "gap_historical-build-043_ok": true,
+     "gaps_over_1s": [],
+     "whole_process_torch_gib": 13.5231
+    }
+   },
+   "health": {
+    "nht": {
+     "peak": 0.23,
+     "late": 0.1665,
+     "final": 0.6119,
+     "n": 244
+    },
+    "stack": {
+     "peak": 0.2,
+     "late": 0.0646,
+     "final": 0.0441,
+     "n": 244
+    }
+   },
+   "checks": {
+    "same_view_set": true,
+    "n_views": [
+     39,
+     39
+    ],
+    "targets_equal": true,
+    "image_sha_equal": true,
+    "dims_equal": true,
+    "views_hash": [
+     "5cc3f7d326a0d6df4d62678989bcc2ffb37e43d02b6d621e40a6979dc624fb20"
+    ],
+    "scorer": [
+     "6fac406b86cacb8f981b91f99913ab11b63234999002e586ac8663d57da3cc25"
+    ],
+    "gpu_uuid": [
+     "7a531a3c-1368-b00e-1d27-7b120196829b"
+    ],
+    "summary_psnr_absdiff": 0.0
+   }
+  }
+ ],
+ "room_summary": {
+  "dpsnr_per_seed": {
+   "54": -0.1367,
+   "55": 0.1657,
+   "56": -1.0311
+  },
+  "mean": -0.3341,
+  "sd": 0.6223,
+  "two_sd": 1.2446,
+  "dvgg_per_seed": [
+   -0.0039,
+   -0.0104,
+   0.0006
+  ],
+  "verdict_primary": "room v2.1 COMPLETE 3/3 (historical-build-043 amendment); per-seed d reported; mean -0.334 within 2*SD 1.245",
+  "verdict_letter": "INCOMPLETE 2/3 (s56 invalid); s54/s55 mean +0.0145"
+ },
+ "v2_pairs": [
+  {
+   "pair": "bicycle-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-bicycle-s45",
+   "dpsnr": 0.3915,
+   "dvgg": -0.0135,
+   "views_ok": true
+  },
+  {
+   "pair": "bicycle-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-bicycle-s46",
+   "dpsnr": 0.4106,
+   "dvgg": -0.0157,
+   "views_ok": true
+  },
+  {
+   "pair": "bicycle-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-bicycle-s47",
+   "dpsnr": 0.2721,
+   "dvgg": -0.0157,
+   "views_ok": true
+  },
+  {
+   "pair": "bonsai-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-bonsai-s45",
+   "dpsnr": -1.3559,
+   "dvgg": -0.0024,
+   "views_ok": true
+  },
+  {
+   "pair": "bonsai-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-bonsai-s46",
+   "dpsnr": -0.144,
+   "dvgg": -0.0045,
+   "views_ok": true
+  },
+  {
+   "pair": "bonsai-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-bonsai-s47",
+   "dpsnr": -0.1911,
+   "dvgg": -0.0052,
+   "views_ok": true
+  },
+  {
+   "pair": "counter-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-counter-s45",
+   "dpsnr": 0.1323,
+   "dvgg": -0.0099,
+   "views_ok": true
+  },
+  {
+   "pair": "counter-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-counter-s46",
+   "dpsnr": 0.1951,
+   "dvgg": -0.0106,
+   "views_ok": true
+  },
+  {
+   "pair": "counter-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-counter-s47",
+   "dpsnr": 0.0566,
+   "dvgg": -0.0093,
+   "views_ok": true
+  },
+  {
+   "pair": "flowers-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-flowers-s45",
+   "dpsnr": -0.2333,
+   "dvgg": -0.0294,
+   "views_ok": true
+  },
+  {
+   "pair": "flowers-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-flowers-s46",
+   "dpsnr": -0.1905,
+   "dvgg": -0.0254,
+   "views_ok": true
+  },
+  {
+   "pair": "flowers-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-flowers-s47",
+   "dpsnr": -0.2966,
+   "dvgg": -0.0278,
+   "views_ok": true
+  },
+  {
+   "pair": "garden-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-garden-s45",
+   "dpsnr": 0.1274,
+   "dvgg": -0.0003,
+   "views_ok": true
+  },
+  {
+   "pair": "garden-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-garden-s46",
+   "dpsnr": 0.192,
+   "dvgg": -0.0008,
+   "views_ok": true
+  },
+  {
+   "pair": "garden-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-garden-s47",
+   "dpsnr": 0.0819,
+   "dvgg": -0.0002,
+   "views_ok": true
+  },
+  {
+   "pair": "kitchen-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-kitchen-s45",
+   "dpsnr": 2.4331,
+   "dvgg": -0.0479,
+   "views_ok": true
+  },
+  {
+   "pair": "kitchen-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-kitchen-s46",
+   "dpsnr": -0.4857,
+   "dvgg": -0.0047,
+   "views_ok": true
+  },
+  {
+   "pair": "kitchen-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-kitchen-s47",
+   "dpsnr": 0.1233,
+   "dvgg": -0.0033,
+   "views_ok": true
+  },
+  {
+   "pair": "stump-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-stump-s45",
+   "dpsnr": 0.4943,
+   "dvgg": -0.0065,
+   "views_ok": true
+  },
+  {
+   "pair": "stump-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-stump-s46",
+   "dpsnr": 0.5589,
+   "dvgg": -0.0098,
+   "views_ok": true
+  },
+  {
+   "pair": "stump-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-stump-s47",
+   "dpsnr": 0.5407,
+   "dvgg": -0.0079,
+   "views_ok": true
+  },
+  {
+   "pair": "treehill-s45",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-treehill-s45",
+   "dpsnr": 0.1193,
+   "dvgg": -0.0084,
+   "views_ok": true
+  },
+  {
+   "pair": "treehill-s46",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-treehill-s46",
+   "dpsnr": -0.0116,
+   "dvgg": -0.0079,
+   "views_ok": true
+  },
+  {
+   "pair": "treehill-s47",
+   "historical-record": "$SPLAT_DATA/research/r-oracle/stack-vs-nht/x5v2/jobs/stack-vs-nht-treehill-s47",
+   "dpsnr": -0.0861,
+   "dvgg": -0.0068,
+   "views_ok": true
+  }
+ ],
+ "combined_primary": {
+  "seed_means": [
+   0.2191,
+   0.0767,
+   -0.0589
+  ],
+  "mean": 0.079,
+  "sd": 0.139,
+  "two_sd": 0.278,
+  "scenes_positive": 6,
+  "n_scenes": 9,
+  "dvgg": -0.0107,
+  "verdict": "PARITY",
+  "vgg_seed_means": [
+   -0.0136,
+   -0.01,
+   -0.0084
+  ],
+  "per_scene_dpsnr": {
+   "bicycle": 0.358,
+   "bonsai": -0.5637,
+   "counter": 0.128,
+   "flowers": -0.2402,
+   "garden": 0.1338,
+   "kitchen": 0.6902,
+   "room": -0.3341,
+   "stump": 0.5313,
+   "treehill": 0.0072
+  },
+  "per_scene_dvgg": {
+   "bicycle": -0.015,
+   "bonsai": -0.0041,
+   "counter": -0.0099,
+   "flowers": -0.0275,
+   "garden": -0.0004,
+   "kitchen": -0.0187,
+   "room": -0.0045,
+   "stump": -0.0081,
+   "treehill": -0.0077
+  }
+ },
+ "combined_letter_2slots": {
+  "seed_means": [
+   0.2191,
+   0.0767
+  ],
+  "mean": 0.1479,
+  "sd": 0.1007,
+  "two_sd": 0.2013,
+  "scenes_positive": 7,
+  "n_scenes": 9,
+  "dvgg": -0.0118,
+  "verdict": "PARITY",
+  "vgg_seed_means": [
+   -0.0136,
+   -0.01
+  ],
+  "per_scene_dpsnr": {
+   "bicycle": 0.401,
+   "bonsai": -0.75,
+   "counter": 0.1637,
+   "flowers": -0.2119,
+   "garden": 0.1597,
+   "kitchen": 0.9737,
+   "room": 0.0145,
+   "stump": 0.5266,
+   "treehill": 0.0539
+  },
+  "per_scene_dvgg": {
+   "bicycle": -0.0146,
+   "bonsai": -0.0035,
+   "counter": -0.0102,
+   "flowers": -0.0274,
+   "garden": -0.0005,
+   "kitchen": -0.0263,
+   "room": -0.0071,
+   "stump": -0.0081,
+   "treehill": -0.0082
+  }
+ },
+ "lane_vs_verifier": {
+  "room_dpsnr": "lane -0.137/+0.166/-1.031, mean -0.334, SD 0.622 ; verifier -0.1367/+0.1657/-1.0311, -0.3341, 0.6223 : MATCH",
+  "room_dvgg": "lane -0.004/-0.010/+0.001 ; verifier -0.0039/-0.0104/+0.0006 : MATCH",
+  "s56_gap": "lane 31 samples, 3.164 s, range 0.000, NVML 9.781 both sides ; verifier identical : MATCH",
+  "combined_primary": "lane +0.219/+0.077/-0.059 mean +0.079 2SD 0.278 6/9 dVGG -0.0107 ; verifier +0.2191/+0.0767/-0.0589, +0.0790, 0.2780, 6/9, -0.0107 : MATCH",
+  "combined_letter": "lane +0.219/+0.077 mean +0.148 2SD 0.201 7/9 ; verifier +0.2191/+0.0767, +0.1479, 0.2013, 7/9 : MATCH",
+  "no_discrepancy_over_0p01_dB": true
+ },
+ "discrepancies_and_notes": [
+  "RULING TEXT vs RAW (not a lane error): the 10:23 ruling (claims line 623) says \"51 samples inside the gap, torch reserved 6.131-6.229 GiB\". Raw NHT torch-series has 31 samples strictly inside the 3.164 s gap with reserved constant 6.2285 GiB (allocated 1.954-2.003). 6.131-6.229 / 51 must come from a wider window. Admissibility holds under either figure; recommend correcting the ruling facts to 31 / 0.000.",
+  "HEALTH: registration (line 370) says \"peak/late/final dead fraction vs cap, flag > 50%\". Lane flag_over_half_cap tests only the peak relocation fraction (NHT 0.251/0.258/0.230, STACK 0.204/0.208/0.200: no flag). But NHT final_dead_frac (final opacity<0.005 / final count, count = cap 2M) is 0.605/0.629/0.612 on all three seeds, >50%. STACK final 0.042/0.041/0.044. Under a literal reading NHT is health-FLAGGED on every room pair; this is a disclosure flag, not a validity condition, and does not change the verdict. v2 NHT final-dead was not instrumented, so no like-for-like v2 comparison exists.",
+  "report.json decision_original_guard=INCOMPLETE lists s56 as an original-guard failure because pair-result memory_pass uses the NVML increment over the ballast nvidia-smi baseline (STACK 15.198 GiB), the measure claims line 203 corrected. The registered original-wording reading (whole-process torch <=15) passes s56 (STACK 13.52). The letter-of-gap-rule reading is a separate reason s56 is invalid; the lane label conflates them. Verdict unaffected.",
+  "Letter reading drops seed slot 3 for all 9 scenes (lane choice). Pairing by slot is per the 10:23 instruction; the 8 v2 scenes in slot 3 are valid, so this is one of several possible letter readings; stated as such.",
+  "NHT torch-series (100 ms) under-reads its eval peak (max 4.25 GiB s56) vs row.json 5.73; guards use row.json; all far under limits."
+ ],
+ "verdicts": {
+  "primary": "PARITY (PROVISIONAL, combined): mean +0.079 dB, |0.079| <= 2*SD 0.278; 6/9 positive; dVGG -0.0107. Not AHEAD (mean < 2SD).",
+  "letter_2slots": "PARITY (PROVISIONAL, combined): mean +0.148 dB <= 2*SD 0.201; 7/9 positive; dVGG -0.0118. Not AHEAD.",
+  "both_readings_agree": "PARITY under both readings, so a single verdict word is permitted per the 10:23 ruling; label \"combined, PROVISIONAL\", never HEADLINE; carry v2 disclosures (caveats 9,10, ISP wording, NHT F64/unfused, X18 exposure) plus the s56 gap amendment and NHT final-dead flag.",
+  "room_standalone": "room v2.1: PRIMARY complete 3/3, d = -0.137/+0.166/-1.031, mean -0.334 (SD 0.622); LETTER incomplete 2/3."
+ }
+}

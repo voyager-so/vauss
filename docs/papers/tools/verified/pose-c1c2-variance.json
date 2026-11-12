@@ -1,0 +1,44 @@
+{
+ "kind": "pose",
+ "claim": "pose-c1-variance-c1c2-eth3d-ppc-heldout9x3",
+ "verified_by": "publications (recompute from rows.jsonl)",
+ "verified_at": "2026-10-09T00:52-07:00",
+ "inputs": "$SPLAT_DATA/runs/sfm-learned/v2/score/variance/{rows.jsonl,RESULT.json}",
+ "gates": [
+  "r3-r5 only, 9 scenes x 3 repeats per arm, n_expected==expected all rows",
+  "repeat means and scene means match RESULT.json"
+ ],
+ "c1": {
+  "r3_r5_mean": 0.8965,
+  "rep_means": [
+   0.8964,
+   0.8968,
+   0.8962
+  ],
+  "band_2sd_9rep": 0.0342,
+  "diff_vs_spirula": 0.0151,
+  "wins": "6/9",
+  "verdict": "PARITY"
+ },
+ "c1_c2": {
+  "r3_r5_mean": 0.9173,
+  "rep_means": [
+   0.9177,
+   0.916,
+   0.9184
+  ],
+  "band_2sd_6rep": 0.0038,
+  "diff_vs_spirula": 0.0359,
+  "wins": "7/9",
+  "verdict": "AHEAD",
+  "robustness": "also AHEAD under C1's wider 9-repeat band (.0342 < .0359)"
+ },
+ "c2_effect": "C2 changes only 3 scenes (electro .781->.872 +4 cams, meadow .755->.852 +1 cam, kicker +1 cam AUC unchanged); 6 scenes bit-identical",
+ "class": "HEADLINE",
+ "required_wording": "On 9 held-out ETH3D scenes (centred prep, 3 pre-registered repeats), our COLMAP@2400 frontend with a guarded completion pass (C2, research code, not in product) scores AUC@3 .917 vs Spirula default .881 (AHEAD, 7/9). Plain COLMAP alone is at PARITY (.896).",
+ "footnotes": [
+  "3 fal runner-error retries (meadow r4/r5 EIO, electro r4 tarball timeout) resubmitted as new jobs; only retry outputs scored",
+  "Spirula DEFAULT rows reused (deterministic, same prep/scorer hashes)",
+  "gain comes from completing camera registration on electro/meadow"
+ ]
+}

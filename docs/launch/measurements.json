@@ -1,0 +1,80 @@
+{
+  "measured": "2026-10-09",
+  "training_equal_cap": {
+    "measured": "2026-10-09",
+    "gpu": "L40S",
+    "scenes": 7,
+    "runs_per_scene": 3,
+    "steps": 30000,
+    "splat_cap": 1000000,
+    "mean_paired_time_ratio": 0.185,
+    "reciprocal_speedup": 5.405405405405405,
+    "mean_training_s": {
+      "Vauss": 126.86,
+      "VkSplat": 194.96,
+      "gsplat-MCMC 1.5.3": 679.37
+    },
+    "lpips_wins": 7,
+    "memory_ratio_range": [
+      0.43,
+      0.56
+    ]
+  },
+  "quality": {
+    "Mip-NeRF 360 tuned": {
+      "scenes": 9,
+      "runs_per_scene": 1,
+      "gpu": "RTX PRO 6000",
+      "PSNR": 28.521,
+      "SSIM": 0.8375,
+      "LPIPS_VGG": 0.2079,
+      "training_seconds_range": [
+        195,
+        342
+      ]
+    },
+    "Mip-NeRF 360 reference": {
+      "scenes": 9,
+      "runs_per_scene": 3,
+      "gpu": "L40S",
+      "PSNR": 28.127,
+      "SSIM": 0.8311,
+      "LPIPS_VGG": 0.2226
+    },
+    "Tanks and Temples reference": {
+      "scenes": 2,
+      "runs_per_scene": 3,
+      "gpu": "L40S",
+      "PSNR": 24.365,
+      "SSIM": 0.8693,
+      "LPIPS_VGG": 0.1562
+    },
+    "Deep Blending reference": {
+      "scenes": 2,
+      "runs_per_scene": 3,
+      "gpu": "L40S",
+      "PSNR": 30.346,
+      "SSIM": 0.9126,
+      "LPIPS_VGG": 0.2915
+    }
+  },
+  "library_demo": {
+    "input": "30-second 1080p AI-generated orbit video",
+    "gpu": "RTX PRO 6000",
+    "training_seconds": 303,
+    "camera_solve_seconds": 143,
+    "video_to_exports_seconds": 712,
+    "splats": 1963332,
+    "steps": 45000,
+    "full_production_approx_minutes": 35,
+    "full_production_scope": "AI image/video generation, reconstruction and final Blender rendering"
+  },
+  "cabin_demo": {
+    "input": "60-second 1080p AI-generated capture",
+    "gpu": "RTX PRO 6000",
+    "training_seconds": 322,
+    "video_to_exports_seconds": 2215,
+    "splats": 1948256,
+    "steps": 60000
+  }
+}

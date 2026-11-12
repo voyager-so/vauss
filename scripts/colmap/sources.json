@@ -1,0 +1,38 @@
+[
+  {
+    "name": "colmap",
+    "version": "4.2.1",
+    "url": "https://codeload.github.com/colmap/colmap/tar.gz/refs/tags/4.2.1",
+    "sha256": "15fb9e333541676e4ee9bc5d8ab95a3ed6e549a20eb13fc5aafd04ca06c76c88"
+  },
+  {
+    "name": "ceres",
+    "version": "2.2.0",
+    "url": "https://codeload.github.com/ceres-solver/ceres-solver/tar.gz/refs/tags/2.2.0",
+    "sha256": "12efacfadbfdc1bbfa203c236e96f4d3c210bed96994288b3ff0c8e7c6f350d4"
+  },
+  {
+    "name": "oiio",
+    "version": "2.5.19.0",
+    "url": "https://codeload.github.com/AcademySoftwareFoundation/OpenImageIO/tar.gz/refs/tags/v2.5.19.0",
+    "sha256": "108bb43da6ba7dedf9197886ce5cc45771f1bbf62d88bcab8b080dd549cef03c"
+  },
+  {
+    "name": "tiff",
+    "version": "4.7.0",
+    "url": "https://download.osgeo.org/libtiff/tiff-4.7.0.tar.gz",
+    "sha256": "67160e3457365ab96c5b3286a0903aa6e78bdc44c4bc737d2e486bcecb6ba976"
+  },
+  {
+    "name": "poselib",
+    "version": "fa7280fee27f97aff31ae7f98bab7f583fac7d08",
+    "url": "https://github.com/PoseLib/PoseLib/archive/fa7280fee27f97aff31ae7f98bab7f583fac7d08.zip",
+    "sha256": "5408d4ae8ce367cb2f076bc6c5f0f6f78abd3573d2c015304b04e46f23455f5b"
+  },
+  {
+    "name": "faiss",
+    "version": "1.14.1",
+    "url": "https://github.com/facebookresearch/faiss/archive/refs/tags/v1.14.1.zip",
+    "sha256": "4b1ae7e7a0a46385b4084f0e3945623a15fcf99d793bf44d82aae8e24f11e5f5"
+  }
+]

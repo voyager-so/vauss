@@ -1,0 +1,380 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "X5 counter TEST: neural+tail3000 vs SH3, seeds 0/1/2",
+ "argv": [
+  "--arm",
+  "sh=runs/capacity-counter-s?-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+  "--arm",
+  "neural_tail=runs/capacity-counter-s?-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+  "--label",
+  "X5 counter TEST: neural+tail3000 vs SH3, seeds 0/1/2",
+  "--json",
+  "$HOME/code/nf/splat-agent-worktrees/pubs-verify/docs/papers/tools/verified/x5-counter-test.json"
+ ],
+ "cwd": "$SPLAT_DATA/research/x5b",
+ "generated_at": "2026-10-08T22:05:07-07:00",
+ "verifier_sha256": "3c70e4841f9909188590fe4a19827f4e4d9f12cc45b03719f7c9088e54930b7d",
+ "verifier_git_head": "historical-build-002",
+ "options": {
+  "common_views": false,
+  "expected_views": null,
+  "raw_names": false,
+  "reps": 10000,
+  "rng_seed": 0
+ },
+ "status": "OK",
+ "inputs": {
+  "sh": {
+   "specs": [
+    {
+     "glob": "runs/capacity-counter-s?-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-counter-s0-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+     "sha256": "84e02fa0ae0376c876759d7129b38c595559c1ad0dde4a00a019c50db82519e7"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-counter-s1-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+     "sha256": "d21228859f073795d8267416531c11f8bdda309a75bb3131b4f32290913e6bad"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-counter-s2-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+     "sha256": "05afc5d34623487d92f67b4363e43b27fb0a5b11e0e15a89eaf4b3aa774f23e6"
+    }
+   ]
+  },
+  "neural_tail": {
+   "specs": [
+    {
+     "glob": "runs/capacity-counter-s?-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+     "filters": [],
+     "rows": null
+    }
+   ],
+   "files": [
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-counter-s0-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+     "sha256": "daf8221536af15c60a090447b0907afac4f51c3aaedb8fb449bd5ce66d569bf3"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-counter-s1-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+     "sha256": "2d7c0e0125f2c01b3bd6fe08084230cfb3b54119e9fe947fccf61a4f45f12400"
+    },
+    {
+     "path": "$SPLAT_DATA/research/x5b/runs/capacity-counter-s2-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+     "sha256": "34890587692438dc857a5dae48e517c258ad71a489ab58b0e86554897d086263"
+    }
+   ]
+  }
+ },
+ "notes": [
+  "metric lpips_alex absent from some views in 1 scene(s) (counter); not reported for those"
+ ],
+ "per_scene": {
+  "counter": {
+   "n_expected": 30,
+   "n_common": 30,
+   "common_view_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+   "identical_view_sets": true,
+   "common_views": [
+    "DSCF5857",
+    "DSCF5865",
+    "DSCF5873",
+    "DSCF5881",
+    "DSCF5889",
+    "DSCF5897",
+    "DSCF5905",
+    "DSCF5913",
+    "DSCF5921",
+    "DSCF5929",
+    "DSCF5937",
+    "DSCF5945",
+    "DSCF5953",
+    "DSCF5961",
+    "DSCF5969",
+    "DSCF5977",
+    "DSCF5985",
+    "DSCF5993",
+    "DSCF6001",
+    "DSCF6009",
+    "DSCF6017",
+    "DSCF6025",
+    "DSCF6033",
+    "DSCF6041",
+    "DSCF6049",
+    "DSCF6057",
+    "DSCF6065",
+    "DSCF6073",
+    "DSCF6081",
+    "DSCF6089"
+   ],
+   "metrics": [
+    "psnr",
+    "ssim",
+    "lpips_vgg"
+   ],
+   "arms": {
+    "sh": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 0,
+       "source": "runs/capacity-counter-s0-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.55456110636393,
+        "ssim": 0.9207249859968821,
+        "lpips_vgg": 0.2370725507537524
+       }
+      },
+      {
+       "run": 1,
+       "source": "runs/capacity-counter-s1-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.57676582336426,
+        "ssim": 0.9213399151961009,
+        "lpips_vgg": 0.23698319296042125
+       }
+      },
+      {
+       "run": 2,
+       "source": "runs/capacity-counter-s2-cap2500000-aa0-tail3000-d0-t0/sh/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 29.456711196899413,
+        "ssim": 0.9206135888894399,
+        "lpips_vgg": 0.23731035242478052
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 29.5293460422092,
+      "ssim": 0.9208928300274742,
+      "lpips_vgg": 0.23712203204631807
+     }
+    },
+    "neural_tail": {
+     "n_runs": 3,
+     "runs": [
+      {
+       "run": 0,
+       "source": "runs/capacity-counter-s0-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 30.63073113759359,
+        "ssim": 0.9268308341503143,
+        "lpips_vgg": 0.22861882001161576
+       }
+      },
+      {
+       "run": 1,
+       "source": "runs/capacity-counter-s1-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 30.519947052001953,
+        "ssim": 0.9263783017794291,
+        "lpips_vgg": 0.22886634667714437
+       }
+      },
+      {
+       "run": 2,
+       "source": "runs/capacity-counter-s2-cap2500000-aa0-tail3000-d0-t0/neural/per_image.json",
+       "format": "per-view list + sibling meta",
+       "n_scored": 30,
+       "views_hash": "54c8c0f9c9b6a0483fc24a31a912a97eb68ef31b450905875600a380bff23a32",
+       "normalised_views_hash": "7961f10a66c5b77c2c36a39f09a0e37be72c95aa3cfe93b19cb262bd800e0269",
+       "dropped_for_common": [],
+       "mean": {
+        "psnr": 30.544338925679526,
+        "ssim": 0.9260332624117533,
+        "lpips_vgg": 0.22947299629449844
+       }
+      }
+     ],
+     "mean": {
+      "psnr": 30.56500570509169,
+      "ssim": 0.9264141327804989,
+      "lpips_vgg": 0.22898605432775287
+     }
+    }
+   }
+  }
+ },
+ "absolute": {
+  "sh": {
+   "psnr": {
+    "mean_over_scenes": 29.5293460422092,
+    "per_scene": {
+     "counter": 29.5293460422092
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.9208928300274742,
+    "per_scene": {
+     "counter": 0.9208928300274742
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.23712203204631807,
+    "per_scene": {
+     "counter": 0.23712203204631807
+    }
+   }
+  },
+  "neural_tail": {
+   "psnr": {
+    "mean_over_scenes": 30.56500570509169,
+    "per_scene": {
+     "counter": 30.56500570509169
+    }
+   },
+   "ssim": {
+    "mean_over_scenes": 0.9264141327804989,
+    "per_scene": {
+     "counter": 0.9264141327804989
+    }
+   },
+   "lpips_vgg": {
+    "mean_over_scenes": 0.22898605432775287,
+    "per_scene": {
+     "counter": 0.22898605432775287
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "neural_tail": {
+   "a": "sh",
+   "b": "neural_tail",
+   "metrics": {
+    "psnr": {
+     "mean_delta": 1.035659662882491,
+     "ci95": [
+      0.9431812286376946,
+      1.087627728780113
+     ],
+     "ci_unit": "single scene: paired seed bootstrap (resample seeds)",
+     "tally": {
+      "W": 1,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 1,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "counter",
+       "delta": 1.035659662882491,
+       "a": 29.5293460422092,
+       "b": 30.56500570509169,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "0": 1.0761700312296583,
+        "1": 0.9431812286376946,
+        "2": 1.087627728780113
+       },
+       "seed_sd": 0.08029330799366748
+      }
+     ]
+    },
+    "ssim": {
+     "mean_delta": 0.005521302753024648,
+     "ci95": [
+      0.005038386583328225,
+      0.006105848153432181
+     ],
+     "ci_unit": "single scene: paired seed bootstrap (resample seeds)",
+     "tally": {
+      "W": 1,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 1,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "counter",
+       "delta": 0.005521302753024648,
+       "a": 0.9208928300274742,
+       "b": 0.9264141327804989,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "0": 0.006105848153432181,
+        "1": 0.005038386583328225,
+        "2": 0.0054196735223134285
+       },
+       "seed_sd": 0.0005409389302993553
+      }
+     ]
+    },
+    "lpips_vgg": {
+     "mean_delta": -0.008135977718565196,
+     "ci95": [
+      -0.008453730742136623,
+      -0.00783735613028208
+     ],
+     "ci_unit": "single scene: paired seed bootstrap (resample seeds)",
+     "tally": {
+      "W": 1,
+      "=": 0,
+      "L": 0
+     },
+     "n_scenes": 1,
+     "positive_scenes": 1,
+     "scenes": [
+      {
+       "scene": "counter",
+       "delta": -0.008135977718565196,
+       "a": 0.23712203204631807,
+       "b": 0.22898605432775287,
+       "call": "W",
+       "n_runs_a": 3,
+       "n_runs_b": 3,
+       "n_views": 30,
+       "paired_by_seed": true,
+       "per_seed_delta": {
+        "0": -0.008453730742136623,
+        "1": -0.008116846283276885,
+        "2": -0.00783735613028208
+       },
+       "seed_sd": 0.00030863234502697946
+      }
+     ]
+    }
+   }
+  }
+ }
+}

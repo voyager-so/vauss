@@ -1,0 +1,55 @@
+[package]
+name = "splat-cli"
+default-run = "vauss"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+[[bin]]
+name = "vauss"
+path = "src/main.rs"
+
+# Silent compatibility commands use the same CLI and behavior.
+[[bin]]
+name = "splat"
+path = "src/main.rs"
+test = false
+bench = false
+
+[[bin]]
+name = "voyager-splat"
+path = "src/main.rs"
+test = false
+bench = false
+
+[dependencies]
+splat-contracts.workspace = true
+splat-core.workspace = true
+splat-spirula.workspace = true
+splat-fetch.workspace = true
+splat-mcp.workspace = true
+splat-agent.workspace = true
+splat-brush.workspace = true
+splat-fill.workspace = true
+splat-shots.workspace = true
+splat-webexport.workspace = true
+splat-assets.workspace = true
+splat-eval.workspace = true
+splat-mesh.workspace = true
+sha2.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+glam.workspace = true
+clap.workspace = true
+fs2.workspace = true
+uuid.workspace = true
+ctrlc.workspace = true
+splat-effects.workspace = true
+image.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

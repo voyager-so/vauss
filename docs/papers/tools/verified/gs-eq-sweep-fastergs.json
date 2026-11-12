@@ -1,0 +1,366 @@
+{
+ "claim": "pubs:p0:GS-EQ-SWEEP-fastergs",
+ "class": "DESCRIPTIVE",
+ "label": "Faster-GS d7fae871 (MCMC mode) on NeRFICG e458ac6e",
+ "verifier": "independent (pubs verifier), recomputed from raw perview.jsonl + summary.json + logs; no GPU, no tests",
+ "verified_at": "2026-10-09",
+ "registration": [
+  "archived study registry (not distributed) lines 465, 476, 547 (historical source archive)",
+  "protocols/gs-eq-sweep-fastergs.md",
+  "rule:speed-coplacement (542/546/550)",
+  "rule:fal-runner-reuse (637/646/659)"
+ ],
+ "data": "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/<scene>-s{11,12,13}-F (18 runners)",
+ "verdict": "CONFIRMED with wording conditions",
+ "tally_dev_best": {
+  "FASTER": 5,
+  "TIE": 1,
+  "SLOWER": 0,
+  "note": "all 6 labelled 'ladder may be truncated'"
+ },
+ "tally_default_1m": {
+  "FASTER": 6,
+  "TIE": 0,
+  "SLOWER": 0
+ },
+ "truncation_clause": "Registered text: 'If Faster-GS's DEV-best is its 3M arm, label that scene \"ladder may be truncated\"'. Applied literally it is a LABEL only; it does not change the class. DEV-best = 3M on 6/6 (3M DEV LPIPS lower than 1M by 0.013-0.054), so all six classes stand (5 FASTER, 1 TIE) and every scene carries the label. Lane matches.",
+ "per_scene": {
+  "bicycle": {
+   "dev_best": {
+    "arm": "fastergs-3000k",
+    "fg_dev": 0.2093,
+    "ours_cap_k": 2000,
+    "ours_dev": 0.2074,
+    "ratio_mean": 0.573,
+    "ratio_pooled": 0.574,
+    "per_seed": [
+     0.575,
+     0.576,
+     0.57
+    ],
+    "hold": 3,
+    "fg_test": 0.2165,
+    "ours_test": 0.2138,
+    "mem_ratio": 0.229,
+    "verdict": "FASTER",
+    "next_lower": 1200
+   },
+   "default_1m": {
+    "arm": "fastergs-default",
+    "fg_dev": 0.263,
+    "ours_cap_k": 1200,
+    "ours_dev": 0.2385,
+    "ratio_mean": 0.884,
+    "ratio_pooled": 0.884,
+    "per_seed": [
+     0.888,
+     0.879,
+     0.885
+    ],
+    "hold": 3,
+    "fg_test": 0.2701,
+    "ours_test": 0.2448,
+    "mem_ratio": 0.29,
+    "verdict": "FASTER",
+    "next_lower": 800
+   },
+   "truncated": true,
+   "dev_gap_3m_vs_1m": -0.0538,
+   "health_min": {
+    "fastergs-default": 1.0,
+    "fastergs-3000k": 1.0,
+    "ours-300k": 1.0,
+    "ours-500k": 1.0,
+    "ours-800k": 1.0,
+    "ours-1200k": 0.9839,
+    "ours-2000k": 0.9684,
+    "ours-3000k": 0.9522,
+    "ours-4000k": 0.9494
+   }
+  },
+  "garden": {
+   "dev_best": {
+    "arm": "fastergs-3000k",
+    "fg_dev": 0.1194,
+    "ours_cap_k": 2000,
+    "ours_dev": 0.1142,
+    "ratio_mean": 0.56,
+    "ratio_pooled": 0.56,
+    "per_seed": [
+     0.576,
+     0.547,
+     0.557
+    ],
+    "hold": 3,
+    "fg_test": 0.1198,
+    "ours_test": 0.1152,
+    "mem_ratio": 0.239,
+    "verdict": "FASTER",
+    "next_lower": 1200
+   },
+   "default_1m": {
+    "arm": "fastergs-default",
+    "fg_dev": 0.1612,
+    "ours_cap_k": 1200,
+    "ours_dev": 0.1361,
+    "ratio_mean": 0.944,
+    "ratio_pooled": 0.944,
+    "per_seed": [
+     0.941,
+     0.915,
+     0.976
+    ],
+    "hold": 3,
+    "fg_test": 0.1578,
+    "ours_test": 0.1361,
+    "mem_ratio": 0.288,
+    "verdict": "FASTER",
+    "next_lower": 800
+   },
+   "truncated": true,
+   "dev_gap_3m_vs_1m": -0.0418,
+   "health_min": {
+    "fastergs-default": 1.0,
+    "fastergs-3000k": 1.0,
+    "ours-300k": 1.0,
+    "ours-500k": 1.0,
+    "ours-800k": 1.0,
+    "ours-1200k": 1.0,
+    "ours-2000k": 0.9842,
+    "ours-3000k": 0.9709,
+    "ours-4000k": 0.9609
+   }
+  },
+  "counter": {
+   "dev_best": {
+    "arm": "fastergs-3000k",
+    "fg_dev": 0.2319,
+    "ours_cap_k": 1200,
+    "ours_dev": 0.231,
+    "ratio_mean": 0.404,
+    "ratio_pooled": 0.404,
+    "per_seed": [
+     0.402,
+     0.407,
+     0.403
+    ],
+    "hold": 1,
+    "fg_test": 0.2158,
+    "ours_test": 0.2166,
+    "mem_ratio": 0.128,
+    "verdict": "TIE",
+    "next_lower": 800
+   },
+   "default_1m": {
+    "arm": "fastergs-default",
+    "fg_dev": 0.2485,
+    "ours_cap_k": 800,
+    "ours_dev": 0.239,
+    "ratio_mean": 0.653,
+    "ratio_pooled": 0.653,
+    "per_seed": [
+     0.647,
+     0.663,
+     0.65
+    ],
+    "hold": 3,
+    "fg_test": 0.2345,
+    "ours_test": 0.2255,
+    "mem_ratio": 0.135,
+    "verdict": "FASTER",
+    "next_lower": 500
+   },
+   "truncated": true,
+   "dev_gap_3m_vs_1m": -0.0166,
+   "health_min": {
+    "fastergs-default": 1.0,
+    "fastergs-3000k": 1.0,
+    "ours-300k": 1.0,
+    "ours-500k": 0.9977,
+    "ours-800k": 0.9858,
+    "ours-1200k": 0.9755,
+    "ours-2000k": 0.9679,
+    "ours-3000k": 0.9611,
+    "ours-4000k": 0.957
+   }
+  },
+  "room": {
+   "dev_best": {
+    "arm": "fastergs-3000k",
+    "fg_dev": 0.2528,
+    "ours_cap_k": 1200,
+    "ours_dev": 0.2486,
+    "ratio_mean": 0.487,
+    "ratio_pooled": 0.487,
+    "per_seed": [
+     0.492,
+     0.483,
+     0.486
+    ],
+    "hold": 3,
+    "fg_test": 0.2562,
+    "ours_test": 0.2511,
+    "mem_ratio": 0.144,
+    "verdict": "FASTER",
+    "next_lower": 800
+   },
+   "default_1m": {
+    "arm": "fastergs-default",
+    "fg_dev": 0.2672,
+    "ours_cap_k": 800,
+    "ours_dev": 0.2576,
+    "ratio_mean": 0.792,
+    "ratio_pooled": 0.792,
+    "per_seed": [
+     0.811,
+     0.798,
+     0.768
+    ],
+    "hold": 3,
+    "fg_test": 0.2721,
+    "ours_test": 0.2601,
+    "mem_ratio": 0.147,
+    "verdict": "FASTER",
+    "next_lower": 500
+   },
+   "truncated": true,
+   "dev_gap_3m_vs_1m": -0.0144,
+   "health_min": {
+    "fastergs-default": 1.0,
+    "fastergs-3000k": 1.0,
+    "ours-300k": 1.0,
+    "ours-500k": 1.0,
+    "ours-800k": 1.0,
+    "ours-1200k": 1.0,
+    "ours-2000k": 0.9863,
+    "ours-3000k": 0.9741,
+    "ours-4000k": 0.9641
+   }
+  },
+  "kitchen": {
+   "dev_best": {
+    "arm": "fastergs-3000k",
+    "fg_dev": 0.1462,
+    "ours_cap_k": 1200,
+    "ours_dev": 0.1435,
+    "ratio_mean": 0.404,
+    "ratio_pooled": 0.404,
+    "per_seed": [
+     0.403,
+     0.397,
+     0.414
+    ],
+    "hold": 3,
+    "fg_test": 0.1404,
+    "ours_test": 0.1367,
+    "mem_ratio": 0.12,
+    "verdict": "FASTER",
+    "next_lower": 800
+   },
+   "default_1m": {
+    "arm": "fastergs-default",
+    "fg_dev": 0.1595,
+    "ours_cap_k": 500,
+    "ours_dev": 0.1583,
+    "ratio_mean": 0.596,
+    "ratio_pooled": 0.596,
+    "per_seed": [
+     0.608,
+     0.578,
+     0.602
+    ],
+    "hold": 3,
+    "fg_test": 0.1546,
+    "ours_test": 0.1527,
+    "mem_ratio": 0.112,
+    "verdict": "FASTER",
+    "next_lower": 300
+   },
+   "truncated": true,
+   "dev_gap_3m_vs_1m": -0.0133,
+   "health_min": {
+    "fastergs-default": 1.0,
+    "fastergs-3000k": 1.0,
+    "ours-300k": 1.0,
+    "ours-500k": 1.0,
+    "ours-800k": 0.9907,
+    "ours-1200k": 0.9826,
+    "ours-2000k": 0.9734,
+    "ours-3000k": 0.9668,
+    "ours-4000k": 0.9626
+   }
+  },
+  "truck-full": {
+   "dev_best": {
+    "arm": "fastergs-3000k",
+    "fg_dev": 0.1351,
+    "ours_cap_k": 1200,
+    "ours_dev": 0.1333,
+    "ratio_mean": 0.512,
+    "ratio_pooled": 0.512,
+    "per_seed": [
+     0.533,
+     0.507,
+     0.495
+    ],
+    "hold": 3,
+    "fg_test": 0.1301,
+    "ours_test": 0.1288,
+    "mem_ratio": 0.171,
+    "verdict": "FASTER",
+    "next_lower": 800
+   },
+   "default_1m": {
+    "arm": "fastergs-default",
+    "fg_dev": 0.1663,
+    "ours_cap_k": 800,
+    "ours_dev": 0.1468,
+    "ratio_mean": 0.865,
+    "ratio_pooled": 0.865,
+    "per_seed": [
+     0.893,
+     0.845,
+     0.858
+    ],
+    "hold": 3,
+    "fg_test": 0.1629,
+    "ours_test": 0.1418,
+    "mem_ratio": 0.226,
+    "verdict": "FASTER",
+    "next_lower": 500
+   },
+   "truncated": true,
+   "dev_gap_3m_vs_1m": -0.0312,
+   "health_min": {
+    "fastergs-default": 1.0,
+    "fastergs-3000k": 1.0,
+    "ours-300k": 1.0,
+    "ours-500k": 1.0,
+    "ours-800k": 1.0,
+    "ours-1200k": 1.0,
+    "ours-2000k": 0.985,
+    "ours-3000k": 0.9702,
+    "ours-4000k": 0.964
+   }
+  }
+ },
+ "checks": {
+  "recompute": "DEV=H[1::2], TEST=H[0::2] of sorted held-out ids; target = FG arm 3-seed mean DEV LPIPS-VGG; ours = smallest cap with 3-seed mean DEV <= target; ratio = mean per-seed train_s ratio (pooled ratio identical to 3 dp); FASTER iff <0.95 and TEST hold >=2/3. All ratios/holds/caps match lane json exactly: dev-best .573/.560/.404(TIE, hold 1/3)/.487/.404/.512; 1M .884/.944/.653/.792/.596/.865 (lane range .596-.944 correct). Counter TIE is correct: ratio .404 but TEST hold 1/3 (FG-3M test .2158 vs ours-1.2M .2166).",
+  "timing": "Every pair same-request same-runner; order alternates by seed (s11,s13: FG-1M,FG-3M,ours 300k->4M; s12: reversed) - 2:1 not balanced, per registered v2 design. SPLAT_THREAD_CAP=0 (uncapped) and affinity_cpus=6 on all 18. NVML baseline before each arm <=4 MiB. Per-seed ratio spread within scene max 1.08x (truck .495-.533); no outlier under the 1.5x audit criterion of rule:speed-coplacement -> hold may be lifted. Arm train_s spread across seeds max 1.20x (garden ours-300k/500k, room ours-4M) - none in a verdict pair changes a class. Wall ratios (incl. FG preload ~40 s) are lower still: dev-best .34-.48. Runner spans 17:14-18:05Z. Hardware mixed across runners (Xeon 8559C/6962P/one other; driver 610.57.04 / 610.43.02) but within-runner pairing.",
+  "integrity": "162/162 rows: scene label matches, view names == sorted(perf/scenes/<scene>/images)[::8] exactly, one views_hash per scene, n_scored = expected (25/24/30/39/35/32). Ours in-run 'Eval iter 30000 PSNR' vs scored PSNR: 126/126 within -0.030..+0.010 dB. Faster-GS PSNR per arm consistent across seeds (max 0.30 dB spread, kitchen 3M). All 18 rc=0 on every arm. FG source git heads d7fae871/e458ac6e logged (tree_sha256 logged but 'registered False', i.e. not asserted).",
+  "memory": "Both arms: mem.peak_mib = NVML board peak_used minus baseline from the same harness monitor; ratio mean over seeds .112-.290 (lane '.11-.29' correct). Faster-GS expandable_segments True confirmed in logs; its peak includes VRAM-preloaded training images (PRELOADING_LEVEL 2, ~2 GB alloc at step 0) - must be disclosed beside the ratio. Note summary 'gs_preload False' is the gsplat-arm env flag, not Faster-GS.",
+  "health": "Faster-GS final/cap = 1.000 all 36 runs (count at last step); FINALIZE prune to 0.93-0.99x (e.g. 1M->0.93-0.99M; 3M->2.55-2.93M) reported separately - fine. Ours min final/cap = 0.9494 (bicycle 4M rung); over the scored verdict caps min 0.968 (bicycle 2M). Lane's original '>=0.96' was wrong; corrected '0.95' is right to 2 dp (exact 0.949). No flag >50%."
+ },
+ "recipe": {
+  "upstream": "Partly. Base = the one shipped yaml fastergs_garden.yaml + the code's own 'set to X when using MCMC' annotations (USE_MCMC, densify end 24900, Morton end 25000, opacity/scale reg 0.01, opacity LR 0.05) - confirmed sole config per amendment 476. BUT the MCMC cap is NOT upstream's benchmark recipe: nerficg@e458ac6e scripts/benchmark.py (ENABLE_CUSTOM_MCMC_COUNTS=True) overrides MAX_PRIMITIVES per M360 scene: bicycle 6.13M, garden 5.83M, counter 1.22M, kitchen 1.85M, room 1.59M. The 1M arm is the Trainer.py:32 default only (logged cap_source Trainer.py:32-default; FASTERGS_SCENE unset).",
+  "truck_full": "Disclosure present in lane json (label_note 'garden recipe applied (no upstream per-dataset config)') and consistent with amendment 476; truck is not in benchmark.py mcmc_counts either, so 1M default applies there."
+ },
+ "discrepancies": [
+  "WORDING (required): '1M = Faster-GS's shipped default' must be qualified: it is the Trainer default; NeRFICG's own benchmark driver uses per-scene MCMC caps (1.22-6.13M on the 5 M360 scenes). Upstream's benchmark cap for bicycle/garden (~6M) exceeds our 3M rung, so truncation is real there; for counter/kitchen/room the benchmark cap lies between the two rungs.",
+  "Ours health minimum is 0.949 (lane initial >=0.96 wrong; corrected 0.95 OK).",
+  "Runs executed 10:14-11:05 PT, before the runner-reuse harness fix historical-build-017 (10:47); fixed /tmp/gseq-score dirs. Post-hoc audit here is CLEAN (view names, views_hash, in-run vs scored PSNR, FG cross-seed PSNR), satisfying rule:fal-runner-reuse re-check.",
+  "Order alternation 2:1 (seeds 11,13 FG-first), not balanced; harmless given 1.08x ratio spread.",
+  "FG tree_sha256 not asserted against a registered value (git sha only)."
+ ],
+ "wording_ok": "Faster-GS d7fae871 (MCMC mode) on NeRFICG e458ac6e, DESCRIPTIVE, RTX PRO 6000: vs its DEV-best arm (3M on 6/6; ladder may be truncated) ours reaches equal DEV LPIPS in .40-.57x train time on 5/6 scenes (TIE on counter, TEST hold 1/3); vs the 1M Trainer default .60-.94x on 6/6; NVML peak .11-.29x (Faster-GS preloads images to VRAM). Never 'faster than Faster-GS' beyond this protocol."
+}

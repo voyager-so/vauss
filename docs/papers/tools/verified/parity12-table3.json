@@ -1,0 +1,613 @@
+{
+ "claim": "parity:12-table3",
+ "verifier": "independent (pubs verifier), recomputed from per-view rows: ours train.log EVAL_SCALE_VIEW lines, gsplat metrics.json scales.*.views",
+ "verified_at": "2026-10-09",
+ "registration": {
+  "entries": [
+   "archived study registry (not distributed):432 (08:25 rule)",
+   "436 (NVML amendment)",
+   "450 (amendment 2: arm labels, fal exec, 50 ms NVML)",
+   "464 (binary sha eb90dee2 confirmed)",
+   "509 (launched 09:15)",
+   "636 (10:39 DATA ISSUE: 3 wrong-scene gsplat rows, driver 85410b2d)",
+   "555 (o10 withdrawn on this run-reported, unverified D vs M reading, pending verification)"
+  ],
+  "decision_rule": "per scale: per seed index 9-scene mean dPSNR (M-G); AHEAD iff mean>2*SD (ddof=1,n=3) and no scene 3-seed mean < -0.05; BEHIND iff mean < -2*SD; else PARITY. Row AHEAD iff all 4 AHEAD; BEHIND iff any BEHIND; else PARITY. Pre-registered at 08:25 before launch (09:15)."
+ },
+ "data_integrity": {
+  "rows": "81 rows (D,M,G x 9 scenes x 3 seeds), all present, 4 scales each, 30k iters",
+  "scene_labels": "ALL MATCH. G: metrics.json scene == <label>-native and tar blob sha == research/o2-corpus-native/report.json for the label. D/M: argv tar blob sha == label's sha, argv max-res == dims images_8 width, argv seed/mode == label. Per-view held-out names identical across D/M/G for every scene/seed/scale (the every-8 split agrees in both engines).",
+  "summary_vs_views": "ours EVAL_SCALE summary == mean of per-view rows (<=0.002 dB) and n matches for all rows; G aggregate == per-view mean.",
+  "gs_bad": "gs-bad/flowers-s42 ran counter-native, gs-bad/stump-s42 ran bonsai-native, gs-bad/treehill-s43 ran kitchen-native (confirmed from scene field + stdout). Replaced in gs/ by reruns that record the correct scene and tar (new drive.py host_id fields; stdout shows /tmp/t3/scenes/<label>-native). Current gs_table3.py sha256 = 85410b2d... (rmtree + assert len(found)==1). Excluded from t3verdict.py (reads gs/ only) and disclosed at archived study registry (not distributed):636."
+ },
+ "recomputed": {
+  "M_vs_G": {
+   "1": {
+    "verdict": "AHEAD",
+    "mean": 0.4636,
+    "sd": 0.0424,
+    "per_seed": [
+     0.4321,
+     0.5118,
+     0.4467
+    ],
+    "worst": [
+     "stump",
+     -0.0194
+    ],
+    "per_scene": {
+     "bicycle": 0.36,
+     "bonsai": 1.243,
+     "counter": 0.485,
+     "garden": 0.414,
+     "kitchen": 0.831,
+     "room": 0.444,
+     "stump": -0.019,
+     "flowers": 0.047,
+     "treehill": 0.366
+    },
+    "dssim": 0.004
+   },
+   "2": {
+    "verdict": "BEHIND",
+    "mean": -0.1396,
+    "sd": 0.0311,
+    "per_seed": [
+     -0.1694,
+     -0.1072,
+     -0.1422
+    ],
+    "worst": [
+     "room",
+     -1.285
+    ],
+    "per_scene": {
+     "bicycle": -0.013,
+     "bonsai": 2.117,
+     "counter": -0.669,
+     "garden": -1.095,
+     "kitchen": -0.856,
+     "room": -1.285,
+     "stump": -0.144,
+     "flowers": -0.247,
+     "treehill": 0.935
+    },
+    "dssim": -0.041
+   },
+   "4": {
+    "verdict": "AHEAD",
+    "mean": 1.0857,
+    "sd": 0.0225,
+    "per_seed": [
+     1.0629,
+     1.1078,
+     1.0865
+    ],
+    "worst": [
+     "room",
+     -0.0488
+    ],
+    "per_scene": {
+     "bicycle": 0.97,
+     "bonsai": 3.509,
+     "counter": 0.568,
+     "garden": 0.388,
+     "kitchen": 1.335,
+     "room": -0.049,
+     "stump": 1.044,
+     "flowers": 0.465,
+     "treehill": 1.541
+    },
+    "dssim": 0.0061
+   },
+   "8": {
+    "verdict": "AHEAD",
+    "mean": 1.5836,
+    "sd": 0.0177,
+    "per_seed": [
+     1.5659,
+     1.6013,
+     1.5836
+    ],
+    "worst": [
+     "room",
+     0.4101
+    ],
+    "per_scene": {
+     "bicycle": 1.486,
+     "bonsai": 3.943,
+     "counter": 1.078,
+     "garden": 0.978,
+     "kitchen": 2.091,
+     "room": 0.41,
+     "stump": 1.603,
+     "flowers": 0.814,
+     "treehill": 1.848
+    },
+    "dssim": 0.042
+   },
+   "row": "BEHIND"
+  },
+  "D_vs_G": {
+   "1": {
+    "verdict": "PARITY",
+    "mean": 0.3295,
+    "sd": 0.0262,
+    "per_seed": [
+     0.3,
+     0.3385,
+     0.3502
+    ],
+    "worst": [
+     "flowers",
+     -0.0811
+    ],
+    "per_scene": {
+     "bicycle": 0.47,
+     "bonsai": 0.85,
+     "counter": -0.018,
+     "garden": 0.532,
+     "kitchen": 0.507,
+     "room": 0.237,
+     "stump": 0.177,
+     "flowers": -0.081,
+     "treehill": 0.291
+    },
+    "dssim": 0.0037
+   },
+   "2": {
+    "verdict": "BEHIND",
+    "mean": -2.8342,
+    "sd": 0.0218,
+    "per_seed": [
+     -2.855,
+     -2.8114,
+     -2.8362
+    ],
+    "worst": [
+     "kitchen",
+     -4.867
+    ],
+    "per_scene": {
+     "bicycle": -2.305,
+     "bonsai": -4.295,
+     "counter": -2.905,
+     "garden": -4.056,
+     "kitchen": -4.867,
+     "room": -2.85,
+     "stump": -2.219,
+     "flowers": -1.744,
+     "treehill": -0.267
+    },
+    "dssim": -0.0815
+   },
+   "4": {
+    "verdict": "BEHIND",
+    "mean": -2.8774,
+    "sd": 0.0134,
+    "per_seed": [
+     -2.8908,
+     -2.8641,
+     -2.8774
+    ],
+    "worst": [
+     "kitchen",
+     -4.3928
+    ],
+    "per_scene": {
+     "bicycle": -2.695,
+     "bonsai": -4.194,
+     "counter": -3.074,
+     "garden": -4.037,
+     "kitchen": -4.393,
+     "room": -2.739,
+     "stump": -2.424,
+     "flowers": -2.015,
+     "treehill": -0.327
+    },
+    "dssim": -0.0524
+   },
+   "8": {
+    "verdict": "BEHIND",
+    "mean": -2.761,
+    "sd": 0.0091,
+    "per_seed": [
+     -2.7693,
+     -2.7513,
+     -2.7625
+    ],
+    "worst": [
+     "kitchen",
+     -4.1853
+    ],
+    "per_scene": {
+     "bicycle": -2.679,
+     "bonsai": -3.82,
+     "counter": -3.099,
+     "garden": -3.89,
+     "kitchen": -4.185,
+     "room": -2.602,
+     "stump": -2.323,
+     "flowers": -2.039,
+     "treehill": -0.211
+    },
+    "dssim": 0.0104
+   },
+   "row": "BEHIND"
+  },
+  "D_vs_M": {
+   "1": {
+    "verdict": "BEHIND",
+    "mean": -0.134,
+    "sd": 0.0384,
+    "per_seed": [
+     -0.1321,
+     -0.1733,
+     -0.0966
+    ],
+    "worst": [
+     "counter",
+     -0.5029
+    ],
+    "per_scene": {
+     "bicycle": 0.11,
+     "bonsai": -0.393,
+     "counter": -0.503,
+     "garden": 0.118,
+     "kitchen": -0.324,
+     "room": -0.208,
+     "stump": 0.197,
+     "flowers": -0.129,
+     "treehill": -0.075
+    },
+    "dssim": -0.0003
+   },
+   "2": {
+    "verdict": "BEHIND",
+    "mean": -2.6946,
+    "sd": 0.0093,
+    "per_seed": [
+     -2.6856,
+     -2.7042,
+     -2.6941
+    ],
+    "worst": [
+     "bonsai",
+     -6.4122
+    ],
+    "per_scene": {
+     "bicycle": -2.292,
+     "bonsai": -6.412,
+     "counter": -2.236,
+     "garden": -2.962,
+     "kitchen": -4.011,
+     "room": -1.565,
+     "stump": -2.074,
+     "flowers": -1.498,
+     "treehill": -1.202
+    },
+    "dssim": -0.0405
+   },
+   "4": {
+    "verdict": "BEHIND",
+    "mean": -3.9632,
+    "sd": 0.0091,
+    "per_seed": [
+     -3.9537,
+     -3.9719,
+     -3.9639
+    ],
+    "worst": [
+     "bonsai",
+     -7.7021
+    ],
+    "per_scene": {
+     "bicycle": -3.665,
+     "bonsai": -7.702,
+     "counter": -3.642,
+     "garden": -4.426,
+     "kitchen": -5.728,
+     "room": -2.69,
+     "stump": -3.468,
+     "flowers": -2.479,
+     "treehill": -1.868
+    },
+    "dssim": -0.0585
+   },
+   "8": {
+    "verdict": "BEHIND",
+    "mean": -4.3446,
+    "sd": 0.0088,
+    "per_seed": [
+     -4.3352,
+     -4.3526,
+     -4.3461
+    ],
+    "worst": [
+     "bonsai",
+     -7.7629
+    ],
+    "per_scene": {
+     "bicycle": -4.166,
+     "bonsai": -7.763,
+     "counter": -4.177,
+     "garden": -4.869,
+     "kitchen": -6.276,
+     "room": -3.012,
+     "stump": -3.927,
+     "flowers": -2.854,
+     "treehill": -2.059
+    },
+    "dssim": -0.0315
+   },
+   "row": "BEHIND"
+  }
+ },
+ "abs_psnr_3seed_mean_x1_x2_x4_x8": {
+  "bicycle": {
+   "D": [
+    27.447,
+    21.391,
+    18.887,
+    17.878
+   ],
+   "M": [
+    27.337,
+    23.683,
+    22.552,
+    22.044
+   ],
+   "G": [
+    26.977,
+    23.696,
+    21.583,
+    20.558
+   ]
+  },
+  "bonsai": {
+   "D": [
+    34.709,
+    24.997,
+    22.214,
+    21.275
+   ],
+   "M": [
+    35.102,
+    31.409,
+    29.917,
+    29.038
+   ],
+   "G": [
+    33.859,
+    29.292,
+    26.408,
+    25.096
+   ]
+  },
+  "counter": {
+   "D": [
+    30.561,
+    24.62,
+    22.347,
+    21.387
+   ],
+   "M": [
+    31.064,
+    26.855,
+    25.99,
+    25.564
+   ],
+   "G": [
+    30.579,
+    27.524,
+    25.421,
+    24.486
+   ]
+  },
+  "garden": {
+   "D": [
+    30.199,
+    21.002,
+    18.339,
+    17.337
+   ],
+   "M": [
+    30.08,
+    23.963,
+    22.765,
+    22.205
+   ],
+   "G": [
+    29.667,
+    25.058,
+    22.376,
+    21.227
+   ]
+  },
+  "kitchen": {
+   "D": [
+    34.055,
+    22.378,
+    19.504,
+    18.413
+   ],
+   "M": [
+    34.379,
+    26.389,
+    25.232,
+    24.69
+   ],
+   "G": [
+    33.548,
+    27.245,
+    23.897,
+    22.599
+   ]
+  },
+  "room": {
+   "D": [
+    33.642,
+    27.237,
+    25.292,
+    24.578
+   ],
+   "M": [
+    33.85,
+    28.802,
+    27.982,
+    27.59
+   ],
+   "G": [
+    33.405,
+    30.087,
+    28.031,
+    27.18
+   ]
+  },
+  "stump": {
+   "D": [
+    27.68,
+    22.649,
+    20.504,
+    19.646
+   ],
+   "M": [
+    27.483,
+    24.723,
+    23.972,
+    23.573
+   ],
+   "G": [
+    27.503,
+    24.868,
+    22.928,
+    21.97
+   ]
+  },
+  "flowers": {
+   "D": [
+    23.724,
+    19.315,
+    17.425,
+    16.675
+   ],
+   "M": [
+    23.853,
+    20.813,
+    19.905,
+    19.529
+   ],
+   "G": [
+    23.805,
+    21.059,
+    19.44,
+    18.715
+   ]
+  },
+  "treehill": {
+   "D": [
+    24.348,
+    21.497,
+    19.928,
+    19.293
+   ],
+   "M": [
+    24.423,
+    22.699,
+    21.796,
+    21.352
+   ],
+   "G": [
+    24.057,
+    21.764,
+    20.255,
+    19.503
+   ]
+  }
+ },
+ "health": {
+  "D": {
+   "mean_peak": 3114,
+   "max_peak": 4719,
+   "mean_hz": null,
+   "min_hz": null,
+   "mean_samples": 4501,
+   "wall": 227,
+   "drivers": [
+    "580.126.20",
+    "590.48.01",
+    "610.43.02",
+    "610.57.04"
+   ]
+  },
+  "M": {
+   "mean_peak": 3133,
+   "max_peak": 5215,
+   "mean_hz": null,
+   "min_hz": null,
+   "mean_samples": 4503,
+   "wall": 227,
+   "drivers": [
+    "580.126.20",
+    "590.48.01",
+    "610.43.02",
+    "610.57.04"
+   ]
+  },
+  "G": {
+   "mean_peak": 5588,
+   "max_peak": 12687,
+   "mean_hz": 7.4,
+   "min_hz": 1.8,
+   "mean_samples": null,
+   "wall": 549,
+   "drivers": [
+    "590.48.01",
+    "610.43.02",
+    "610.57.04"
+   ]
+  }
+ },
+ "lane_vs_recomputed": "M vs G, D vs G, D vs M per-scale means, per-seed values, SDs, worst scenes and verdicts all reproduce to <=0.001 dB. No discrepancy > 0.01 dB.",
+ "verdicts": {
+  "primary_M_vs_G": {
+   "x1": "AHEAD (+0.464, SD 0.042, worst stump -0.019)",
+   "x2": "BEHIND (-0.140, SD 0.031, worst room -1.285)",
+   "x4": "AHEAD (+1.086, SD 0.022, worst room -0.049)",
+   "x8": "AHEAD (+1.584, SD 0.018, worst room +0.410)",
+   "row": "BEHIND"
+  },
+  "secondary_D_vs_G": {
+   "x1": "PARITY (+0.330 > 2SD but flowers -0.081 breaks the -0.05 floor)",
+   "x2": "BEHIND -2.834",
+   "x4": "BEHIND -2.877",
+   "x8": "BEHIND -2.761"
+  },
+  "secondary_D_vs_M": {
+   "x1": "BEHIND -0.134 (SD 0.038)",
+   "x2": "BEHIND -2.695",
+   "x4": "BEHIND -3.963",
+   "x8": "BEHIND -4.345"
+  }
+ },
+ "protocol_checks": {
+  "train_res": "native/8 as registered (max-res = round(W/8): bicycle 618, garden 648, room 389 ...); gsplat data_factor=8. Matches registration (Mip-Splatting Table 3: train /8, test x1/x2/x4/x8). The older 'half-res train, test x0.25-x2' note is the superseded own protocol (replaced by this registration); not what was run, and not what was registered here.",
+  "test_scales": "x1/x2/x4/x8 of the /8 training size, GT native box-resized for s>1 in both arms (brush thumbnail_exact; gsplat PIL BOX).",
+  "gsplat_recipe": "gs_table3.py: simple_trainer default preset, DefaultStrategy, data_factor=8, antialiased=True, test_every=8, max_steps=30000, seed 42/43/44 (42 = upstream). Label 'gsplat v1.5.3 937e29912570c372bed6747a5c9bf85fed877bae' is a hard-coded string in the driver, not introspected from the installed package at runtime (verifier cannot confirm /opt/gsplat's commit from artifacts).",
+  "same_views": "yes, identical held-out view names per scene in all arms (37-39 views per scene etc.)."
+ },
+ "discrepancies_and_disclosures": [
+  "NONE >0.01 dB between lane numbers and recomputation.",
+  "Eval-size mismatch (descriptive, small): in bicycle, counter, kitchen, flowers ours renders/scores at height 1 px shorter at x1 (e.g. counter 389x259 vs gsplat 389x260; x8 3112x2072 vs 3112x2080) because brush's /8 height rounding differs from gsplat's. GT is box-resized to each arm's own size, so GT construction is not byte-identical across arms in those 4 scenes (aspect off ~0.3%). Room, bonsai, garden, stump, treehill match exactly. Unlikely to move 9-scene means by >0.05 dB but undisclosed.",
+  "x1 GT differs by resampler: ours x1 GT = brush's own /8 load; gsplat x1 GT = gsplat parser's bicubic /8 training image (registration says 'native box-resized' for scaled GT; x1 is not box-resized in either arm). Disclose.",
+  "Ours-mip ran WITHOUT the Mip 3D filter: train.log 'Mip 3D filter off (6.46M-17.4M px per training image, threshold 300000)' \u2014 the gate counts native source pixels, not the /8 training pixels (~100-270k, which would be under threshold). So M = 2D mip dilation + opacity compensation only. Registered arm is just '--render-mode mip' on binary eb90dee2, so the run is valid as registered, but any interpretation ('mip loses at x2') must say the 3D filter was gated off by a native-px check; this is plausibly a gate bug.",
+  "NVML: amendment 2 requires >=18 Hz on all arms; G achieved mean 7.4 Hz (min 1.8), 21/27 rows <18 Hz. D/M 19.3-19.8 Hz. G peak NVML (mean 5588 MiB) is descriptive only, as the lane says; D 3114 / M 3133 recompute exactly.",
+  "Pairing: registration said 'paired D|M on one runner'; launch.sh submits D and M as separate fal exec jobs (amendment 2 moved to fal exec). Runner drivers mixed 580/590/610 across rows. Irrelevant to the PSNR verdict (quality, not wall), but wall comparisons are not citable.",
+  "o10-aa-default-screen-v1 withdrawal (claims:555) quoted D vs M -0.13..-4.35; recomputation confirms these numbers."
+ ],
+ "room_x2_outlier": {
+  "finding": "Real and systematic, not a collapse or label error. M room x2 = 28.83/28.78/28.80 over seeds 1/2/3 (spread 0.05 dB); G 30.05/30.14/30.07; G n_splats 1.54M stable. 85% of room x2 views have M<G (median -1.60 dB), whereas at x1 41%, x4 61%, x8 34%. Correct scene (tar sha, view names).",
+  "shape": "M drops ~5.0 dB x1->x2 then only ~0.8/0.4 dB to x4/x8; G drops 3.3, 2.1, 0.85. Same x2 dip in kitchen (-0.86, 82% views negative) and counter (-0.67, 89%), and garden (-1.10); bonsai is the exception (+2.1). So x2 BEHIND is a cross-scene pattern of the M arm at 2x magnification, with room the largest.",
+  "likely_cause": "Unresolved without renders. Candidates: (a) 3D filter gated off (see above) so M lacks Mip-Splatting's zoom-in smoothing exactly where it matters; (b) a x2-specific render/GT-geometry effect in the brush hook. Not collapse. Recommend a render diff of room DSCF4843 (M 28.34 vs G 31.53 at x2) M vs G at x1/x2 before any interpretive sentence."
+ }
+}

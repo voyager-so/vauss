@@ -1,0 +1,774 @@
+{
+ "schema": "pubs-verify/parity7b-vram/v1",
+ "generated_at": "2026-10-09T01:29:27-07:00",
+ "part1_parity7b": {
+  "claim_group": "parity7b-peak-vram-vs-gsplat",
+  "metric": "whole-process board NVML memory.used peak minus pre-launch idle (nvidia-smi -lms 50)",
+  "method": "Independent parse of each nvml_<tag>.csv: idle = max sample before the runs.txt start time (nvwrap.sh starts nvidia-smi 1 s before launch); peak = max sample in [start, end]; effective Hz = (n-1)/span in-run; max gap in-run; ours training-only peak = max before the first eval log line.",
+  "cells": {
+   "garden 1200000": {
+    "ours_mib": 1680,
+    "gsplat_mib": 4419,
+    "ratio": 0.3801765105227427,
+    "verdict": "AHEAD",
+    "both_valid": true,
+    "final_splats": {
+     "ours": 1194918,
+     "gsplat": 1200000
+    },
+    "lane": {
+     "ours": 1680,
+     "gsplat": 4419,
+     "ratio": 0.38
+    },
+    "lane_match": true,
+    "ours_main_earlier_run_mib": 2653,
+    "ratio_with_ours_main": 0.6003620728671645,
+    "train_only": {
+     "ours": 1680,
+     "gsplat": null
+    },
+    "gsplat_torch_max_reserved_mib": 3866.0,
+    "gsplat_torch_max_allocated_mib": 3643.93798828125
+   },
+   "kitchen 1200000": {
+    "ours_mib": 2817,
+    "gsplat_mib": 5815,
+    "ratio": 0.48443680137575235,
+    "verdict": "AHEAD",
+    "both_valid": true,
+    "final_splats": {
+     "ours": 1187712,
+     "gsplat": 1200000
+    },
+    "lane": {
+     "ours": 2817,
+     "gsplat": 5815,
+     "ratio": 0.48
+    },
+    "lane_match": true,
+    "ours_main_earlier_run_mib": 3136,
+    "ratio_with_ours_main": 0.5392949269131556,
+    "train_only": {
+     "ours": 2817,
+     "gsplat": null
+    },
+    "gsplat_torch_max_reserved_mib": 5262.0,
+    "gsplat_torch_max_allocated_mib": 4985.96875
+   },
+   "garden 6500000": {
+    "ours_mib": 6438,
+    "gsplat_mib": 11329,
+    "ratio": 0.5682761055697767,
+    "verdict": "AHEAD",
+    "both_valid": true,
+    "final_splats": {
+     "ours": 6180991,
+     "gsplat": 6500000
+    },
+    "lane": {
+     "ours": 6438,
+     "gsplat": 11329,
+     "ratio": 0.57
+    },
+    "lane_match": true,
+    "ours_main_earlier_run_mib": 12254,
+    "ratio_with_ours_main": 1.081648865742784,
+    "train_only": {
+     "ours": 6438,
+     "gsplat": null
+    },
+    "gsplat_torch_max_reserved_mib": 10776.0,
+    "gsplat_torch_max_allocated_mib": 8187.14990234375
+   },
+   "kitchen 6500000": {
+    "ours_mib": 6478,
+    "gsplat_mib": 11015,
+    "ratio": 0.5881071266454835,
+    "verdict": "AHEAD",
+    "both_valid": true,
+    "final_splats": {
+     "ours": 6214215,
+     "gsplat": 6500000
+    },
+    "lane": {
+     "ours": 6478,
+     "gsplat": 11015,
+     "ratio": 0.59
+    },
+    "lane_match": true,
+    "ours_main_earlier_run_mib": 11997,
+    "ratio_with_ours_main": 1.089151157512483,
+    "train_only": {
+     "ours": 6478,
+     "gsplat": null
+    },
+    "gsplat_torch_max_reserved_mib": 11214.0,
+    "gsplat_torch_max_allocated_mib": 9230.591796875
+   }
+  },
+  "runs": {
+   "p7b-ours-historical-build-038-1200000/ours_garden_1200000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 1680,
+    "peak_minus_idle_mib": 1680,
+    "train_only_peak_minus_idle_mib": 1680,
+    "hz": 19.91599696490791,
+    "max_gap_s": 0.09999990463256836,
+    "valid": true,
+    "wall_s": 151.21932196617126,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 1194918,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 27.46464,
+    "ssim": 0.8625703
+   },
+   "p7b-ours-historical-build-038-1200000/ours_kitchen_1200000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 2817,
+    "peak_minus_idle_mib": 2817,
+    "train_only_peak_minus_idle_mib": 2817,
+    "hz": 19.91649269751655,
+    "max_gap_s": 0.0820000171661377,
+    "valid": true,
+    "wall_s": 215.60501265525818,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 1187712,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 31.79634,
+    "ssim": 0.9345215
+   },
+   "p7b-ours-historical-build-038-6500000/ours_garden_6500000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 6438,
+    "peak_minus_idle_mib": 6438,
+    "train_only_peak_minus_idle_mib": 6438,
+    "hz": 19.769370285360665,
+    "max_gap_s": 0.3210000991821289,
+    "valid": true,
+    "wall_s": 514.9999330043793,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 6180991,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 27.927824,
+    "ssim": 0.8821431
+   },
+   "p7b-ours-historical-build-038-6500000/ours_kitchen_6500000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 6478,
+    "peak_minus_idle_mib": 6478,
+    "train_only_peak_minus_idle_mib": 6478,
+    "hz": 19.8469784881751,
+    "max_gap_s": 0.23000001907348633,
+    "valid": true,
+    "wall_s": 702.8177492618561,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 6214215,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 32.38301,
+    "ssim": 0.93850946
+   },
+   "p7b-gs-1200000/gs_garden_1200000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 4419,
+    "peak_minus_idle_mib": 4419,
+    "train_only_peak_minus_idle_mib": null,
+    "hz": 19.81493152362204,
+    "max_gap_s": 0.17799997329711914,
+    "valid": true,
+    "wall_s": 650.6293199062347,
+    "unparsed_csv_lines": 0,
+    "final_splats": 1200000,
+    "final_splats_source": "gs7b.py runner.splats['means'].shape[0]",
+    "torch_max_allocated_mib": 3643.93798828125,
+    "torch_max_reserved_mib": 3866.0,
+    "psnr": 27.092506408691406,
+    "ssim": 0.8539901971817017,
+    "lpips": 0.13229680061340332,
+    "train_only_marker": "untimed marker"
+   },
+   "p7b-gs-1200000/gs_kitchen_1200000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 5815,
+    "peak_minus_idle_mib": 5815,
+    "train_only_peak_minus_idle_mib": null,
+    "hz": 19.77953359653303,
+    "max_gap_s": 0.15899991989135742,
+    "valid": true,
+    "wall_s": 845.6461048126221,
+    "unparsed_csv_lines": 0,
+    "final_splats": 1200000,
+    "final_splats_source": "gs7b.py runner.splats['means'].shape[0]",
+    "torch_max_allocated_mib": 4985.96875,
+    "torch_max_reserved_mib": 5262.0,
+    "psnr": 31.52391242980957,
+    "ssim": 0.9309258460998535,
+    "lpips": 0.12560516595840454,
+    "train_only_marker": "untimed marker"
+   },
+   "p7b-gs-6500000/gs_garden_6500000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 11329,
+    "peak_minus_idle_mib": 11329,
+    "train_only_peak_minus_idle_mib": null,
+    "hz": 19.937774361685896,
+    "max_gap_s": 0.07000017166137695,
+    "valid": true,
+    "wall_s": 2729.7784512043,
+    "unparsed_csv_lines": 0,
+    "final_splats": 6500000,
+    "final_splats_source": "gs7b.py runner.splats['means'].shape[0]",
+    "torch_max_allocated_mib": 8187.14990234375,
+    "torch_max_reserved_mib": 10776.0,
+    "psnr": 27.895973205566406,
+    "ssim": 0.876846969127655,
+    "lpips": 0.09485840052366257,
+    "train_only_marker": "untimed marker"
+   },
+   "p7b-gs-6500000/gs_kitchen_6500000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 11015,
+    "peak_minus_idle_mib": 11015,
+    "train_only_peak_minus_idle_mib": null,
+    "hz": 19.936888885033134,
+    "max_gap_s": 0.0709998607635498,
+    "valid": true,
+    "wall_s": 3368.0880653858185,
+    "unparsed_csv_lines": 0,
+    "final_splats": 6500000,
+    "final_splats_source": "gs7b.py runner.splats['means'].shape[0]",
+    "torch_max_allocated_mib": 9230.591796875,
+    "torch_max_reserved_mib": 11214.0,
+    "psnr": 32.32859802246094,
+    "ssim": 0.9363641142845154,
+    "lpips": 0.11476895213127136,
+    "train_only_marker": "untimed marker"
+   },
+   "p7b-ours-main/ours_garden_1200000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 2653,
+    "peak_minus_idle_mib": 2653,
+    "train_only_peak_minus_idle_mib": 2653,
+    "hz": 19.801061127029943,
+    "max_gap_s": 0.1230001449584961,
+    "valid": true,
+    "wall_s": 204.74906015396118,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 1187705,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 27.339884,
+    "ssim": 0.8575935
+   },
+   "p7b-ours-main/ours_kitchen_1200000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 3136,
+    "peak_minus_idle_mib": 3136,
+    "train_only_peak_minus_idle_mib": 3136,
+    "hz": 19.840777759962997,
+    "max_gap_s": 0.127000093460083,
+    "valid": true,
+    "wall_s": 282.3065969944,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 1182505,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 32.021526,
+    "ssim": 0.93339896
+   },
+   "p7b-ours-main/ours_garden_6500000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 12254,
+    "peak_minus_idle_mib": 12254,
+    "train_only_peak_minus_idle_mib": 12254,
+    "hz": 19.779962714787143,
+    "max_gap_s": 0.2820000648498535,
+    "valid": true,
+    "wall_s": 701.0895924568176,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 6174223,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 27.796392,
+    "ssim": 0.8774941
+   },
+   "p7b-ours-main/ours_kitchen_6500000": {
+    "rc": "0",
+    "idle_mib": 0,
+    "n_pre_samples": 20,
+    "board_peak_mib": 11997,
+    "peak_minus_idle_mib": 11997,
+    "train_only_peak_minus_idle_mib": 11997,
+    "hz": 19.78033224398893,
+    "max_gap_s": 0.38299989700317383,
+    "valid": true,
+    "wall_s": 859.8772835731506,
+    "unparsed_csv_lines": 0,
+    "train_only_marker": "first 'Running evaluation'/'Eval iter' log line",
+    "final_splats": 6206509,
+    "final_splats_source": "last 'Refine iter' log line",
+    "psnr": 32.2517,
+    "ssim": 0.9363385
+   }
+  },
+  "historical-record": {
+   "p7b-ours-historical-build-038-1200000": {
+    "historical-record": [
+     "historical-record"
+    ],
+    "requests": [
+     [
+      "01a11fa1-e773-7750-950f-e6264a5eeadf",
+      "splat-gpu-l40-v12"
+     ]
+    ],
+    "exit": [
+     "[01:11:21] exit 0 | fal L40S 48GB | run 375.0s, request 1414.8s | 5 files back (0.0 MB) -> $SPLAT_DATA/runs/v1/p7b-ours-historical-build-038-1200000 | ~$0.216 (perf/perf-vram; total ~$1851.77) | $HOME"
+    ],
+    "gpu_in_exit": [
+     "L40S 48GB"
+    ]
+   },
+   "p7b-ours-historical-build-038-6500000": {
+    "historical-record": [
+     "historical-record"
+    ],
+    "requests": [
+     [
+      "01a11fa1-e793-7fc0-98c6-bd8c58c908e8",
+      "splat-gpu-l40-v12"
+     ]
+    ],
+    "exit": [
+     "[01:25:41] exit 0 | fal L40S 48GB | run 1228.8s, request 2274.6s | 5 files back (0.1 MB) -> $SPLAT_DATA/runs/v1/p7b-ours-historical-build-038-6500000 | ~$0.7079 (perf/perf-vram; total ~$1910.09) | $HOME"
+    ],
+    "gpu_in_exit": [
+     "L40S 48GB"
+    ]
+   },
+   "p7b-gs-1200000": {
+    "historical-record": [
+     "historical-record"
+    ],
+    "requests": [
+     [
+      "01a11f08-7702-76d3-a67b-2949cafcebf4",
+      "splat-py-l40-v2-c3-2h"
+     ]
+    ],
+    "exit": [
+     "[22:25:29] exit 0 | fal L40S 48GB | run 1505.7s, request 1518.4s | 7 files back (0.6 MB) -> $SPLAT_DATA/runs/v1/p7b-gs-1200000 | ~$0.8681 (perf/perf-vram; total ~$1068.31) | $HOME/data/"
+    ],
+    "gpu_in_exit": [
+     "L40S 48GB"
+    ]
+   },
+   "p7b-gs-6500000": {
+    "historical-record": [
+     "historical-record"
+    ],
+    "requests": [
+     [
+      "01a11f08-77e5-7621-8a06-6135ccf081e9",
+      "splat-py-l40-v2-c3-2h"
+     ]
+    ],
+    "exit": [
+     "[23:44:05] exit 0 | fal L40S 48GB | run 6105.7s, request 6234.5s | 7 files back (1.2 MB) -> $SPLAT_DATA/runs/v1/p7b-gs-6500000 | ~$3.5126 (perf/perf-vram; total ~$1547.68) | $HOME/data/"
+    ],
+    "gpu_in_exit": [
+     "L40S 48GB"
+    ]
+   },
+   "p7b-ours-main": {
+    "historical-record": [
+     "historical-record"
+    ],
+    "requests": [
+     [
+      "01a11f08-7692-7a73-b202-c236da94c183",
+      "splat-gpu-l40-v11"
+     ]
+    ],
+    "exit": [
+     "[22:34:37] exit 0 | fal L40S 48GB | run 2061.8s, request 2067.1s | 9 files back (0.2 MB) -> $SPLAT_DATA/runs/v1/p7b-ours-main | ~$1.1862 (perf/perf-vram; total ~$1149.20) | $HOME/data/s"
+    ],
+    "gpu_in_exit": [
+     "L40S 48GB"
+    ]
+   }
+  },
+  "checks": {
+   "all_runs_rc0": true,
+   "all_valid_hz_gap": true,
+   "hz_range": [
+    19.769370285360665,
+    19.937774361685896
+   ],
+   "max_gap_s": 0.38299989700317383,
+   "idle_mib_all": [
+    0
+   ],
+   "pre_launch_samples": [
+    20
+   ],
+   "gpu": "all five requests exited on 'fal L40S 48GB'",
+   "lane_numbers_reproduced": true
+  },
+  "verdict": {
+   "status": "PASS",
+   "rule_verdict": {
+    "garden 1200000": "AHEAD",
+    "kitchen 1200000": "AHEAD",
+    "garden 6500000": "AHEAD",
+    "kitchen 6500000": "AHEAD"
+   },
+   "row": "AHEAD on 4/4 cells (ratio < 0.95 and >100 MiB below)"
+  },
+  "deviations": [
+   {
+    "id": "final_count_not_equal",
+    "registered": "6.5M equal final count",
+    "found": "ours ends below the cap (garden 6,180,991, kitchen 6,214,215 vs gsplat exactly 6,500,000: -4.9% / -4.4%; at 1.2M ours 1,194,918 / 1,187,712 vs 1,200,000)",
+    "effect": "count mismatch favours ours by roughly its size; ratios .57/.59 are far below the .95 line, so the verdict survives, but per-splat claims must not be made"
+   },
+   {
+    "id": "training_only_peak_gsplat",
+    "registered": "also training-only peak (to first eval)",
+    "found": "ours: training-only peak = whole-process peak in all 4 runs; gsplat train logs carry no timestamps, so its training-only NVML peak cannot be derived from the trace",
+    "effect": "training-only column reported for ours only"
+   },
+   {
+    "id": "runner_pairing",
+    "registered": "L40S same type",
+    "found": "arms ran in separate fal requests on different apps (ours splat-gpu-l40-v12 Vulkan image; gsplat splat-py-l40-v2-c3-2h Python image); both L40S",
+    "effect": "meets the registration (same GPU type); driver/runner may differ"
+   },
+   {
+    "id": "ours_build",
+    "registered": "ours brush-cli main baseline (re-run after pool trim)",
+    "found": "claimed numbers are the historical-build-038 re-run (historical-record, historical-record; historical-build-038 is on main). The earlier ours-main run (historical-record) peaked at 2653/3136/12254/11997 MiB, which would be BEHIND at 6.5M (12254 > 11329, 11997 > 11015)",
+    "effect": "the AHEAD result depends on the pool-trim build; disclose the build sha with the numbers"
+   },
+   {
+    "id": "seeds",
+    "registered": "42 (3 seeds if the first pass is within 10%)",
+    "found": "single seed 42; every ratio is >40% from 1",
+    "effect": "none"
+   },
+   {
+    "id": "idle_zero",
+    "registered": "minus pre-launch idle",
+    "found": "every pre-launch window (20 samples) reads 0 MiB on these fal L40S runners",
+    "effect": "peak minus idle equals board peak"
+   },
+   {
+    "id": "table_script",
+    "registered": "-",
+    "found": "runs/v1/tools/p7b_table.py takes the run directories as argv; run with no arguments it loops over nothing and writes {} to p7b_rows.json (explains the empty output)",
+    "effect": "none on the data"
+   }
+  ]
+ },
+ "part2_ladder_memory": {
+  "question": "Is the scaling-ladder peak-memory disclosure like-for-like?",
+  "ours_field": {
+   "field": "splat-perf row peak_vram_mib",
+   "writer": "crates/splat-perf/src/bench.rs (main): max of nvidia-smi memory.used sampled every 200 ms during the trainer process minus the reading just before launch (baseline_mib, 0 on these H100 rows)",
+   "measures": "board-level NVML used memory of the whole trainer process: Vulkan/wgpu context, all allocator pools (reserved, not just live), staging buffers; includes the in-run final eval"
+  },
+  "mcmc_field": {
+   "field": "row.json peak_vram_gb (ladder.py multiplies by 1024)",
+   "writer": "research/r-oracle/run.py (runner uploaded as {runner} by the q1 ladder batch): peak = max(train_peak, eval_peak), each torch.cuda.max_memory_allocated()/1024**3 after reset_peak_memory_stats",
+   "measures": "PyTorch caching-allocator LIVE allocated bytes only, GiB; excludes CUDA context (~0.5+ GiB), cached-but-free reserved blocks, fragmentation, and non-PyTorch allocations (gsplat CUDA kernels' own buffers via torch are included)",
+   "like_for_like_alternative_in_same_row": "nvidia_smi_peak_gb / train_nvml_peak_gb / eval_nvml_peak_gb: independent NVML process at 2 Hz, phase-separated, GiB, lower bounds (memory_protocol v2)"
+  },
+  "like_for_like": false,
+  "units_note": "the disclosure's '9.1-9.4' for ours equals peak_vram_mib/1000 (GB) while '6.3-6.4' equals peak_vram_gb*1024/1000 - both GB, labelled GiB",
+  "table_gib": {
+   "bicycle 1200k": {
+    "ours_board_nvml_minus_baseline_gib": 2.4557291666666665,
+    "mcmc_torch_max_allocated_gib (ladder used)": 3.4073386192321777,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.039632161458333,
+    "mcmc_board_nvml_peak_gib_train_phase": 3.3709920247395835,
+    "ours_minus_mcmc_board_gib": -2.5839029947916665,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "bicycle 2000k": {
+    "ours_board_nvml_minus_baseline_gib": 3.7893880208333335,
+    "mcmc_torch_max_allocated_gib (ladder used)": 3.981046676635742,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.853434244791667,
+    "mcmc_board_nvml_peak_gib_train_phase": 4.503824869791667,
+    "ours_minus_mcmc_board_gib": -2.0640462239583335,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "bicycle 3000k": {
+    "ours_board_nvml_minus_baseline_gib": 5.320963541666667,
+    "mcmc_torch_max_allocated_gib (ladder used)": 4.692401091257731,
+    "mcmc_board_nvml_peak_gib_whole_run": 6.540913899739583,
+    "mcmc_board_nvml_peak_gib_train_phase": 6.03375244140625,
+    "ours_minus_mcmc_board_gib": -1.219950358072916,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "bicycle 5000k": {
+    "ours_board_nvml_minus_baseline_gib": 8.85546875,
+    "mcmc_torch_max_allocated_gib (ladder used)": 6.198670864105225,
+    "mcmc_board_nvml_peak_gib_whole_run": 9.33673095703125,
+    "mcmc_board_nvml_peak_gib_train_phase": 9.33673095703125,
+    "ours_minus_mcmc_board_gib": -0.48126220703125,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "flowers 1200k": {
+    "ours_board_nvml_minus_baseline_gib": 2.794921875,
+    "mcmc_torch_max_allocated_gib (ladder used)": 3.470348040262858,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.182840983072917,
+    "mcmc_board_nvml_peak_gib_train_phase": 3.4113566080729165,
+    "ours_minus_mcmc_board_gib": -2.387919108072917,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "flowers 2000k": {
+    "ours_board_nvml_minus_baseline_gib": 3.9417317708333335,
+    "mcmc_torch_max_allocated_gib (ladder used)": 4.043238798777263,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.933492024739583,
+    "mcmc_board_nvml_peak_gib_train_phase": 4.656148274739583,
+    "ours_minus_mcmc_board_gib": -1.9917602539062496,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "flowers 3000k": {
+    "ours_board_nvml_minus_baseline_gib": 5.445638020833333,
+    "mcmc_torch_max_allocated_gib (ladder used)": 4.7591573397318525,
+    "mcmc_board_nvml_peak_gib_whole_run": 6.578023274739583,
+    "mcmc_board_nvml_peak_gib_train_phase": 6.095601399739583,
+    "ours_minus_mcmc_board_gib": -1.13238525390625,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "flowers 5000k": {
+    "ours_board_nvml_minus_baseline_gib": 9.1630859375,
+    "mcmc_torch_max_allocated_gib (ladder used)": 6.294583956400554,
+    "mcmc_board_nvml_peak_gib_whole_run": 8.996236165364584,
+    "mcmc_board_nvml_peak_gib_train_phase": 8.996236165364584,
+    "ours_minus_mcmc_board_gib": 0.16684977213541607,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "garden 1200k": {
+    "ours_board_nvml_minus_baseline_gib": 2.61328125,
+    "mcmc_torch_max_allocated_gib (ladder used)": 3.5760062535603843,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.212137858072917,
+    "mcmc_board_nvml_peak_gib_train_phase": 3.3416951497395835,
+    "ours_minus_mcmc_board_gib": -2.598856608072917,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "garden 2000k": {
+    "ours_board_nvml_minus_baseline_gib": 3.8600260416666665,
+    "mcmc_torch_max_allocated_gib (ladder used)": 4.141139984130859,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.969950358072917,
+    "mcmc_board_nvml_peak_gib_train_phase": 4.492085774739583,
+    "ours_minus_mcmc_board_gib": -2.1099243164062504,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "garden 3000k": {
+    "ours_board_nvml_minus_baseline_gib": 5.492513020833333,
+    "mcmc_torch_max_allocated_gib (ladder used)": 4.851120313008626,
+    "mcmc_board_nvml_peak_gib_whole_run": 6.626200358072917,
+    "mcmc_board_nvml_peak_gib_train_phase": 6.007710774739583,
+    "ours_minus_mcmc_board_gib": -1.133687337239584,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "garden 5000k": {
+    "ours_board_nvml_minus_baseline_gib": 9.158203125,
+    "mcmc_torch_max_allocated_gib (ladder used)": 6.268784681955974,
+    "mcmc_board_nvml_peak_gib_whole_run": 9.585835774739584,
+    "mcmc_board_nvml_peak_gib_train_phase": 9.585835774739584,
+    "ours_minus_mcmc_board_gib": -0.4276326497395839,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     false,
+     true,
+     true
+    ]
+   },
+   "stump 1200k": {
+    "ours_board_nvml_minus_baseline_gib": 2.4915364583333335,
+    "mcmc_torch_max_allocated_gib (ladder used)": 3.4401647249857583,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.046773274739583,
+    "mcmc_board_nvml_peak_gib_train_phase": 3.4979451497395835,
+    "ours_minus_mcmc_board_gib": -2.5552368164062496,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "stump 2000k": {
+    "ours_board_nvml_minus_baseline_gib": 3.7281901041666665,
+    "mcmc_torch_max_allocated_gib (ladder used)": 4.018383661905925,
+    "mcmc_board_nvml_peak_gib_whole_run": 5.95367431640625,
+    "mcmc_board_nvml_peak_gib_train_phase": 4.536356608072917,
+    "ours_minus_mcmc_board_gib": -2.2254842122395835,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "stump 3000k": {
+    "ours_board_nvml_minus_baseline_gib": 5.419596354166667,
+    "mcmc_torch_max_allocated_gib (ladder used)": 4.732350826263428,
+    "mcmc_board_nvml_peak_gib_whole_run": 6.56109619140625,
+    "mcmc_board_nvml_peak_gib_train_phase": 6.066304524739583,
+    "ours_minus_mcmc_board_gib": -1.141499837239583,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   },
+   "stump 5000k": {
+    "ours_board_nvml_minus_baseline_gib": 8.905598958333334,
+    "mcmc_torch_max_allocated_gib (ladder used)": 6.281075795491536,
+    "mcmc_board_nvml_peak_gib_whole_run": 9.448954264322916,
+    "mcmc_board_nvml_peak_gib_train_phase": 9.448954264322916,
+    "ours_minus_mcmc_board_gib": -0.5433553059895821,
+    "n": [
+     3,
+     3
+    ],
+    "mcmc_memory_valid": [
+     true,
+     true,
+     true
+    ]
+   }
+  },
+  "corrected_disclosure": "Peak memory, like-for-like board NVML (whole process incl. CUDA/Vulkan context and allocator pools; MCMC sampled at 2 Hz so a lower bound): ours lower than gsplat-MCMC at 1.2M-3M on all 4 scenes (e.g. 1.2M 2.46-2.79 vs 5.04-5.21 GiB) and similar at 5M (8.86-9.16 vs 9.00-9.59 GiB; ours lower on 3/4 scenes, flowers +0.16 GiB). The earlier 'ours higher above 2M (9.1-9.4 vs 6.3-6.4 GiB at 5M)' compared our board NVML peak with gsplat's torch.cuda.max_memory_allocated (which omits CUDA context, allocator cache and fragmentation) and mixed GB and GiB; it is withdrawn."
+ }
+}

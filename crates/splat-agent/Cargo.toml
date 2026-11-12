@@ -1,0 +1,18 @@
+[package]
+name = "splat-agent"
+edition.workspace = true
+version.workspace = true
+license-file.workspace = true
+
+[dependencies]
+splat-contracts.workspace = true
+splat-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

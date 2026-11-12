@@ -1,0 +1,54 @@
+{
+ "kind": "render-budget",
+ "claim": "tq-defaults-15-30 + tq-defaults-15-30-s23 (pooled, rule registered before s2/s3)",
+ "verified_by": "publications (per-image recompute on common views from rows.jsonl + rows-s23.jsonl)",
+ "verified_at": "2026-10-09T02:28-07:00",
+ "per_budget": {
+  "15s": {
+   "dPSNR_mean": 1.165,
+   "dLPIPS_mean": -0.0514,
+   "lpips_not_worse": "6/6",
+   "per_pair_dPSNR": {
+    "room": [
+     1.27,
+     0.49,
+     1.07
+    ],
+    "garden": [
+     1.37,
+     1.59,
+     1.2
+    ]
+   },
+   "verdict": "AHEAD"
+  },
+  "30s": {
+   "dPSNR_mean": 1.444,
+   "dLPIPS_mean": -0.0548,
+   "lpips_not_worse": "6/6",
+   "per_pair_dPSNR": {
+    "room": [
+     1.61,
+     1.54,
+     1.52
+    ],
+    "garden": [
+     1.26,
+     1.65,
+     1.08
+    ]
+   },
+   "verdict": "AHEAD"
+  }
+ },
+ "coverage": "room 39/39 all; garden 20-24/24 common views (Spirula in-run dedup)",
+ "lpips_scale": "full on all rows",
+ "class": "HEADLINE",
+ "required_wording": "Defaults vs defaults (ours auto cap, Spirula default), launch->last-optimizer-step clock: at 15 s and 30 s training budgets ours is +1.2 / +1.4 dB PSNR with better LPIPS on 6/6 pairs (room + garden, 3 seeds, same runner per pair, L40S).",
+ "footnotes": [
+  "out-of-window points kept (ours over budget once: room s3 30 s 31.77 s; others under)",
+  "Spirula scored on deduped in-run renders (PLY replay within 0.1 dB)",
+  "ours perf-bench historical-build-014 (main historical-build-016 + reverted loader change + clock marker)",
+  "3M config arm excluded"
+ ]
+}

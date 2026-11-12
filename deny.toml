@@ -1,0 +1,242 @@
+# cargo-deny configuration (canonical; cargo-deny 0.20 format).
+#
+#   cargo deny check licenses bans sources
+#   cargo deny --all-features check licenses bans sources
+#
+# Policy: original Voyager code uses the Preview License; every third-party Rust dependency must be
+# under a permissive licence (or MPL-2.0, which is file-level copyleft and only
+# requires keeping the MPL files' notices and source available). GPL, AGPL, LGPL,
+# SSPL, non-commercial (CC-BY-NC*) and unlicensed crates are rejected by omission
+# from `allow`. Release archives carry the full texts via cargo-about
+# (scripts/licenses.sh, dist/about.toml).
+
+[graph]
+# Check every platform we ship for, so target-specific deps are covered.
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+    "wasm32-unknown-unknown",
+]
+
+[licenses]
+version = 2
+confidence-threshold = 0.93
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Unlicense",
+    "Unicode-3.0",
+    "CDLA-Permissive-2.0", # webpki-roots / Mozilla CA data
+    "MPL-2.0",             # file-level copyleft; notices kept in THIRD_PARTY_LICENSES
+]
+
+# jpeg-encoder (splat-eval frame JPEGs) is "(MIT OR Apache-2.0) AND IJG". The IJG
+# licence is permissive. For this binary dependency the condition is the
+# acknowledgement in the documentation, met by THIRD_PARTY_LICENSES.txt
+# (dist/about.toml accepts IJG). Source distribution additionally needs the IJG
+# README; our own source port (crates/splat-sfm-learned/src/jpeg.rs) carries it in
+# crates/splat-sfm-learned/LICENSE-IJG.txt. Scoped to this crate only.
+[[licenses.exceptions]]
+crate = "jpeg-encoder"
+allow = ["IJG"]
+
+# Only the enumerated Voyager crates may use this custom license. The exact
+# license text is hash-pinned; no general LicenseRef or unlicensed allowance.
+
+[[licenses.clarify]]
+crate = "splat-agent"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-agent"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-assets"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-assets"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-brush"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-brush"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-cli"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-cli"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-contracts"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-contracts"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-core"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-core"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-effects"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-effects"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-eval"
+expression = "LicenseRef-Vauss-Preview AND Apache-2.0"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-eval"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-fetch"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-fetch"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-fill"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-fill"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-inpaint"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-inpaint"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-mcp"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-mcp"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-mesh"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-mesh"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-sfm"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-sfm"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-shots"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-shots"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-spirula"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-spirula"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.clarify]]
+crate = "splat-webexport"
+expression = "LicenseRef-Vauss-Preview"
+license-files = [{ path = "LICENSE", hash = 0x79853e31 }]
+
+[[licenses.exceptions]]
+crate = "splat-webexport"
+allow = ["LicenseRef-Vauss-Preview"]
+
+[[licenses.exceptions]]
+crate = "splat-sfm-learned"
+allow = ["IJG"]
+
+[bans]
+# Duplicate versions are common in the burn/wgpu/cubecl graph; report, don't fail.
+multiple-versions = "warn"
+wildcards = "allow"
+deny = [
+    { name = "openssl-sys", reason = "use rustls; no system OpenSSL in release binaries" },
+    { name = "openssl", reason = "use rustls; no system OpenSSL in release binaries" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# Every git dependency is pinned to an exact rev in Cargo.toml / Cargo.lock and is
+# permissively licensed (licence fields are checked above like any crate):
+allow-git = [
+    # burn, pinned to the rev Brush 1388f74c locked (faec3983); MIT OR Apache-2.0.
+    "https://github.com/tracel-ai/burn",
+    # cubecl, rev 46752244 (pulled in by burn; cubecl-common/cubecl-wgpu are
+    # patched from vendor/, the rest comes from git); MIT OR Apache-2.0.
+    "https://github.com/tracel-ai/cubecl",
+    # cubek kernels, pulled in by burn/cubecl at their pinned revs; MIT OR Apache-2.0.
+    "https://github.com/tracel-ai/cubek",
+    # Brush author's wgpu fork, rev de4d137a ([patch.crates-io], same as Brush); MIT OR Apache-2.0.
+    "https://github.com/ArthurBrussee/wgpu",
+    # spark-lib (splat-webexport LOD/SPZ), rev 4eb719af; MIT.
+    "https://github.com/sparkjsdev/spark",
+    # Not listed: tracel-ai/tracel-llvm (MIT OR Apache-2.0) is in Cargo.lock but
+    # outside the resolved graph for these targets even with --all-features.
+]

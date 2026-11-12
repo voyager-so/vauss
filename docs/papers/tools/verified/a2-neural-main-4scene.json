@@ -1,0 +1,780 @@
+{
+ "schema": "pubs-verify/v1",
+ "label": "a2-neural-main-4scene recomputed from raw rows; gate applied as registered (3-seed means)",
+ "claim_id": "a2-neural-main-4scene",
+ "generated_at": "2026-10-09T06:43:45-07:00",
+ "verifier_git_head": "historical-build-056",
+ "verifier_sha256": "afddf0b0743065b66907860e8b5b7b8fb568510cf076a421540c9ace1deb5dbc",
+ "inputs": {
+  "registry": "~/data/splat/experiments/exp.db (historical-record seed 1, historical-record seeds 2-3, historical-record kitchen seed-1 retry)",
+  "raw": "~/data/splat/runs/fal/jobs/*-a2-{shdef,sh15,sh25,nmax}-m-l40-20261009-* splat-perf.log row (48 runs); cross-checked equal to registry metrics and perf/results.jsonl",
+  "claims_lines": [
+   "registration historical-build-077 (merged historical-build-092 2026-10-09T05:39:28-07:00); no amendments on historical source archive"
+  ]
+ },
+ "rule": {
+  "registered": "Pass for hosted MAX: neural beats BOTH SH arms on PSNR AND LPIPS-VGG on every scene (3-seed means). Wall, VRAM and size are reported and judged by the lead and product.",
+  "gate_arms": "SH default and SH 1.5M only; SH 2.5M is the recommended equal-count arm, reported, not gated",
+  "aggregation": "3-seed means (per-seed strict wins are NOT required by the registered text; reported for information)"
+ },
+ "provenance_checks": {
+  "registration_before_launch": "registration merged 05:39:28; experiments created/claimed 05:40:35 -> OK",
+  "arms": "SH arms brush-cli binary 9c151f8202a7 (main historical-build-048); neural binary 45459b90e510 (historical-build-015, single child of historical-build-048, 2-line config.rs default flip); --max-splats 1.5M/2.5M/2.5M as registered; SH default no cap flag",
+  "same_runner": "every scene x seed quad ran on one fal host (12 distinct hosts, 4 arms each); L40S 48GB; autotune warm on all 48",
+  "seed_effect": "--seed 1/2/3 in argv; metrics and final splat counts differ across seeds within every arm",
+  "views": "garden 24/24, counter 30/30, kitchen 35/35, truck-63-clean 8/8 scored=expected, same views_hash across arms per scene; lpips_scale=full",
+  "kitchen_seed1_retry": "first seed-1 kitchen group failed before training (scene tar rename race, FileNotFoundError); no kitchen seed-1 job dirs from the first attempt; whole quad (all 4 arms) rerun on one host in historical-record -> OK",
+  "board_peak": "board_peak_mib from splat-perf rows (baseline_mib 0); equals peak_vram_mib except counter s1 sh_1p5m 1936 vs 1933"
+ },
+ "scenes": {
+  "garden": {
+   "means": {
+    "sh_default": {
+     "psnr": 27.862,
+     "lpips_vgg": 0.11462,
+     "wall_s": 189.7,
+     "board_peak_mib": 2342,
+     "splats": 1976912
+    },
+    "sh_1p5m": {
+     "psnr": 27.735,
+     "lpips_vgg": 0.125,
+     "wall_s": 160.9,
+     "board_peak_mib": 1912,
+     "splats": 1494529
+    },
+    "sh_2p5m": {
+     "psnr": 27.864,
+     "lpips_vgg": 0.10873,
+     "wall_s": 215.0,
+     "board_peak_mib": 2794,
+     "splats": 2444501
+    },
+    "neural_2p5m": {
+     "psnr": 27.919,
+     "lpips_vgg": 0.11688,
+     "wall_s": 231.1,
+     "board_peak_mib": 2105,
+     "splats": 2452530
+    }
+   },
+   "psnr_seed_sd": {
+    "sh_default": 0.025,
+    "sh_1p5m": 0.036,
+    "sh_2p5m": 0.064,
+    "neural_2p5m": 0.047
+   },
+   "neural_minus": {
+    "sh_default": {
+     "dPSNR": 0.058,
+     "dLPIPS_vgg": 0.00226,
+     "wall_pct": 21.8,
+     "board_peak_dMiB": -237
+    },
+    "sh_1p5m": {
+     "dPSNR": 0.184,
+     "dLPIPS_vgg": -0.00812,
+     "wall_pct": 43.6,
+     "board_peak_dMiB": 194
+    },
+    "sh_2p5m": {
+     "dPSNR": 0.055,
+     "dLPIPS_vgg": 0.00815,
+     "wall_pct": 7.5,
+     "board_peak_dMiB": -688
+    }
+   },
+   "gate_on_means": {
+    "psnr": true,
+    "lpips_vgg": false,
+    "pass": false
+   },
+   "equal_count_sh_2p5m_beats_neural_lpips": true,
+   "per_seed": [
+    {
+     "seed": 1,
+     "host": "f8f25f467416",
+     "views": "24/24",
+     "arms": {
+      "sh_default": {
+       "psnr": 27.8793,
+       "lpips_vgg": 0.11457,
+       "wall_s": 187.68,
+       "board_peak_mib": 2365,
+       "splats": 1977246
+      },
+      "sh_1p5m": {
+       "psnr": 27.766,
+       "lpips_vgg": 0.12499,
+       "wall_s": 158.67,
+       "board_peak_mib": 1957,
+       "splats": 1500000
+      },
+      "sh_2p5m": {
+       "psnr": 27.8662,
+       "lpips_vgg": 0.10869,
+       "wall_s": 208.69,
+       "board_peak_mib": 2490,
+       "splats": 2430190
+      },
+      "neural_2p5m": {
+       "psnr": 27.9439,
+       "lpips_vgg": 0.11678,
+       "wall_s": 232.1,
+       "board_peak_mib": 2191,
+       "splats": 2460613
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": false
+     }
+    },
+    {
+     "seed": 2,
+     "host": "6f427cc4bdb9",
+     "views": "24/24",
+     "arms": {
+      "sh_default": {
+       "psnr": 27.8338,
+       "lpips_vgg": 0.11471,
+       "wall_s": 196.52,
+       "board_peak_mib": 2355,
+       "splats": 1976452
+      },
+      "sh_1p5m": {
+       "psnr": 27.6964,
+       "lpips_vgg": 0.12474,
+       "wall_s": 165.7,
+       "board_peak_mib": 1821,
+       "splats": 1483586
+      },
+      "sh_2p5m": {
+       "psnr": 27.927,
+       "lpips_vgg": 0.10886,
+       "wall_s": 222.75,
+       "board_peak_mib": 2881,
+       "splats": 2440746
+      },
+      "neural_2p5m": {
+       "psnr": 27.8649,
+       "lpips_vgg": 0.11743,
+       "wall_s": 231.31,
+       "board_peak_mib": 2028,
+       "splats": 2439502
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": false
+     }
+    },
+    {
+     "seed": 3,
+     "host": "36457cdc57b9",
+     "views": "24/24",
+     "arms": {
+      "sh_default": {
+       "psnr": 27.8727,
+       "lpips_vgg": 0.11458,
+       "wall_s": 184.88,
+       "board_peak_mib": 2306,
+       "splats": 1977037
+      },
+      "sh_1p5m": {
+       "psnr": 27.7435,
+       "lpips_vgg": 0.12527,
+       "wall_s": 158.28,
+       "board_peak_mib": 1957,
+       "splats": 1500000
+      },
+      "sh_2p5m": {
+       "psnr": 27.8,
+       "lpips_vgg": 0.10864,
+       "wall_s": 213.69,
+       "board_peak_mib": 3010,
+       "splats": 2462566
+      },
+      "neural_2p5m": {
+       "psnr": 27.9495,
+       "lpips_vgg": 0.11642,
+       "wall_s": 229.89,
+       "board_peak_mib": 2097,
+       "splats": 2457475
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": false
+     }
+    }
+   ]
+  },
+  "counter": {
+   "means": {
+    "sh_default": {
+     "psnr": 29.839,
+     "lpips_vgg": 0.2239,
+     "wall_s": 181.6,
+     "board_peak_mib": 1551,
+     "splats": 1173836
+    },
+    "sh_1p5m": {
+     "psnr": 29.871,
+     "lpips_vgg": 0.22,
+     "wall_s": 206.6,
+     "board_peak_mib": 1937,
+     "splats": 1459884
+    },
+    "sh_2p5m": {
+     "psnr": 29.907,
+     "lpips_vgg": 0.21307,
+     "wall_s": 279.9,
+     "board_peak_mib": 2735,
+     "splats": 2413225
+    },
+    "neural_2p5m": {
+     "psnr": 30.582,
+     "lpips_vgg": 0.21447,
+     "wall_s": 300.8,
+     "board_peak_mib": 1769,
+     "splats": 2411411
+    }
+   },
+   "psnr_seed_sd": {
+    "sh_default": 0.018,
+    "sh_1p5m": 0.016,
+    "sh_2p5m": 0.014,
+    "neural_2p5m": 0.028
+   },
+   "neural_minus": {
+    "sh_default": {
+     "dPSNR": 0.743,
+     "dLPIPS_vgg": -0.00943,
+     "wall_pct": 65.6,
+     "board_peak_dMiB": 218
+    },
+    "sh_1p5m": {
+     "dPSNR": 0.712,
+     "dLPIPS_vgg": -0.00553,
+     "wall_pct": 45.6,
+     "board_peak_dMiB": -169
+    },
+    "sh_2p5m": {
+     "dPSNR": 0.675,
+     "dLPIPS_vgg": 0.0014,
+     "wall_pct": 7.5,
+     "board_peak_dMiB": -966
+    }
+   },
+   "gate_on_means": {
+    "psnr": true,
+    "lpips_vgg": true,
+    "pass": true
+   },
+   "equal_count_sh_2p5m_beats_neural_lpips": true,
+   "per_seed": [
+    {
+     "seed": 1,
+     "host": "87f27cd7f104",
+     "views": "30/30",
+     "arms": {
+      "sh_default": {
+       "psnr": 29.8176,
+       "lpips_vgg": 0.22414,
+       "wall_s": 182.49,
+       "board_peak_mib": 1550,
+       "splats": 1172401
+      },
+      "sh_1p5m": {
+       "psnr": 29.8796,
+       "lpips_vgg": 0.22001,
+       "wall_s": 206.5,
+       "board_peak_mib": 1936,
+       "splats": 1457756
+      },
+      "sh_2p5m": {
+       "psnr": 29.9233,
+       "lpips_vgg": 0.21286,
+       "wall_s": 280.33,
+       "board_peak_mib": 2734,
+       "splats": 2412412
+      },
+      "neural_2p5m": {
+       "psnr": 30.6129,
+       "lpips_vgg": 0.21435,
+       "wall_s": 301.74,
+       "board_peak_mib": 1811,
+       "splats": 2410222
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": true
+     }
+    },
+    {
+     "seed": 2,
+     "host": "1faefc8bbff8",
+     "views": "30/30",
+     "arms": {
+      "sh_default": {
+       "psnr": 29.8505,
+       "lpips_vgg": 0.22378,
+       "wall_s": 187.48,
+       "board_peak_mib": 1551,
+       "splats": 1174321
+      },
+      "sh_1p5m": {
+       "psnr": 29.852,
+       "lpips_vgg": 0.22016,
+       "wall_s": 214.3,
+       "board_peak_mib": 1938,
+       "splats": 1461014
+      },
+      "sh_2p5m": {
+       "psnr": 29.9008,
+       "lpips_vgg": 0.21319,
+       "wall_s": 288.32,
+       "board_peak_mib": 2735,
+       "splats": 2412747
+      },
+      "neural_2p5m": {
+       "psnr": 30.5748,
+       "lpips_vgg": 0.21447,
+       "wall_s": 308.53,
+       "board_peak_mib": 1747,
+       "splats": 2411793
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": true
+     }
+    },
+    {
+     "seed": 3,
+     "host": "e517bd9836f6",
+     "views": "30/30",
+     "arms": {
+      "sh_default": {
+       "psnr": 29.8481,
+       "lpips_vgg": 0.22378,
+       "wall_s": 174.88,
+       "board_peak_mib": 1551,
+       "splats": 1174785
+      },
+      "sh_1p5m": {
+       "psnr": 29.8801,
+       "lpips_vgg": 0.21982,
+       "wall_s": 198.89,
+       "board_peak_mib": 1938,
+       "splats": 1460883
+      },
+      "sh_2p5m": {
+       "psnr": 29.8976,
+       "lpips_vgg": 0.21315,
+       "wall_s": 270.92,
+       "board_peak_mib": 2736,
+       "splats": 2414516
+      },
+      "neural_2p5m": {
+       "psnr": 30.5589,
+       "lpips_vgg": 0.21458,
+       "wall_s": 292.12,
+       "board_peak_mib": 1748,
+       "splats": 2412219
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": true
+     }
+    }
+   ]
+  },
+  "kitchen": {
+   "means": {
+    "sh_default": {
+     "psnr": 32.162,
+     "lpips_vgg": 0.13984,
+     "wall_s": 189.1,
+     "board_peak_mib": 1565,
+     "splats": 1181881
+    },
+    "sh_1p5m": {
+     "psnr": 32.387,
+     "lpips_vgg": 0.13763,
+     "wall_s": 216.0,
+     "board_peak_mib": 1907,
+     "splats": 1473106
+    },
+    "sh_2p5m": {
+     "psnr": 32.416,
+     "lpips_vgg": 0.13463,
+     "wall_s": 291.1,
+     "board_peak_mib": 2711,
+     "splats": 2425071
+    },
+    "neural_2p5m": {
+     "psnr": 32.526,
+     "lpips_vgg": 0.13746,
+     "wall_s": 325.2,
+     "board_peak_mib": 1842,
+     "splats": 2425230
+    }
+   },
+   "psnr_seed_sd": {
+    "sh_default": 0.047,
+    "sh_1p5m": 0.062,
+    "sh_2p5m": 0.136,
+    "neural_2p5m": 0.089
+   },
+   "neural_minus": {
+    "sh_default": {
+     "dPSNR": 0.364,
+     "dLPIPS_vgg": -0.00238,
+     "wall_pct": 72.0,
+     "board_peak_dMiB": 277
+    },
+    "sh_1p5m": {
+     "dPSNR": 0.139,
+     "dLPIPS_vgg": -0.00017,
+     "wall_pct": 50.6,
+     "board_peak_dMiB": -65
+    },
+    "sh_2p5m": {
+     "dPSNR": 0.11,
+     "dLPIPS_vgg": 0.00283,
+     "wall_pct": 11.7,
+     "board_peak_dMiB": -869
+    }
+   },
+   "gate_on_means": {
+    "psnr": true,
+    "lpips_vgg": true,
+    "pass": true
+   },
+   "equal_count_sh_2p5m_beats_neural_lpips": true,
+   "per_seed": [
+    {
+     "seed": 1,
+     "host": "bc0f8bd2d76a",
+     "views": "35/35",
+     "arms": {
+      "sh_default": {
+       "psnr": 32.1799,
+       "lpips_vgg": 0.13972,
+       "wall_s": 183.29,
+       "board_peak_mib": 1521,
+       "splats": 1178844
+      },
+      "sh_1p5m": {
+       "psnr": 32.3906,
+       "lpips_vgg": 0.13787,
+       "wall_s": 215.9,
+       "board_peak_mib": 2093,
+       "splats": 1480817
+      },
+      "sh_2p5m": {
+       "psnr": 32.4688,
+       "lpips_vgg": 0.13476,
+       "wall_s": 285.72,
+       "board_peak_mib": 2775,
+       "splats": 2425515
+      },
+      "neural_2p5m": {
+       "psnr": 32.6124,
+       "lpips_vgg": 0.13713,
+       "wall_s": 319.94,
+       "board_peak_mib": 1829,
+       "splats": 2424345
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": true
+     }
+    },
+    {
+     "seed": 2,
+     "host": "705d1bfa103f",
+     "views": "35/35",
+     "arms": {
+      "sh_default": {
+       "psnr": 32.1085,
+       "lpips_vgg": 0.14003,
+       "wall_s": 198.1,
+       "board_peak_mib": 1586,
+       "splats": 1181383
+      },
+      "sh_1p5m": {
+       "psnr": 32.3238,
+       "lpips_vgg": 0.13751,
+       "wall_s": 220.7,
+       "board_peak_mib": 1781,
+       "splats": 1468096
+      },
+      "sh_2p5m": {
+       "psnr": 32.2609,
+       "lpips_vgg": 0.13479,
+       "wall_s": 300.72,
+       "board_peak_mib": 2775,
+       "splats": 2425330
+      },
+      "neural_2p5m": {
+       "psnr": 32.53,
+       "lpips_vgg": 0.1376,
+       "wall_s": 335.03,
+       "board_peak_mib": 1880,
+       "splats": 2425211
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": false
+     }
+    },
+    {
+     "seed": 3,
+     "host": "1e1f014b6f79",
+     "views": "35/35",
+     "arms": {
+      "sh_default": {
+       "psnr": 32.1978,
+       "lpips_vgg": 0.13976,
+       "wall_s": 185.88,
+       "board_peak_mib": 1588,
+       "splats": 1185417
+      },
+      "sh_1p5m": {
+       "psnr": 32.4468,
+       "lpips_vgg": 0.1375,
+       "wall_s": 211.3,
+       "board_peak_mib": 1846,
+       "splats": 1470406
+      },
+      "sh_2p5m": {
+       "psnr": 32.5171,
+       "lpips_vgg": 0.13433,
+       "wall_s": 286.73,
+       "board_peak_mib": 2582,
+       "splats": 2424367
+      },
+      "neural_2p5m": {
+       "psnr": 32.4351,
+       "lpips_vgg": 0.13764,
+       "wall_s": 320.74,
+       "board_peak_mib": 1816,
+       "splats": 2426135
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": false,
+      "lpips_vgg": false
+     }
+    }
+   ]
+  },
+  "truck-63-clean": {
+   "means": {
+    "sh_default": {
+     "psnr": 20.893,
+     "lpips_vgg": 0.23575,
+     "wall_s": 97.2,
+     "board_peak_mib": 1105,
+     "splats": 896597
+    },
+    "sh_1p5m": {
+     "psnr": 20.978,
+     "lpips_vgg": 0.23036,
+     "wall_s": 131.0,
+     "board_peak_mib": 1526,
+     "splats": 1416485
+    },
+    "sh_2p5m": {
+     "psnr": 20.881,
+     "lpips_vgg": 0.22902,
+     "wall_s": 193.5,
+     "board_peak_mib": 2305,
+     "splats": 2328880
+    },
+    "neural_2p5m": {
+     "psnr": 21.042,
+     "lpips_vgg": 0.23021,
+     "wall_s": 200.8,
+     "board_peak_mib": 1642,
+     "splats": 2330452
+    }
+   },
+   "psnr_seed_sd": {
+    "sh_default": 0.161,
+    "sh_1p5m": 0.118,
+    "sh_2p5m": 0.047,
+    "neural_2p5m": 0.109
+   },
+   "neural_minus": {
+    "sh_default": {
+     "dPSNR": 0.15,
+     "dLPIPS_vgg": -0.00553,
+     "wall_pct": 106.7,
+     "board_peak_dMiB": 537
+    },
+    "sh_1p5m": {
+     "dPSNR": 0.065,
+     "dLPIPS_vgg": -0.00015,
+     "wall_pct": 53.3,
+     "board_peak_dMiB": 116
+    },
+    "sh_2p5m": {
+     "dPSNR": 0.161,
+     "dLPIPS_vgg": 0.00119,
+     "wall_pct": 3.8,
+     "board_peak_dMiB": -663
+    }
+   },
+   "gate_on_means": {
+    "psnr": true,
+    "lpips_vgg": true,
+    "pass": true
+   },
+   "equal_count_sh_2p5m_beats_neural_lpips": true,
+   "per_seed": [
+    {
+     "seed": 1,
+     "host": "5b4fd1d64386",
+     "views": "8/8",
+     "arms": {
+      "sh_default": {
+       "psnr": 21.0173,
+       "lpips_vgg": 0.23475,
+       "wall_s": 96.64,
+       "board_peak_mib": 1096,
+       "splats": 900770
+      },
+      "sh_1p5m": {
+       "psnr": 21.0982,
+       "lpips_vgg": 0.23068,
+       "wall_s": 131.45,
+       "board_peak_mib": 1494,
+       "splats": 1415105
+      },
+      "sh_2p5m": {
+       "psnr": 20.8293,
+       "lpips_vgg": 0.22895,
+       "wall_s": 193.08,
+       "board_peak_mib": 2272,
+       "splats": 2327809
+      },
+      "neural_2p5m": {
+       "psnr": 21.1469,
+       "lpips_vgg": 0.22714,
+       "wall_s": 200.08,
+       "board_peak_mib": 1611,
+       "splats": 2329152
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": true
+     }
+    },
+    {
+     "seed": 2,
+     "host": "f5b24cfe7ebb",
+     "views": "8/8",
+     "arms": {
+      "sh_default": {
+       "psnr": 20.7115,
+       "lpips_vgg": 0.23449,
+       "wall_s": 97.64,
+       "board_peak_mib": 1125,
+       "splats": 893981
+      },
+      "sh_1p5m": {
+       "psnr": 20.9726,
+       "lpips_vgg": 0.22962,
+       "wall_s": 130.05,
+       "board_peak_mib": 1525,
+       "splats": 1414735
+      },
+      "sh_2p5m": {
+       "psnr": 20.9201,
+       "lpips_vgg": 0.22899,
+       "wall_s": 195.88,
+       "board_peak_mib": 2243,
+       "splats": 2331653
+      },
+      "neural_2p5m": {
+       "psnr": 20.9286,
+       "lpips_vgg": 0.23061,
+       "wall_s": 203.08,
+       "board_peak_mib": 1703,
+       "splats": 2334269
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": false,
+      "lpips_vgg": false
+     }
+    },
+    {
+     "seed": 3,
+     "host": "329192b5198a",
+     "views": "8/8",
+     "arms": {
+      "sh_default": {
+       "psnr": 20.9492,
+       "lpips_vgg": 0.238,
+       "wall_s": 97.24,
+       "board_peak_mib": 1094,
+       "splats": 895041
+      },
+      "sh_1p5m": {
+       "psnr": 20.8618,
+       "lpips_vgg": 0.23078,
+       "wall_s": 131.45,
+       "board_peak_mib": 1559,
+       "splats": 1419614
+      },
+      "sh_2p5m": {
+       "psnr": 20.8937,
+       "lpips_vgg": 0.22912,
+       "wall_s": 191.68,
+       "board_peak_mib": 2400,
+       "splats": 2327178
+      },
+      "neural_2p5m": {
+       "psnr": 21.0519,
+       "lpips_vgg": 0.23289,
+       "wall_s": 199.28,
+       "board_peak_mib": 1611,
+       "splats": 2327935
+      }
+     },
+     "strict_per_seed_beats_both_gate_arms": {
+      "psnr": true,
+      "lpips_vgg": false
+     }
+    }
+   ]
+  }
+ },
+ "verdict": "FAIL",
+ "failing": [
+  "garden"
+ ],
+ "class": "PROVISIONAL (registered class_max) - result is a pre-registered FAIL",
+ "lane_comparison": {
+  "verdict": "match (FAIL)",
+  "psnr_all_scenes": "match",
+  "garden_lpips": "match: neural .1169 vs SHdef .1146 (+0.0023); neural does beat SH1.5M (.1250)",
+  "kitchen": "lane .1374 vs .1376; recomputed means .13746 vs .13763 (-0.00017), PASSES the registered mean gate; strict per-seed fails s2 and s3 on LPIPS vs SH1.5 and s3 on PSNR vs SH1.5 - per-seed is not the registered rule",
+  "equal_count": "MISMATCH: lane says SH 2.5M beats neural on LPIPS on 3/4 scenes; recomputed 4/4 (truck-63-clean .2290 vs .2302 too; neural beats SH2.5M on LPIPS only in truck s1)"
+ },
+ "notes": [
+  "Kitchen and truck LPIPS margins vs SH1.5M are 0.00017 and 0.00015 on means - pass the literal rule but are noise-scale; truck-63-clean PSNR vs SH1.5 +0.065 with per-seed SD up to 0.16",
+  "Web-package size (seed-1 PLY export-web) is a registered report item, not part of the gate; not verified here",
+  "Disclosures required by the registration: garden/kitchen/counter overlap earlier A2 tuning; equalwall and both bake variants failed"
+ ]
+}

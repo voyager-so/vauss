@@ -1,0 +1,27 @@
+{
+ "claim": "pgsr-dtu5-calib-v1",
+ "class": "PROVISIONAL (reference calibration, 1 seed)",
+ "verdict": "CALIBRATED",
+ "verified_by": "publications",
+ "verified_at": "2026-10-09T07:16:00-07:00",
+ "source": "research/vmesh/pgsr-v1-results.json @ main historical-build-042",
+ "recompute": {
+  "n_scans": 5,
+  "pgsr_scorer_mean": 0.4842,
+  "official2dgs_scorer_mean": 0.4842,
+  "b15_mean": 0.4843,
+  "target_no_icp": 0.484,
+  "secondary_icp_0p432": "not matched (0.052 above; ICP not in released evaluator)",
+  "official2dgs_v6": 0.6017,
+  "pgsr_ahead_of_official2dgs_scans": "4/5 (2DGS ahead on scan 40: .354 vs .403)",
+  "g1_official": 0.7114,
+  "g1_b15": 0.7139,
+  "g1_note": "current G1 = g1-dtu5-mesh-catchup-v1 arm C (V-MESH-P correction, main historical-build-081); gap to PGSR +0.227/+0.230 mm. The 1.020/1.085 figures were the superseded g1-surfel-dtu5-v1 build."
+ },
+ "disclosures": [
+  "1 seed, author-default",
+  "torch 2.7.1+cu128 on RTX PRO 6000; nvcc compat include; job-local pytorch3d quaternion_to_matrix stand-in; upstream sources unmodified",
+  "NC licence: research reference only, nothing enters the product",
+  "p1 attempt failed 5/5 at import (infra), excluded"
+ ]
+}

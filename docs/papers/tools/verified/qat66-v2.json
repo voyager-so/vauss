@@ -1,0 +1,736 @@
+{
+ "schema": "pubs-verify/qat66-v2/v1",
+ "claim_group": "qat1-native-qat66-v2",
+ "generated_at": "2026-10-09T02:32:30-07:00",
+ "method": "Per (scene, seed): decoded-export (SPZ v3 6/6, splat export-web --raw -> upstream decoder -> main __brush render) per-view rows parsed from each arm's splat-perf import stdout in logs/{A,B}-spz-default-import.log (the score-*/row.json files stayed on the runner); means over views; B - A; 3-seed means per scene. Wall = arm wall_s (whole trainer process); training-only train_s from row-*-float.json also reported.",
+ "scenes": {
+  "curtis": {
+   "n_seeds": 3,
+   "dpsnr": 0.975152519908742,
+   "dlpips": -0.013414775828520464,
+   "dssim": 0.01193195432918633,
+   "wall_ratio_mean_of_seed_ratios": 1.0324065591904876,
+   "wall_ratio_of_means": 1.032179899451968,
+   "train_s_ratio": 1.0333071115717325,
+   "size_ratio_B_over_A": 1.0070865247572485,
+   "size_ratio_A_over_B": 0.9929690779582002,
+   "float_dpsnr": 0.12055337708944099,
+   "per_seed": {
+    "s42": {
+     "dpsnr": 0.6193480368669704,
+     "dlpips": -0.014690469205379489,
+     "wall_ratio": 1.0106482097697327,
+     "train_s_ratio": 1.0114273291165898,
+     "size_ratio_B_over_A": 1.0105113561324695
+    },
+    "s43": {
+     "dpsnr": 0.8846403408334957,
+     "dlpips": -0.011109027266502383,
+     "wall_ratio": 1.0522449540024716,
+     "train_s_ratio": 1.0542819130313004,
+     "size_ratio_B_over_A": 1.005462873426681
+    },
+    "s44": {
+     "dpsnr": 1.42146918202576,
+     "dlpips": -0.014444831013679521,
+     "wall_ratio": 1.0343265137992586,
+     "train_s_ratio": 1.0342120925673073,
+     "size_ratio_B_over_A": 1.005285344712595
+    }
+   },
+   "pass": true,
+   "lane_check": {
+    "dpsnr": [
+     0.975,
+     0.975152519908742
+    ],
+    "dlpips": [
+     -0.0134,
+     -0.013414775828520464
+    ],
+    "wall": [
+     1.032,
+     1.0324065591904876,
+     1.032179899451968
+    ],
+    "size_A_over_B (lane convention)": [
+     0.993,
+     0.9929690779582002
+    ]
+   },
+   "lane_ok": true
+  },
+  "garden": {
+   "n_seeds": 3,
+   "dpsnr": 0.16824960324609725,
+   "dlpips": -0.0043996125459670925,
+   "dssim": 0.0033959195650080285,
+   "wall_ratio_mean_of_seed_ratios": 1.0458420864125353,
+   "wall_ratio_of_means": 1.045864278020296,
+   "train_s_ratio": 1.0469936161376792,
+   "size_ratio_B_over_A": 1.0022761608312718,
+   "size_ratio_A_over_B": 0.997729512531635,
+   "float_dpsnr": 0.11250058967134298,
+   "per_seed": {
+    "s42": {
+     "dpsnr": 0.19891396225362,
+     "dlpips": -0.004114265243212373,
+     "wall_ratio": 1.0486373165618448,
+     "train_s_ratio": 1.0459224755192686,
+     "size_ratio_B_over_A": 1.0031632031764428
+    },
+    "s43": {
+     "dpsnr": 0.18632944763625403,
+     "dlpips": -0.0043824296444654465,
+     "wall_ratio": 1.0496362858365427,
+     "train_s_ratio": 1.0526846706544437,
+     "size_ratio_B_over_A": 1.0022466531174319
+    },
+    "s44": {
+     "dpsnr": 0.11950539984841768,
+     "dlpips": -0.004702142750223459,
+     "wall_ratio": 1.0392526568392184,
+     "train_s_ratio": 1.0423737022393251,
+     "size_ratio_B_over_A": 1.0014186261999407
+    }
+   },
+   "pass": true,
+   "lane_check": {
+    "dpsnr": [
+     0.168,
+     0.16824960324609725
+    ],
+    "dlpips": [
+     -0.0044,
+     -0.0043996125459670925
+    ],
+    "wall": [
+     1.046,
+     1.0458420864125353,
+     1.045864278020296
+    ],
+    "size_A_over_B (lane convention)": [
+     0.998,
+     0.997729512531635
+    ]
+   },
+   "lane_ok": true
+  }
+ },
+ "cells": {
+  "curtis/s42": {
+   "dir": "curtis-s42-main-historical-build-098-vs-qat-6ae2e96b5319-AB",
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a11fd4-66fa-7580-a636-2729dc089567",
+     "splat-gpu-rtxpro6000-r2-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    [
+     "0",
+     "RTX PRO 6000 96GB "
+    ]
+   ],
+   "request_cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "Intel(R) Xeon(R) 6962P",
+   "order": "AB",
+   "labels": {
+    "A": "main-historical-build-098",
+    "B": "qat-6ae2e96b5319"
+   },
+   "brush_sha256": {
+    "A": "dd061379a05a015e",
+    "B": "9e331e99eb86e1b1"
+   },
+   "splat_sha256": {
+    "A": "363a0c305a2a943a",
+    "B": "a71c0140fca3f923"
+   },
+   "decoded": {
+    "A": {
+     "psnr": 24.81683275565254,
+     "lpips": 0.12117959260940551,
+     "ssim": 0.8890250785423349,
+     "n": 5,
+     "n_unique": 5,
+     "expected": 5,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-A-spz-default/render/renders",
+     "engine_label": "main-historical-build-098-spz-default",
+     "arm_json_psnr": 24.816832755652538,
+     "float_psnr": 25.96034320122626,
+     "render_exit": -11,
+     "n_rendered": 5,
+     "bytes": 40017101,
+     "spz_version": 3,
+     "wall_s": 150.26,
+     "train_s": 147.191,
+     "float_lpips_scale": "full",
+     "decoded_n": 1132386,
+     "header_n": 1132386,
+     "splats": 1132386
+    },
+    "B": {
+     "psnr": 25.43618079251951,
+     "lpips": 0.10648912340402603,
+     "ssim": 0.9003506011254845,
+     "n": 5,
+     "n_unique": 5,
+     "expected": 5,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-B-spz-default/render/renders",
+     "engine_label": "qat-6ae2e96b5319-spz-default",
+     "arm_json_psnr": 25.43618079251951,
+     "float_psnr": 26.158953216747733,
+     "render_exit": -11,
+     "n_rendered": 5,
+     "bytes": 40437735,
+     "spz_version": 3,
+     "wall_s": 151.86,
+     "train_s": 148.873,
+     "float_lpips_scale": "full",
+     "decoded_n": 1131614,
+     "header_n": 1131614,
+     "splats": 1131614
+    }
+   },
+   "views_hash_ids": "d2dd0c3e91071ff9",
+   "dpsnr": 0.6193480368669704,
+   "dlpips": -0.014690469205379489,
+   "dssim": 0.011325522583149561,
+   "wall_ratio": 1.0106482097697327,
+   "train_s_ratio": 1.0114273291165898,
+   "size_ratio_B_over_A": 1.0105113561324695,
+   "float_dpsnr": 0.19861001552147428
+  },
+  "curtis/s43": {
+   "dir": "curtis-s43-main-historical-build-098-vs-qat-6ae2e96b5319-AB",
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a11fda-88c9-7c03-98c1-0d96c70476e7",
+     "splat-gpu-rtxpro6000-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    [
+     "0",
+     "RTX PRO 6000 96GB "
+    ]
+   ],
+   "request_cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "Intel(R) Xeon(R) 6962P",
+   "order": "AB",
+   "labels": {
+    "A": "main-historical-build-098",
+    "B": "qat-6ae2e96b5319"
+   },
+   "brush_sha256": {
+    "A": "dd061379a05a015e",
+    "B": "9e331e99eb86e1b1"
+   },
+   "splat_sha256": {
+    "A": "363a0c305a2a943a",
+    "B": "a71c0140fca3f923"
+   },
+   "decoded": {
+    "A": {
+     "psnr": 24.309009963328606,
+     "lpips": 0.12449871450662613,
+     "ssim": 0.886595668183098,
+     "n": 5,
+     "n_unique": 5,
+     "expected": 5,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-A-spz-default/render/renders",
+     "engine_label": "main-historical-build-098-spz-default",
+     "arm_json_psnr": 24.309009963328602,
+     "float_psnr": 26.05470722070415,
+     "render_exit": -11,
+     "n_rendered": 5,
+     "bytes": 40365387,
+     "spz_version": 3,
+     "wall_s": 145.66,
+     "train_s": 142.81,
+     "float_lpips_scale": "full",
+     "decoded_n": 1132468,
+     "header_n": 1132468,
+     "splats": 1132468
+    },
+    "B": {
+     "psnr": 25.1936503041621,
+     "lpips": 0.11338968724012374,
+     "ssim": 0.896135545025124,
+     "n": 5,
+     "n_unique": 5,
+     "expected": 5,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-B-spz-default/render/renders",
+     "engine_label": "qat-6ae2e96b5319-spz-default",
+     "arm_json_psnr": 25.193650304162105,
+     "float_psnr": 26.08936993142508,
+     "render_exit": -11,
+     "n_rendered": 5,
+     "bytes": 40585898,
+     "spz_version": 3,
+     "wall_s": 153.27,
+     "train_s": 150.562,
+     "float_lpips_scale": "full",
+     "decoded_n": 1132027,
+     "header_n": 1132027,
+     "splats": 1132027
+    }
+   },
+   "views_hash_ids": "d2dd0c3e91071ff9",
+   "dpsnr": 0.8846403408334957,
+   "dlpips": -0.011109027266502383,
+   "dssim": 0.009539876842026063,
+   "wall_ratio": 1.0522449540024716,
+   "train_s_ratio": 1.0542819130313004,
+   "size_ratio_B_over_A": 1.005462873426681,
+   "float_dpsnr": 0.03466271072093008
+  },
+  "curtis/s44": {
+   "dir": "curtis-s44-main-historical-build-098-vs-qat-6ae2e96b5319-AB",
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a11fdb-25d8-7530-9d0a-d1dd4f897592",
+     "splat-gpu-rtxpro6000-r2-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    [
+     "0",
+     "RTX PRO 6000 96GB "
+    ]
+   ],
+   "request_cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "Intel(R) Xeon(R) 6962P",
+   "order": "AB",
+   "labels": {
+    "A": "main-historical-build-098",
+    "B": "qat-6ae2e96b5319"
+   },
+   "brush_sha256": {
+    "A": "dd061379a05a015e",
+    "B": "9e331e99eb86e1b1"
+   },
+   "splat_sha256": {
+    "A": "363a0c305a2a943a",
+    "B": "a71c0140fca3f923"
+   },
+   "decoded": {
+    "A": {
+     "psnr": 23.800201749018697,
+     "lpips": 0.12700169980525972,
+     "ssim": 0.8817041237444257,
+     "n": 5,
+     "n_unique": 5,
+     "expected": 5,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-A-spz-default/render/renders",
+     "engine_label": "main-historical-build-098-spz-default",
+     "arm_json_psnr": 23.800201749018697,
+     "float_psnr": 26.01009530374909,
+     "render_exit": -11,
+     "n_rendered": 5,
+     "bytes": 39920575,
+     "spz_version": 3,
+     "wall_s": 145.66,
+     "train_s": 142.815,
+     "float_lpips_scale": "full",
+     "decoded_n": 1130990,
+     "header_n": 1130990,
+     "splats": 1130990
+    },
+    "B": {
+     "psnr": 25.221670931044457,
+     "lpips": 0.1125568687915802,
+     "ssim": 0.8966345873068091,
+     "n": 5,
+     "n_unique": 5,
+     "expected": 5,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-B-spz-default/render/renders",
+     "engine_label": "qat-6ae2e96b5319-spz-default",
+     "arm_json_psnr": 25.221670931044457,
+     "float_psnr": 26.13848270877501,
+     "render_exit": -11,
+     "n_rendered": 5,
+     "bytes": 40131569,
+     "spz_version": 3,
+     "wall_s": 150.66,
+     "train_s": 147.701,
+     "float_lpips_scale": "full",
+     "decoded_n": 1131493,
+     "header_n": 1131493,
+     "splats": 1131493
+    }
+   },
+   "views_hash_ids": "d2dd0c3e91071ff9",
+   "dpsnr": 1.42146918202576,
+   "dlpips": -0.014444831013679521,
+   "dssim": 0.014930463562383367,
+   "wall_ratio": 1.0343265137992586,
+   "train_s_ratio": 1.0342120925673073,
+   "size_ratio_B_over_A": 1.005285344712595,
+   "float_dpsnr": 0.1283874050259186
+  },
+  "garden/s42": {
+   "dir": "garden-s42-main-historical-build-098-vs-qat-6ae2e96b5319-AB",
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a11fd4-5bc0-7cc3-90e5-b79e9a930613",
+     "splat-gpu-rtxpro6000-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    [
+     "0",
+     "RTX PRO 6000 96GB "
+    ]
+   ],
+   "request_cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "Intel(R) Xeon(R) 6962P",
+   "order": "AB",
+   "labels": {
+    "A": "main-historical-build-098",
+    "B": "qat-6ae2e96b5319"
+   },
+   "brush_sha256": {
+    "A": "dd061379a05a015e",
+    "B": "9e331e99eb86e1b1"
+   },
+   "splat_sha256": {
+    "A": "363a0c305a2a943a",
+    "B": "a71c0140fca3f923"
+   },
+   "decoded": {
+    "A": {
+     "psnr": 27.303422396460427,
+     "lpips": 0.14553564973175526,
+     "ssim": 0.8564449982019615,
+     "n": 24,
+     "n_unique": 24,
+     "expected": 24,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-A-spz-default/render/renders",
+     "engine_label": "main-historical-build-098-spz-default",
+     "arm_json_psnr": 27.303422396460434,
+     "float_psnr": 27.426102095218468,
+     "render_exit": -11,
+     "n_rendered": 24,
+     "bytes": 43551107,
+     "spz_version": 3,
+     "wall_s": 119.25,
+     "train_s": 115.499,
+     "float_lpips_scale": "full",
+     "decoded_n": 1190680,
+     "header_n": 1190680,
+     "splats": 1190680
+    },
+    "B": {
+     "psnr": 27.502336358714047,
+     "lpips": 0.14142138448854288,
+     "ssim": 0.8600879458434979,
+     "n": 24,
+     "n_unique": 24,
+     "expected": 24,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-B-spz-default/render/renders",
+     "engine_label": "qat-6ae2e96b5319-spz-default",
+     "arm_json_psnr": 27.502336358714047,
+     "float_psnr": 27.57095005917309,
+     "render_exit": -11,
+     "n_rendered": 24,
+     "bytes": 43688868,
+     "spz_version": 3,
+     "wall_s": 125.05,
+     "train_s": 120.803,
+     "float_lpips_scale": "full",
+     "decoded_n": 1193263,
+     "header_n": 1193263,
+     "splats": 1193263
+    }
+   },
+   "views_hash_ids": "2b4944d0a0b02adc",
+   "dpsnr": 0.19891396225362,
+   "dlpips": -0.004114265243212373,
+   "dssim": 0.003642947641536387,
+   "wall_ratio": 1.0486373165618448,
+   "train_s_ratio": 1.0459224755192686,
+   "size_ratio_B_over_A": 1.0031632031764428,
+   "float_dpsnr": 0.1448479639546214
+  },
+  "garden/s43": {
+   "dir": "garden-s43-main-historical-build-098-vs-qat-6ae2e96b5319-AB",
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a11fd4-bb9a-7ce0-8740-61dd44461cb2",
+     "splat-gpu-rtxpro6000-r2-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    [
+     "0",
+     "RTX PRO 6000 96GB "
+    ]
+   ],
+   "request_cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "Intel(R) Xeon(R) 6962P",
+   "order": "AB",
+   "labels": {
+    "A": "main-historical-build-098",
+    "B": "qat-6ae2e96b5319"
+   },
+   "brush_sha256": {
+    "A": "dd061379a05a015e",
+    "B": "9e331e99eb86e1b1"
+   },
+   "splat_sha256": {
+    "A": "363a0c305a2a943a",
+    "B": "a71c0140fca3f923"
+   },
+   "decoded": {
+    "A": {
+     "psnr": 27.31144916576631,
+     "lpips": 0.1459422092884779,
+     "ssim": 0.8564334892287261,
+     "n": 24,
+     "n_unique": 24,
+     "expected": 24,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-A-spz-default/render/renders",
+     "engine_label": "main-historical-build-098-spz-default",
+     "arm_json_psnr": 27.311449165766305,
+     "float_psnr": 27.438409947735668,
+     "render_exit": -11,
+     "n_rendered": 24,
+     "bytes": 43674299,
+     "spz_version": 3,
+     "wall_s": 116.85,
+     "train_s": 113.012,
+     "float_lpips_scale": "full",
+     "decoded_n": 1194129,
+     "header_n": 1194129,
+     "splats": 1194129
+    },
+    "B": {
+     "psnr": 27.497778613402563,
+     "lpips": 0.14155977964401245,
+     "ssim": 0.8598829883580581,
+     "n": 24,
+     "n_unique": 24,
+     "expected": 24,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-B-spz-default/render/renders",
+     "engine_label": "qat-6ae2e96b5319-spz-default",
+     "arm_json_psnr": 27.49777861340256,
+     "float_psnr": 27.572510893171742,
+     "render_exit": -11,
+     "n_rendered": 24,
+     "bytes": 43772420,
+     "spz_version": 3,
+     "wall_s": 122.65,
+     "train_s": 118.966,
+     "float_lpips_scale": "full",
+     "decoded_n": 1195627,
+     "header_n": 1195627,
+     "splats": 1195627
+    }
+   },
+   "views_hash_ids": "2b4944d0a0b02adc",
+   "dpsnr": 0.18632944763625403,
+   "dlpips": -0.0043824296444654465,
+   "dssim": 0.003449499129332012,
+   "wall_ratio": 1.0496362858365427,
+   "train_s_ratio": 1.0526846706544437,
+   "size_ratio_B_over_A": 1.0022466531174319,
+   "float_dpsnr": 0.13410094543607443
+  },
+  "garden/s44": {
+   "dir": "garden-s44-main-historical-build-098-vs-qat-6ae2e96b5319-AB",
+   "exp": [
+    "historical-record"
+   ],
+   "requests": [
+    [
+     "01a11fda-e117-71b3-a200-87567e92ddff",
+     "splat-gpu-rtxpro6000-v14"
+    ]
+   ],
+   "retry_lines": 0,
+   "exits": [
+    [
+     "0",
+     "RTX PRO 6000 96GB "
+    ]
+   ],
+   "request_cancelled": false,
+   "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+   "cpu": "AMD EPYC 9355 32-Core Processor",
+   "order": "AB",
+   "labels": {
+    "A": "main-historical-build-098",
+    "B": "qat-6ae2e96b5319"
+   },
+   "brush_sha256": {
+    "A": "dd061379a05a015e",
+    "B": "9e331e99eb86e1b1"
+   },
+   "splat_sha256": {
+    "A": "363a0c305a2a943a",
+    "B": "a71c0140fca3f923"
+   },
+   "decoded": {
+    "A": {
+     "psnr": 27.362962004935294,
+     "lpips": 0.1459461866567532,
+     "ssim": 0.8568394283194967,
+     "n": 24,
+     "n_unique": 24,
+     "expected": 24,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-A-spz-default/render/renders",
+     "engine_label": "main-historical-build-098-spz-default",
+     "arm_json_psnr": 27.362962004935298,
+     "float_psnr": 27.492522985204996,
+     "render_exit": -11,
+     "n_rendered": 24,
+     "bytes": 43804351,
+     "spz_version": 3,
+     "wall_s": 116.68,
+     "train_s": 113.561,
+     "float_lpips_scale": "full",
+     "decoded_n": 1200000,
+     "header_n": 1200000,
+     "splats": 1200000
+    },
+    "B": {
+     "psnr": 27.482467404783712,
+     "lpips": 0.14124404390652975,
+     "ssim": 0.8599347402436524,
+     "n": 24,
+     "n_unique": 24,
+     "expected": 24,
+     "lpips_scale": "full",
+     "renders_from": "/tmp/qat1/score-B-spz-default/render/renders",
+     "engine_label": "qat-6ae2e96b5319-spz-default",
+     "arm_json_psnr": 27.48246740478371,
+     "float_psnr": 27.55107584482833,
+     "render_exit": -11,
+     "n_rendered": 24,
+     "bytes": 43866493,
+     "spz_version": 3,
+     "wall_s": 121.26,
+     "train_s": 118.373,
+     "float_lpips_scale": "full",
+     "decoded_n": 1200000,
+     "header_n": 1200000,
+     "splats": 1200000
+    }
+   },
+   "views_hash_ids": "2b4944d0a0b02adc",
+   "dpsnr": 0.11950539984841768,
+   "dlpips": -0.004702142750223459,
+   "dssim": 0.003095311924155686,
+   "wall_ratio": 1.0392526568392184,
+   "train_s_ratio": 1.0423737022393251,
+   "size_ratio_B_over_A": 1.0014186261999407,
+   "float_dpsnr": 0.05855285962333312
+  }
+ },
+ "v1_stopped_partial_rows": {
+  "curtis-s42-main-historical-build-098-vs-qat-8a8a7729080c-AB": {
+   "dpsnr_spz": 0.8612754115380881,
+   "dlpips_spz": -0.011700987815856934,
+   "wall_ratio": 1.1126373626373627,
+   "size": 1.0055277031901177
+  },
+  "garden-s42-main-historical-build-098-vs-qat-8a8a7729080c-AB": {
+   "dpsnr_spz": 0.16999582550068482,
+   "dlpips_spz": -0.004797525393466173,
+   "wall_ratio": 1.0410193177147553,
+   "size": 1.0056838340408767
+  },
+  "garden-s43-main-historical-build-098-vs-qat-8a8a7729080c-AB": {
+   "dpsnr_spz": 0.16178269731062755,
+   "dlpips_spz": -0.003992890318234771,
+   "wall_ratio": 1.093168279970216,
+   "size": 1.0016979456967412
+  }
+ },
+ "checks": {
+  "decoded_not_float": "import --renders points at score-{A,B}-spz-default/render/renders; decoded means differ from float means (see cells)",
+  "lpips_scale_full": true,
+  "N_N_identical_ids": true,
+  "same_runner": "one fal request per (scene, seed) job running both arms sequentially (order AB) in one process; no retry lines; no request in cancelled.jsonl",
+  "seeds_complete": [
+   "curtis/s42",
+   "curtis/s43",
+   "curtis/s44",
+   "garden/s42",
+   "garden/s43",
+   "garden/s44"
+  ],
+  "render_exit_codes": [
+   "-11"
+  ],
+  "B_identity": "label/bins qat-6ae2e96b5319 in every row (brush sha256 prefix ['9e331e99eb86e1b1']); registration binds B = 845403d5 (bins lane/6ae2e96b5319). 845403d5 exists on main history; the lane build dir (BUILD.json) was later deleted by the bin sweep and the registry binary_sha is empty, so the bins->commit link rests on the registration, not on a re-derivable artifact."
+ },
+ "deviations": [
+  {
+   "id": "per_view_location",
+   "found": "score-*/row.json were not retained (QAT1 confirms top-level JSON only), and arm-*.json carries only export means; BUT each arm's logs/{A,B}-spz-default-import.log holds the full splat-perf import row (stdout) with per_image for the decoded-export renders, so per-view N/N and ids were verified from those logs (no verification gap for the decoded export); float per-view rows are in row-*-float.json",
+   "effect": "none on values (per-view means equal arm-*.json metrics exactly)"
+  },
+  {
+   "id": "render_exit",
+   "found": "every decoded-export and float re-render records render_exit ['-11'] (SIGSEGV) while n_rendered == views_expected for all",
+   "effect": "renders complete, crash appears at teardown; flag to perf (main __brush render)"
+  },
+  {
+   "id": "post_v1_change",
+   "found": "implementation changed after seeing v1 wave-1 (registered as disclosed); v1 stopped partial rows reported alongside",
+   "effect": "disclose"
+  },
+  {
+   "id": "b_binding",
+   "found": "bins->845403d5 link not re-derivable from retained artifacts",
+   "effect": "disclose; consider recording BUILD.json head in rows"
+  }
+ ],
+ "check_failures": [],
+ "verdict": {
+  "status": "PASS",
+  "per_scene": {
+   "curtis": true,
+   "garden": true
+  }
+ }
+}

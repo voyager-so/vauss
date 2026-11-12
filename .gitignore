@@ -1,0 +1,8 @@
+/build*/
+/data/
+*.ply
+*.splat
+__pycache__/
+.venv/
+__pycache__/
+/target/

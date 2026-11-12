@@ -1,0 +1,22 @@
+# Burn port of the Depth Anything 3 (DA3-BASE) camera-pose path, Apache-2.0; see NOTICE.
+[package]
+name = "splat-sfm-learned"
+edition.workspace = true
+version.workspace = true
+license = "Apache-2.0 AND IJG"
+
+[dependencies]
+anyhow.workspace = true
+brush-cube.workspace = true
+burn = { workspace = true, features = ["wgpu", "safetensors"] }
+burn-cubecl.workspace = true
+fs2.workspace = true
+image.workspace = true
+rayon.workspace = true
+# Same requirement as cubecl-environment (already in Cargo.lock); bundled SQLite builds everywhere.
+rusqlite = { version = "0.40", features = ["bundled"] }
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

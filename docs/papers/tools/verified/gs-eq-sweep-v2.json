@@ -1,0 +1,586 @@
+{
+ "claim": "pubs:p0:GS-EQ-SWEEP-v2",
+ "verifier": "independent recompute (pubs verifier), 2026-10-09; no GPU, no tests",
+ "sources": {
+  "registration": "historical source archive archived study registry (not distributed) l.410 + amendments l.425, l.427; protocol docs/papers/claims/protocols/gs-eq-sweep-v2.md sha256 8f4548b5953569d1 (matches l.427), rules inherited from protocols/gs-eq-sweep.md",
+  "rules_applied": [
+   "rule:speed-coplacement (+09:43 gate, +09:48 thread_cap addendum, 09:43 same-GPU-model outlier ruling)",
+   "rule:fal-runner-reuse"
+  ],
+  "raw": "rows.jsonl (splat-perf per_image) + summary.json + result.json + harness.log + ours-*.log per run dir; perview.jsonl cross-checked equal to rows.jsonl (0 diffs)",
+  "lane_json": "$SPLAT_DATA/runs/research/gseq-sweep/gseq-sweep-v2-verdict.json",
+  "lane_script": "$HOME/code/nf/splat-agent-worktrees/research-gseq-sweep/research/gseq-sweep/sweep_verdict.py (GSEQ_V2=1)"
+ },
+ "rule_as_registered": "DEV=H[1::2], TEST=H[0::2] of every8_idx0_sorted. gsplat*=gsplat cap with lowest 3-seed mean DEV LPIPS-VGG over 300k/600k/1M/3M/5M/8M; ours*=smallest ours cap (same runner's ladder) with 3-seed mean DEV LPIPS <= target (no tolerance); ratio=mean over 3 seeds of ours/gsplat train_s on the same runner; FASTER if ratio<0.95 and TEST hold>=2/3; SLOWER if ratio>1.05 or not reached; else TIE. Truncation: gsplat*=8M -> 'ladder may be truncated', counted TIE not FASTER. Row: AHEAD only if FASTER 6/6; PARITY if FASTER>=SLOWER; else BEHIND. Robustness = worst verdict over gsplat caps, same thresholds.",
+ "per_scene": {
+  "bicycle": {
+   "gsplat_star": "gsplat-mcmc8000k",
+   "gsplat_star_part": "C2",
+   "gsplat_star_dev_lpips": 0.18021,
+   "ours_cap": null,
+   "ratio_train_s": null,
+   "ratio_per_seed": [],
+   "wall_ratio": null,
+   "test_hold": null,
+   "class": "SLOWER",
+   "tally_as": "SLOWER",
+   "ladder_truncated": true,
+   "ours_dev_lpips_by_cap_on_star_runner": {
+    "ours-300k": 0.35629,
+    "ours-500k": 0.31112,
+    "ours-800k": 0.27037,
+    "ours-1200k": 0.23807,
+    "ours-2000k": 0.20782,
+    "ours-3000k": 0.19118,
+    "ours-4000k": 0.18432
+   },
+   "robust_worst_cap_verdict": "SLOWER",
+   "per_cap": {
+    "gsplat-mcmc3000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.20099,
+     "ours_cap": "ours-3000k",
+     "ratio": 0.2301,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc5000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.1882,
+     "ours_cap": "ours-4000k",
+     "ratio": 0.1819,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc300k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.34478,
+     "ours_cap": "ours-500k",
+     "ratio": 0.3112,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc600k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.28794,
+     "ours_cap": "ours-800k",
+     "ratio": 0.2988,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc1000k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.25202,
+     "ours_cap": "ours-1200k",
+     "ratio": 0.2738,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc8000k": {
+     "part": "C2",
+     "gsplat_dev_lpips": 0.18021,
+     "ours_cap": null,
+     "ratio": null,
+     "test_hold": null,
+     "verdict": "SLOWER"
+    }
+   },
+   "historical-record": [
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s11-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s11-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s11-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s12-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s12-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s12-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s13-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s13-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/bicycle-s13-C2"
+   ]
+  },
+  "garden": {
+   "gsplat_star": "gsplat-mcmc8000k",
+   "gsplat_star_part": "C2",
+   "gsplat_star_dev_lpips": 0.10557,
+   "ours_cap": "ours-3000k",
+   "ratio_train_s": 0.0984,
+   "ratio_per_seed": [
+    0.0948,
+    0.0942,
+    0.106
+   ],
+   "wall_ratio": 0.1008,
+   "test_hold": 2,
+   "class": "FASTER-TRUNC",
+   "tally_as": "TIE",
+   "ladder_truncated": true,
+   "ours_dev_lpips_by_cap_on_star_runner": {
+    "ours-300k": 0.27521,
+    "ours-500k": 0.20977,
+    "ours-800k": 0.16448,
+    "ours-1200k": 0.13627,
+    "ours-2000k": 0.11433,
+    "ours-3000k": 0.10438,
+    "ours-4000k": 0.0999
+   },
+   "robust_worst_cap_verdict": "FASTER",
+   "per_cap": {
+    "gsplat-mcmc3000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.1242,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.1744,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc5000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.11307,
+     "ours_cap": "ours-3000k",
+     "ratio": 0.1445,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc300k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.25849,
+     "ours_cap": "ours-500k",
+     "ratio": 0.345,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc600k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.19468,
+     "ours_cap": "ours-800k",
+     "ratio": 0.3328,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc1000k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.16299,
+     "ours_cap": "ours-1200k",
+     "ratio": 0.3024,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc8000k": {
+     "part": "C2",
+     "gsplat_dev_lpips": 0.10557,
+     "ours_cap": "ours-3000k",
+     "ratio": 0.0984,
+     "test_hold": 2,
+     "verdict": "FASTER"
+    }
+   },
+   "historical-record": [
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s11-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s11-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s11-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s12-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s12-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s12-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s13-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s13-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/garden-s13-C2"
+   ]
+  },
+  "counter": {
+   "gsplat_star": "gsplat-mcmc8000k",
+   "gsplat_star_part": "C2",
+   "gsplat_star_dev_lpips": 0.21861,
+   "ours_cap": "ours-4000k",
+   "ratio_train_s": 0.1166,
+   "ratio_per_seed": [
+    0.1145,
+    0.1175,
+    0.1177
+   ],
+   "wall_ratio": 0.1185,
+   "test_hold": 3,
+   "class": "FASTER-TRUNC",
+   "tally_as": "TIE",
+   "ladder_truncated": true,
+   "ours_dev_lpips_by_cap_on_star_runner": {
+    "ours-300k": 0.26835,
+    "ours-500k": 0.25115,
+    "ours-800k": 0.23895,
+    "ours-1200k": 0.23111,
+    "ours-2000k": 0.22319,
+    "ours-3000k": 0.2188,
+    "ours-4000k": 0.2162
+   },
+   "robust_worst_cap_verdict": "FASTER",
+   "per_cap": {
+    "gsplat-mcmc3000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.22753,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.1812,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc5000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.22175,
+     "ours_cap": "ours-3000k",
+     "ratio": 0.1526,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc300k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.27292,
+     "ours_cap": "ours-300k",
+     "ratio": 0.2474,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc600k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.25422,
+     "ours_cap": "ours-500k",
+     "ratio": 0.2538,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc1000k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.24344,
+     "ours_cap": "ours-800k",
+     "ratio": 0.2523,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc8000k": {
+     "part": "C2",
+     "gsplat_dev_lpips": 0.21861,
+     "ours_cap": "ours-4000k",
+     "ratio": 0.1166,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    }
+   },
+   "historical-record": [
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s11-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s11-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s11-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s12-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s12-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s12-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s13-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s13-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/counter-s13-C2"
+   ]
+  },
+  "room": {
+   "gsplat_star": "gsplat-mcmc5000k",
+   "gsplat_star_part": "A2",
+   "gsplat_star_dev_lpips": 0.24303,
+   "ours_cap": "ours-2000k",
+   "ratio_train_s": 0.1284,
+   "ratio_per_seed": [
+    0.1349,
+    0.1261,
+    0.1241
+   ],
+   "wall_ratio": 0.1307,
+   "test_hold": 2,
+   "class": "FASTER",
+   "tally_as": "FASTER",
+   "ladder_truncated": false,
+   "ours_dev_lpips_by_cap_on_star_runner": {
+    "ours-300k": 0.29069,
+    "ours-500k": 0.27113,
+    "ours-800k": 0.2575,
+    "ours-1200k": 0.24881,
+    "ours-2000k": 0.24104,
+    "ours-3000k": 0.23634,
+    "ours-4000k": 0.23409
+   },
+   "robust_worst_cap_verdict": "FASTER",
+   "per_cap": {
+    "gsplat-mcmc3000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.2451,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.1911,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc5000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.24303,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.1284,
+     "test_hold": 2,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc300k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.28878,
+     "ours_cap": "ours-500k",
+     "ratio": 0.3781,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc600k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.26863,
+     "ours_cap": "ours-800k",
+     "ratio": 0.3647,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc1000k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.25825,
+     "ours_cap": "ours-800k",
+     "ratio": 0.282,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc8000k": {
+     "part": "C2",
+     "gsplat_dev_lpips": 0.24383,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.084,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    }
+   },
+   "historical-record": [
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s11-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s11-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s11-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s12-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s12-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s12-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s13-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s13-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/room-s13-C2"
+   ]
+  },
+  "kitchen": {
+   "gsplat_star": "gsplat-mcmc8000k",
+   "gsplat_star_part": "C2",
+   "gsplat_star_dev_lpips": 0.14019,
+   "ours_cap": "ours-2000k",
+   "ratio_train_s": 0.0818,
+   "ratio_per_seed": [
+    0.0848,
+    0.0789,
+    0.0817
+   ],
+   "wall_ratio": 0.0837,
+   "test_hold": 1,
+   "class": "TIE",
+   "tally_as": "TIE",
+   "ladder_truncated": true,
+   "ours_dev_lpips_by_cap_on_star_runner": {
+    "ours-300k": 0.1799,
+    "ours-500k": 0.15864,
+    "ours-800k": 0.14874,
+    "ours-1200k": 0.14383,
+    "ours-2000k": 0.14008,
+    "ours-3000k": 0.13848,
+    "ours-4000k": 0.13762
+   },
+   "robust_worst_cap_verdict": "TIE",
+   "per_cap": {
+    "gsplat-mcmc3000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.14529,
+     "ours_cap": "ours-1200k",
+     "ratio": 0.1391,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc5000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.14233,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.119,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc300k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.18716,
+     "ours_cap": "ours-300k",
+     "ratio": 0.3054,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc600k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.16606,
+     "ours_cap": "ours-500k",
+     "ratio": 0.3086,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc1000k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.15663,
+     "ours_cap": "ours-800k",
+     "ratio": 0.2728,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc8000k": {
+     "part": "C2",
+     "gsplat_dev_lpips": 0.14019,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.0818,
+     "test_hold": 1,
+     "verdict": "TIE"
+    }
+   },
+   "historical-record": [
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s11-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s11-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s11-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s12-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s12-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s12-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s13-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s13-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/kitchen-s13-C2"
+   ]
+  },
+  "truck-full": {
+   "gsplat_star": "gsplat-mcmc8000k",
+   "gsplat_star_part": "C2",
+   "gsplat_star_dev_lpips": 0.11037,
+   "ours_cap": null,
+   "ratio_train_s": null,
+   "ratio_per_seed": [],
+   "wall_ratio": null,
+   "test_hold": null,
+   "class": "SLOWER",
+   "tally_as": "SLOWER",
+   "ladder_truncated": true,
+   "ours_dev_lpips_by_cap_on_star_runner": {
+    "ours-300k": 0.19644,
+    "ours-500k": 0.16677,
+    "ours-800k": 0.1465,
+    "ours-1200k": 0.13339,
+    "ours-2000k": 0.12147,
+    "ours-3000k": 0.11484,
+    "ours-4000k": 0.11102
+   },
+   "robust_worst_cap_verdict": "SLOWER",
+   "per_cap": {
+    "gsplat-mcmc3000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.12389,
+     "ours_cap": "ours-2000k",
+     "ratio": 0.2095,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc5000k": {
+     "part": "A2",
+     "gsplat_dev_lpips": 0.1158,
+     "ours_cap": "ours-3000k",
+     "ratio": 0.1786,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc300k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.19856,
+     "ours_cap": "ours-300k",
+     "ratio": 0.384,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc600k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.16879,
+     "ours_cap": "ours-500k",
+     "ratio": 0.3318,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc1000k": {
+     "part": "B2",
+     "gsplat_dev_lpips": 0.15096,
+     "ours_cap": "ours-800k",
+     "ratio": 0.2858,
+     "test_hold": 3,
+     "verdict": "FASTER"
+    },
+    "gsplat-mcmc8000k": {
+     "part": "C2",
+     "gsplat_dev_lpips": 0.11037,
+     "ours_cap": null,
+     "ratio": null,
+     "test_hold": null,
+     "verdict": "SLOWER"
+    }
+   },
+   "historical-record": [
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s11-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s11-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s11-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s12-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s12-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s12-C2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s13-A2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s13-B2",
+    "$SPLAT_DATA/runs/research/gseq-sweep/rtx-v2/truck-full-s13-C2"
+   ]
+  }
+ },
+ "primary_row": {
+  "verdict": "BEHIND",
+  "tally": {
+   "FASTER": 1,
+   "FASTER-TRUNC(=TIE)": 2,
+   "TIE": 1,
+   "SLOWER": 2
+  },
+  "matches_lane": true
+ },
+ "robust_row": {
+  "verdict_lane_reading": "PARITY 3/1/2 (truncation not applied to the robust row)",
+  "verdict_if_truncation_applies_scene_wide": "BEHIND 1/3/2 (garden, counter -> TIE)",
+  "note": "Registration wording ('that scene ... counted TIE, never FASTER') is scene-level; the lane's own RANK map ranks FASTER-TRUNC = TIE but only labels the primary. Needs a pubs ruling; primary unaffected."
+ },
+ "timing": {
+  "source": "train_s = wall span first->last step (ours train_only_s GPU-synced, equals log line on all 378 ours runs; gsplat cuda-synchronize+perf_counter bracket in gs_run.py), not per-step averages; wall_s = process span; primary wall ratios agree (0.084-0.131)",
+  "order": "all 54 runners follow the registered order (odd seeds gsplat asc then ours asc; seed 12 exact reverse): 0 violations",
+  "nvml_baseline": "all 486 runs baseline <64 MiB (all 0)",
+  "thread_cap": "all 54 submitted 09:13:08-09:15:18 PT, before historical-build-064 (~09:48) introduced thread caps; no thread_cap/host facts recorded; every arm ran under the same (uncapped) condition, consistent with addendum (b). Note launch.sh's explicit SPLAT_THREAD_CAP=0 was added later (historical-build-071, 10:25) and did not affect these jobs.",
+  "outlier_flags_recomputed": [
+   "bicycle-s11-B2:gsplat-mcmc300k 1.88x",
+   "bicycle-s13-B2:gsplat-mcmc300k 0.54x",
+   "counter-s11-A2:ours-800k 1.70x",
+   "counter-s11-B2:gsplat-mcmc300k 0.51x",
+   "counter-s11-B2:gsplat-mcmc600k 0.66x"
+  ],
+  "flags_on_primary_arms": "none (primary arms: C2 gsplat 8M on garden/counter/kitchen/bicycle/truck-full, A2 gsplat 5M on room, and the matched ours caps) - lane claim confirmed. Flags touch robustness cells bicycle 300k (scene already SLOWER) and counter 300k/600k (gsplat fast = unflattering to ours; ratios 0.25 far from 0.95); counter-s11-A2 ours-800k is not a matched arm. No verdict changes.",
+  "hardware_disclosure": "all RTX PRO 6000 (same GPU model, so outlier test valid); mixed CPUs (Xeon 6962P/6960P/Platinum 8559C, EPYC 9355) and drivers (580.126.20, 590.48.01, 610.43.02, 610.57.04) across runners; ratios are within-runner"
+ },
+ "integrity": {
+  "exit_codes": "54/54 exit 0, every run rc 0",
+  "rows": "486 rows (54 x 9), all arms present per part",
+  "scene_views": "every row's scored view names == the labelled scene's every-8 sorted held-out list; row.scene == label; summary scene/seed == dir label; lpips_scale full",
+  "inrun_vs_scored_psnr_ours": "378 ours runs: scored minus in-run eval PSNR min -0.010, max +0.037, mean +0.003 dB (no wrong-GT signal; rule:fal-runner-reuse satisfied by audit since jobs predate the fresh-dir fix historical-build-017)",
+  "health_flags": "not independently recomputed; lane reports none"
+ },
+ "label": {
+  "lane_label": "gsplat 1.5.3 (PyPI, 937e2991)",
+  "finding": "NOT the PyPI wheel. fal py image (fal/app_py.py, unchanged since historical-build-028 2026-10-08) does `git clone --depth 1 --branch v1.5.3 --recursive` of nerfstudio-project/gsplat and `uv pip install --no-build-isolation .` (CUDA ext compiled for sm_89+sm_120); v2 deletes /opt/gsplat/gsplat so the installed source-built package is used. Runner reports gsplat 1.5.3 / torch 2.7.1+cu128. Correct label: 'gsplat 1.5.3, source build of tag v1.5.3 (937e299)', same as the XB2 verifier's finding.",
+  "fix": "change label in launch.sh COMP string / claim text from 'PyPI' to 'source build of tag v1.5.3'"
+ },
+ "discrepancies": [
+  "Label: 'PyPI' is wrong; source build of tag v1.5.3 (937e299).",
+  "Lane wording 'every reached per-cap ratio is FASTER' is inexact: kitchen 8M is reached (ratio 0.082) but verdict TIE on TEST hold 1/3; all other reached caps are FASTER.",
+  "Robustness row PARITY 3/1/2 relies on not applying the truncation clause to the robust row; garden and counter's robust FASTER includes their truncated 8M cap. Scene-wide reading gives BEHIND 1/3/2. Ruling needed.",
+  "Numbers otherwise match the lane to all printed digits: primary ratios garden 0.098, counter 0.117, room 0.128, kitchen 0.082; 5M reached 6/6 at 0.119-0.182; gsplat*=8M on 5/6; truck-full misses by 0.0006 DEV LPIPS (ours 4M 0.11102 vs gsplat 8M 0.11040), bicycle by 0.0041 (0.18432 vs 0.18020)."
+ ],
+ "verdict": "PRIMARY BEHIND confirmed (FASTER 1 room / FASTER-TRUNC=TIE 2 garden, counter / TIE 1 kitchen / SLOWER 2 bicycle, truck-full). Robustness PARITY under lane reading, BEHIND if truncation applies scene-wide. Speed figures release under rule:speed-coplacement (in-exec, alternated order, clean baselines, no primary outlier) with mixed-CPU disclosure."
+}

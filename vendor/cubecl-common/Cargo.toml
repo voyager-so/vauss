@@ -1,0 +1,63 @@
+# Vendored manifest: upstream workspace inheritance expanded, see PATCH.md.
+
+[package]
+"authors" = ["Dilshod Tadjibaev (@antimora)", "Nathaniel Simard (@nathanielsimard)"]
+"categories" = ["science", "mathematics", "algorithms"]
+"description" = "Common crate for CubeCL"
+"edition" = "2024"
+"keywords" = ["gpu", "cuda", "wgpu"]
+"license" = "MIT OR Apache-2.0"
+"name" = "cubecl-common"
+"readme" = "README.md"
+"repository" = "https://github.com/tracel-ai/cubecl/tree/main/crates/cubecl-common"
+"version" = "0.11.0-pre.4"
+
+[lints]
+"rust" = { "warnings" = "warn" }
+"clippy" = { "doc_markdown" = "warn" }
+"rustdoc" = { "broken_intra_doc_links" = "warn", "invalid_html_tags" = "warn" }
+
+[features]
+"default" = ["std"]
+"fp4" = ["float4"]
+"fp8" = ["float8"]
+"hash" = ["xxhash-rust"]
+"serde" = []
+"shared-bytes" = ["cubecl-environment/shared-bytes"]
+"std" = ["cubecl-environment/std"]
+"tracing" = ["cubecl-environment/tracing"]
+
+[dependencies]
+"cubecl-environment" = { "git" = "https://github.com/tracel-ai/cubecl", "rev" = "467522442c7b68f02c7ff0c84b2e249e36d8da91", "version" = "=0.11.0-pre.4", "default-features" = false }
+"log" = { "default-features" = false, "version" = "^0.4.22" }
+"tynm" = { "version" = "0.2" }
+"bytemuck" = { "version" = "1.16.1", "features" = ["derive"] }
+"derive-new" = { "version" = "0.7.0", "default-features" = false }
+"derive_more" = { "version" = "2", "default-features" = false, "features" = ["not", "add", "mul", "add_assign", "mul_assign", "display", "debug", "from", "into", "deref", "deref_mut"] }
+"float4" = { "version" = "0.2", "optional" = true }
+"float8" = { "version" = "0.7", "default-features" = false, "optional" = true }
+"half" = { "version" = "2.5", "features" = ["alloc", "num-traits", "serde"], "default-features" = false }
+"hashbrown" = { "version" = "0.17" }
+"num-traits" = { "version" = "0.2.19", "default-features" = false, "features" = ["libm"] }
+"serde" = { "version" = "1.0.204", "default-features" = false, "features" = ["derive", "alloc"] }
+"xxhash-rust" = { "version" = "0.8", "default-features" = false, "features" = ["xxh3", "const_xxh3"], "optional" = true }
+
+[target."cfg(target_has_atomic = \"ptr\")".dependencies]
+"spin" = { "version" = "0.12.2", "features" = ["mutex", "spin_mutex", "lazylock"] }
+
+[target."cfg(not(target_has_atomic = \"ptr\"))".dependencies]
+"portable-atomic" = { "version" = "1.14", "default-features" = false, "features" = ["serde"] }
+"portable-atomic-util" = { "version" = "0.2.4", "features" = ["alloc"] }
+"spin" = { "version" = "0.12.2", "features" = ["mutex", "spin_mutex", "lazylock", "portable_atomic"] }
+
+[build-dependencies]
+"cfg_aliases" = { "version" = "0.2.2" }
+
+[dev-dependencies]
+"criterion" = { "version" = "0.8", "features" = ["html_reports"] }
+"tempfile" = { "version" = "3.20" }
+"test-log" = { "version" = "^0.2", "default-features" = false, "features" = ["trace"] }
+
+[[bench]]
+"harness" = false
+"name" = "device_handle"
