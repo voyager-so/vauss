@@ -1667,7 +1667,9 @@ fn build_at(g: &crate::ply::Gaussians, scene: &Value, ply_hint: Option<&Path>, l
         _ => None,
     };
     let opts = collision::FuseOpts { voxel: edge, close: close_r, depth_scale: 3.0, min_depth: (MIN_DEPTH_M / mpu) as f32,
-        bound_q: 0.0, include, clip: Some(clip) };
+        bound_q: 0.0, include, clip: Some(clip),
+        // The game's voxel world keeps the original fusion rule (median depth, a third of views suffice).
+        transmittance: 0.5, solid_ratio: 2.0, carve_gap: 2.5, surface_hits: false };
     let fused = collision::fuse(g, &views, scene, &opts)?;
     let max_depth = fused.max_depth;
     let (t_depth, t_fuse, t_vox) = (fused.t_depth, fused.t_fuse, fused.t_vox);

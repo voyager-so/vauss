@@ -1,3 +1,4 @@
+# Public mirror CI uses GitHub-hosted runners; private build infrastructure is separate.
 name: Rust CI
 # PRs get one fast Linux build; the macOS and Windows builds run on release tags or a manual run.
 on:
@@ -14,23 +15,27 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   check:
+    # Keep the established branch-protection context while using faster runners.
+    name: check (${{ matrix.label }}, ${{ matrix.target }})
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"}]' || '[{"os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"},{"os":"macos-15","target":"aarch64-apple-darwin"},{"os":"windows-2022","target":"x86_64-pc-windows-msvc"}]') }}
+        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"label":"ubuntu-22.04","os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"}]' || '[{"label":"ubuntu-22.04","os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"},{"label":"macos-15","os":"macos-15","target":"aarch64-apple-darwin"},{"label":"windows-2022","os":"windows-2022","target":"x86_64-pc-windows-msvc"}]') }}
     runs-on: ${{ matrix.os }}
+    env:
+      CARGO_BUILD_JOBS: '4'
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         shell: bash
         run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }} && rustup default stable
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: rust-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('Cargo.lock') }}
+          key: vauss-ci-v2-${{ github.repository }}-${{ matrix.target }}-${{ hashFiles('Cargo.lock') }}
       - run: cargo build --locked --workspace --target ${{ matrix.target }}
       - name: Check primary command and silent compatibility aliases
         run: cargo test --locked -p splat-cli --test cli --target ${{ matrix.target }} primary_command_and_compatibility_aliases_are_identical -- --exact
@@ -39,7 +44,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - run: cargo install cargo-deny --locked --version 0.18.4
+      - uses: actions/cache@v5
+        id: deny-cache
+        with:
+          path: ~/.cargo/bin/cargo-deny
+          key: vauss-ci-tools-v1-${{ github.repository }}-linux-cargo-deny-0.18.4
+      - if: steps.deny-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-deny --locked --version 0.18.4
       - run: cargo deny check licenses bans sources
   # Unit and fixture tests of the crates whose behaviour these jobs can check without a GPU or
   # COLMAP (fake-COLMAP ladders, fetch pins, viewer templates). The build matrix above compiles
@@ -49,13 +60,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal && rustup default stable
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: rust-tests-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          key: vauss-ci-tests-v2-${{ github.repository }}-x86_64-unknown-linux-gnu-${{ hashFiles('Cargo.lock') }}
       - run: cargo test --locked -p splat-fetch -p splat-sfm -p splat-webexport
       # Free-roam packaging and walk checks: generated pages, provenance scrub, raw scenes, the
       # walk/floor/pivot harness on the viewer template.
@@ -66,6 +77,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/three" && cd "$RUNNER_TEMP/three"
           npm pack --silent three@0.180.0 && tar -xzf three-0.180.0.tgz
           echo "THREE_MODULE=$RUNNER_TEMP/three/package/build/three.module.js" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: python3 -m pip install --quiet numpy
       - run: python3 -m unittest discover -s dev/free-roam -p 'test_*.py' -v
       - run: node scripts/accept/viewer-roam.js

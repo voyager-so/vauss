@@ -1,8 +1,9 @@
 //! CPU collision packages in the exact exported splat frame, built after the package is published.
 //!
-//! Depth fusion: the splats' median depth is rasterised (CPU, front-to-back alpha) at every capture
-//! camera at low resolution. Surface hits and seen-free space vote per view on a dense voxel grid,
-//! so floaters the cameras look through are carved away and depth gives continuous surfaces.
+//! Depth fusion: the depth where the splats' front-to-back opacity reaches 70% is rasterised (CPU) at
+//! every capture camera. Surface hits and seen-free space vote per view on a dense voxel grid: a voxel
+//! is solid only when at least twice as many views put a surface in it as see through it, so faint
+//! haze that stops some views' depth (invisible in colour) is carved away rather than kept as a shell.
 //! A morphological closing bridges small gaps, components under 0.5% of the volume are dropped, and
 //! a solid floor slab (export floor, else the dominant upward surface below the cameras) is always
 //! added under the occupied footprint. Marching cubes closes the surface; meshoptimizer reduces it;
@@ -25,15 +26,19 @@ use splat_mesh::Mesh;
 
 use crate::ply::{self, Gaussians};
 
-/// Fusion voxel (scene units); coarsened when the grid would exceed [`MAX_CELLS`].
-const VOXEL: f32 = 0.05;
+/// Fusion voxel (scene units); coarsened when the grid would exceed [`MAX_CELLS`]. Marching cubes
+/// puts the surface half a voxel outside the solid samples, so this bounds the collision's bias.
+const VOXEL: f32 = 0.025;
 const MAX_CELLS: usize = 120_000_000;
-/// Depth maps are rendered this many pixels tall (width from the camera's aspect).
-const DEPTH_HEIGHT: usize = 180;
+/// Depth maps are rendered this many pixels tall (width from the camera's aspect). Coarser maps widen
+/// every silhouette (an edge pixel takes the nearer surface's depth): 180 px put table edges ~10 cm out.
+const DEPTH_HEIGHT: usize = 360;
+/// Collision depth is taken where transmittance falls to this (70% opacity), past faint haze.
+const DEPTH_TRANSMITTANCE: f32 = 0.3;
 /// Splats below this opacity do not contribute to depth.
 const MIN_ALPHA: f32 = 0.05;
-/// Morphological closing radius (voxels, cube element).
-const CLOSE: usize = 2;
+/// Morphological closing radius (voxels, cube element). Larger closings fuse tables into chairs.
+const CLOSE: usize = 1;
 /// Components smaller than this fraction of the occupied volume are dropped.
 const MIN_COMPONENT: f64 = 0.005;
 /// Floor slab thickness (scene units).
@@ -244,7 +249,10 @@ pub(crate) fn prims(g: &Gaussians) -> Vec<Prim> {
 }
 
 /// Median depth (camera z where transmittance first falls to 1/2) per pixel; NaN where it never does.
-pub(crate) fn render_depth(prims: &[Prim], v: &View) -> Vec<f32> {
+pub(crate) fn render_depth(prims: &[Prim], v: &View) -> Vec<f32> { render_depth_at(prims, v, 0.5) }
+
+/// Camera z where transmittance first falls to `t_stop` per pixel; NaN where it never does.
+pub(crate) fn render_depth_at(prims: &[Prim], v: &View, t_stop: f32) -> Vec<f32> {
     let (w, h) = (v.w as f32, v.h as f32);
     let rt = v.r.transpose();
     // (z, conic a b c, centre, bbox, alpha)
@@ -284,14 +292,14 @@ pub(crate) fn render_depth(prims: &[Prim], v: &View) -> Vec<f32> {
             let row = py as usize * v.w;
             for px in bb[0]..=bb[2] {
                 let k = row + px as usize;
-                if t[k] <= 0.5 { continue; }
+                if t[k] <= t_stop { continue; }
                 let dx = px as f32 + 0.5 - u;
                 let power = -0.5 * (con[0] * dx * dx + con[2] * dy * dy) - con[1] * dx * dy;
                 if power > 0.0 { continue; }
                 let a = (alpha * power.exp()).min(0.99);
                 if a < 1.0 / 255.0 { continue; }
                 t[k] *= 1.0 - a;
-                if t[k] <= 0.5 {
+                if t[k] <= t_stop {
                     depth[k] = z;
                     open -= 1;
                 }
@@ -340,7 +348,12 @@ pub(crate) struct Fused {
     pub(crate) t_depth: f64,
     pub(crate) t_fuse: f64,
     pub(crate) t_vox: f64,
+    /// Mean surface hit (sum, count) per fused-solid voxel: where the views actually saw the surface.
+    pub(crate) hit_mean: HashMap<u32, HitStat>,
 }
+
+/// Surface hits in one voxel: sum of hit points, sum of unit directions from the hit back to its camera, count.
+pub(crate) type HitStat = (Vec3, Vec3, u32);
 
 /// How [`fuse`] samples the scene.
 pub(crate) struct FuseOpts {
@@ -356,12 +369,21 @@ pub(crate) struct FuseOpts {
     /// Grid bounds also cover this box, then are clipped to `clip`.
     pub(crate) include: Option<(Vec3, Vec3)>,
     pub(crate) clip: Option<(Vec3, Vec3)>,
+    /// Depth is taken where transmittance falls to this.
+    pub(crate) transmittance: f32,
+    /// A voxel is solid when `hits >= 2 && hits * solid_ratio >= free` (votes are per view).
+    pub(crate) solid_ratio: f64,
+    /// Free-space carving stops this many voxels short of each surface hit.
+    pub(crate) carve_gap: f32,
+    /// Keep the mean surface hit per solid voxel ([`Fused::hit_mean`]) for sub-voxel meshing.
+    pub(crate) surface_hits: bool,
 }
 
 impl FuseOpts {
     /// The collision export's sampling.
     fn collision() -> Self {
-        Self { voxel: VOXEL, close: CLOSE, depth_scale: 3.0, min_depth: 0.0, bound_q: 0.01, include: None, clip: None }
+        Self { voxel: VOXEL, close: CLOSE, depth_scale: 3.0, min_depth: 0.0, bound_q: 0.01, include: None, clip: None,
+            transmittance: DEPTH_TRANSMITTANCE, solid_ratio: 0.5, carve_gap: 0.6, surface_hits: true }
     }
 }
 
@@ -371,7 +393,7 @@ pub(crate) fn fuse(g: &Gaussians, views: &[View], scene: &Value, o: &FuseOpts) -
     let close_r = o.close;
     let t0 = Instant::now();
     let prims = prims(g);
-    let depths: Vec<Vec<f32>> = views.par_iter().map(|v| render_depth(&prims, v)).collect();
+    let depths: Vec<Vec<f32>> = views.par_iter().map(|v| render_depth_at(&prims, v, o.transmittance)).collect();
     drop(prims);
     let t_depth = t0.elapsed().as_secs_f64();
 
@@ -430,13 +452,15 @@ pub(crate) fn fuse(g: &Gaussians, views: &[View], scene: &Value, o: &FuseOpts) -
             if let Some(i) = grid.index(v.c + ray * z) { hit.push(i); }
             if x % 2 != 0 || y % 2 != 0 { continue; }
             let len = ray.length();
-            let end = (z - 2.5 * grid.voxel / len).min(0.97 * z);
+            let end = (z - o.carve_gap * grid.voxel / len).min(0.97 * z);
             let step = 0.7 * grid.voxel / len;
             let mut t = 0.1;
             while t < end {
                 if let Some(i) = grid.index(v.c + ray * t) { empty.push(i); }
                 t += step;
             }
+            // bound scratch memory at fine voxels / large depth maps: dedupe as the list grows
+            if empty.len() > (1 << 22) { empty.sort_unstable(); empty.dedup(); }
         }}
         for (list, votes) in [(&mut hit, &hits), (&mut empty, &free)] {
             list.sort_unstable();
@@ -444,12 +468,31 @@ pub(crate) fn fuse(g: &Gaussians, views: &[View], scene: &Value, o: &FuseOpts) -
             for &i in list.iter() { let _ = votes[i as usize].fetch_update(Ordering::Relaxed, Ordering::Relaxed, |c| c.checked_add(1)); }
         }
     });
-    drop(depths);
     let mut solid: Vec<bool> = hits.par_iter().zip(&free).map(|(h, f)| {
         let (h, f) = (h.load(Ordering::Relaxed) as u32, f.load(Ordering::Relaxed) as u32);
-        h >= 2 && 2 * h >= f
+        h >= 2 && h as f64 * o.solid_ratio >= f as f64
     }).collect();
     drop((hits, free));
+    // Where in each solid voxel the surface was seen (sub-voxel), for snapping the mesh onto it.
+    let hit_mean = if !o.surface_hits { HashMap::new() } else { views.par_iter().zip(&depths).map(|(v, d)| {
+        let mut m: HashMap<u32, HitStat> = HashMap::new();
+        for y in 0..v.h { for x in 0..v.w {
+            let z = d[y * v.w + x];
+            if !(z.is_finite() && z < max_depth) { continue; }
+            let p = v.c + v.ray(x, y) * z;
+            if let Some(i) = grid.index(p) {
+                if solid[i as usize] {
+                    let e = m.entry(i).or_insert((Vec3::ZERO, Vec3::ZERO, 0));
+                    e.0 += p; e.1 += (v.c - p).normalize_or_zero(); e.2 += 1;
+                }
+            }
+        }}
+        m
+    }).reduce(HashMap::new, |mut a, b| {
+        for (k, (p, d, n)) in b { let e = a.entry(k).or_insert((Vec3::ZERO, Vec3::ZERO, 0)); e.0 += p; e.1 += d; e.2 += n; }
+        a
+    }) };
+    drop(depths);
     let fused = solid.iter().filter(|&&s| s).count();
     let t_fuse = t0.elapsed().as_secs_f64() - t_depth;
 
@@ -459,18 +502,131 @@ pub(crate) fn fuse(g: &Gaussians, views: &[View], scene: &Value, o: &FuseOpts) -
     let cavities = fill_cavities(&mut solid, &grid, (1.0 / grid.voxel).powi(3) as usize);
     let floor = floor_slab(&mut solid, &grid, views, scene);
     let t_vox = t0.elapsed().as_secs_f64() - t_depth - t_fuse;
-    Ok(Fused { grid, solid, floor, max_depth, fused, closed, kept, components, cavities, t_depth, t_fuse, t_vox })
+    Ok(Fused { grid, solid, floor, max_depth, fused, closed, kept, components, cavities, t_depth, t_fuse, t_vox, hit_mean })
 }
+
+/// Occupancy marching cubes puts every surface half a voxel outside the solid samples, and samples
+/// are rounded to the nearest voxel: up to a voxel of bias on every face (a table top a voxel high).
+/// Move each vertex along its normal onto the mean surface hit of the nearby solid voxels (where the
+/// capture views saw the surface), at most one voxel. Returns how many vertices moved.
+fn snap_to_hits(mesh: &mut Mesh, grid: &Grid, solid: &[bool], hit_mean: &HashMap<u32, HitStat>) -> usize {
+    let mut nrm = vec![Vec3::ZERO; mesh.positions.len()];
+    for t in &mesh.triangles {
+        let [a, b, c] = t.map(|i| mesh.positions[i as usize]);
+        let n = (b - a).cross(c - a);
+        for &i in t { nrm[i as usize] += n; }
+    }
+    let vox = grid.voxel;
+    let cell = |p: Vec3| -> Option<IVec3> {
+        let c = ((p - grid.lo) / vox).round();
+        (c.x >= 0.0 && c.y >= 0.0 && c.z >= 0.0 && (c.x as usize) < grid.n[0] && (c.y as usize) < grid.n[1] && (c.z as usize) < grid.n[2])
+            .then(|| c.as_ivec3())
+    };
+    let is_solid = |p: Vec3| cell(p).is_some_and(|c| solid[grid.at(c.x as usize, c.y as usize, c.z as usize)]);
+    // outward normals: the mesh is closed and consistently wound, so its signed volume gives the winding's sign
+    let vol: f64 = mesh.triangles.iter().map(|t| {
+        let [a, b, c] = t.map(|i| mesh.positions[i as usize].as_dvec3());
+        a.dot(b.cross(c))
+    }).sum();
+    let sign = if vol < 0.0 { -1.0f32 } else { 1.0 };
+    let moved: Vec<Option<(f32, Vec3)>> = mesh.positions.par_iter().zip(&nrm).map(|(&v, &n)| {
+        let mut n = n.normalize_or_zero();
+        if n == Vec3::ZERO { return None; }
+        // outward: solid behind, empty in front
+        n *= sign;
+        // solid in front and empty behind: a locally inverted normal; leave the vertex where it is
+        if is_solid(v + 0.6 * vox * n) && !is_solid(v - 0.6 * vox * n) { return None; }
+        let c = cell(v)?;
+        let (mut sum, mut w) = (0.0f32, 0.0f32);
+        for dz in -SNAP_R..=SNAP_R { for dy in -SNAP_R..=SNAP_R { for dx in -SNAP_R..=SNAP_R {
+            let q = c + IVec3::new(dx, dy, dz);
+            if q.min_element() < 0 || q.x as usize >= grid.n[0] || q.y as usize >= grid.n[1] || q.z as usize >= grid.n[2] { continue; }
+            let Some(&(ps, ds, k)) = hit_mean.get(&(grid.at(q.x as usize, q.y as usize, q.z as usize) as u32)) else { continue };
+            // only hits seen from this face's side: the back face of a thin sheet must not snap onto the front's hits
+            if ds.dot(n) <= 0.2 * k as f32 { continue; }
+            let m = ps / k as f32;
+            let s = (m - v).dot(n);
+            let lateral = (m - v - s * n).length();
+            if lateral < (SNAP_R as f32 + 0.5) * vox && s.abs() < 1.5 * vox { sum += s * k as f32; w += k as f32; }
+        }}}
+        (w > 0.0).then(|| ((sum / w).clamp(-vox, vox), n))
+    }).collect();
+    let mut count = 0;
+    for (p, m) in mesh.positions.iter_mut().zip(&moved) {
+        if let Some((d, n)) = m { *p += *d * *n; count += 1; }
+    }
+    count
+}
+
+/// Flat horizontal surfaces (floors, table tops, seats) come out of voxels with a 1-2 cm staircase
+/// ripple. Connected near-horizontal upward regions (normal within ~14 deg of up, neighbours within
+/// 0.6 voxel of each other) that are already within ~3 cm of flat and at least 0.04 square units are
+/// set to their area-weighted median height. Returns the number of regions flattened.
+fn flatten_planes(mesh: &mut Mesh, voxel: f32) -> usize {
+    let tri = &mesh.triangles;
+    let pos = &mesh.positions;
+    let n = tri.len();
+    let info: Vec<(Vec3, f32, f32)> = tri.iter().map(|t| {
+        let [a, b, c] = t.map(|i| pos[i as usize]);
+        let cr = (b - a).cross(c - a);
+        (cr.normalize_or_zero(), 0.5 * cr.length(), (a.y + b.y + c.y) / 3.0)
+    }).collect();
+    let up: Vec<bool> = info.iter().map(|(nr, area, _)| nr.y > 0.97 && *area > 0.0).collect();
+    let mut by_edge: HashMap<(u32, u32), Vec<u32>> = HashMap::new();
+    for (f, t) in tri.iter().enumerate() {
+        if !up[f] { continue; }
+        for k in 0..3 { let (a, b) = (t[k], t[(k + 1) % 3]); by_edge.entry((a.min(b), a.max(b))).or_default().push(f as u32); }
+    }
+    let mut comp = vec![u32::MAX; n];
+    let mut regions = 0;
+    let mut newy: Vec<Option<f32>> = vec![None; pos.len()];
+    for seed in 0..n {
+        if !up[seed] || comp[seed] != u32::MAX { continue; }
+        let id = seed as u32;
+        let mut stack = vec![seed];
+        let mut faces = Vec::new();
+        comp[seed] = id;
+        while let Some(f) = stack.pop() {
+            faces.push(f);
+            let t = tri[f];
+            for k in 0..3 {
+                let (a, b) = (t[k], t[(k + 1) % 3]);
+                for &g in &by_edge[&(a.min(b), a.max(b))] {
+                    let g = g as usize;
+                    if comp[g] == u32::MAX && (info[g].2 - info[f].2).abs() < 0.6 * voxel { comp[g] = id; stack.push(g); }
+                }
+            }
+        }
+        let area: f32 = faces.iter().map(|&f| info[f].1).sum();
+        if area < 0.04 { continue; }
+        let mut hs: Vec<(f32, f32)> = faces.iter().map(|&f| (info[f].2, info[f].1)).collect();
+        hs.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let quant = |q: f32| { let mut acc = 0.0; for &(h, w) in &hs { acc += w; if acc >= q * area { return h; } } hs[hs.len() - 1].0 };
+        let (med, lo, hi) = (quant(0.5), quant(0.05), quant(0.95));
+        if hi - lo > 1.2 * voxel { continue; }
+        regions += 1;
+        // move only vertices already within ~3 cm of the plane: a coarse ramp of a few big triangles passes the
+        // centroid test but its corners are far from the median, so they stay; a vertex shared with an earlier
+        // levelled region keeps that height
+        for &f in &faces { for &v in &tri[f] {
+            if newy[v as usize].is_none() && (pos[v as usize].y - med).abs() <= 1.2 * voxel { newy[v as usize] = Some(med); }
+        } }
+    }
+    for (p, y) in mesh.positions.iter_mut().zip(newy) { if let Some(y) = y { p.y = y; } }
+    regions
+}
+
+/// Snap support: voxels within this many cells of a vertex (laterally along its surface).
+const SNAP_R: i32 = 2;
 
 /// Write collision/ into `dir` and return its manifest (paths relative to the package).
 fn build(g: &Gaussians, views: &[View], scene: &Value, dir: &Path) -> Result<Value> {
     let t0 = Instant::now();
     std::fs::create_dir_all(dir.join("convex"))?;
-    let Fused { grid, solid, floor, max_depth, fused, closed, kept, components, cavities, t_depth, t_fuse, t_vox } =
+    let Fused { grid, solid, floor, max_depth, fused, closed, kept, components, cavities, t_depth, t_fuse, t_vox, hit_mean } =
         fuse(g, views, scene, &FuseOpts::collision())?;
     let cells: Vec<IVec3> = (0..grid.n[2]).flat_map(|z| (0..grid.n[1]).flat_map(move |y| (0..grid.n[0]).map(move |x| (x, y, z))))
         .filter(|&(x, y, z)| solid[grid.at(x, y, z)]).map(|(x, y, z)| IVec3::new(x as i32, y as i32, z as i32)).collect();
-    drop(solid);
     eprintln!("collision: {fused} fused -> {closed} closed -> {kept} kept ({components} components) -> {} with floor; marching cubes", cells.len());
     let mut mesh = splat_mesh::mesh_occupancy(&cells, grid.lo, grid.voxel);
     let raw_triangles = mesh.triangles.len();
@@ -478,8 +634,13 @@ fn build(g: &Gaussians, views: &[View], scene: &Value, dir: &Path) -> Result<Val
     simplify(&mut mesh);
     let after = topology(&mesh);
     ensure!(after.0 <= before.0 && after.1 <= before.1, "collision simplification damaged mesh topology");
+    // Positions only (topology unchanged): put the faces where the views saw the surface.
+    let snapped = snap_to_hits(&mut mesh, &grid, &solid, &hit_mean);
+    drop(solid);
+    drop(hit_mean);
+    let planes = flatten_planes(&mut mesh, grid.voxel);
     let t_mesh = t0.elapsed().as_secs_f64() - t_depth - t_fuse - t_vox;
-    eprintln!("collision: {} -> {} triangles; {} boundary / {} nonmanifold edges", raw_triangles, mesh.triangles.len(), after.0, after.1);
+    eprintln!("collision: {snapped} vertices snapped onto surface hits, {planes} flat regions levelled; {} -> {} triangles; {} boundary / {} nonmanifold edges", raw_triangles, mesh.triangles.len(), after.0, after.1);
     ensure!(!mesh.triangles.is_empty(), "collision mesh is empty");
     splat_mesh::write_glb(&mesh, &dir.join("collision.glb"))?;
     write_obj(&mesh, &dir.join("collision.obj"))?;
@@ -507,9 +668,9 @@ fn build(g: &Gaussians, views: &[View], scene: &Value, dir: &Path) -> Result<Val
         "schema": 2, "mesh": "collision/collision.glb", "obj": "collision/collision.obj", "floor": "collision/floor.json",
         "convex": convex, "readme": "collision/README.md", "method": "depth_fusion", "status": "ready",
         "grid": {"voxel_units": grid.voxel, "dims": grid.n, "views": views.len(), "depth_height_px": DEPTH_HEIGHT,
-            "min_alpha": MIN_ALPHA, "max_depth_units": max_depth, "occupied_rule": "hit_views>=2 && 2*hit_views>=free_views",
+            "min_alpha": MIN_ALPHA, "max_depth_units": max_depth, "occupied_rule": "hit_views>=2 && hit_views>=2*free_views", "depth_transmittance": DEPTH_TRANSMITTANCE,
             "closing_voxels": CLOSE, "min_component_frac": MIN_COMPONENT, "fused_cells": fused, "closed_cells": closed,
-            "kept_cells": kept, "components": components, "cavity_cells_filled": cavities, "cells_with_floor": cells.len()},
+            "kept_cells": kept, "components": components, "cavity_cells_filled": cavities, "cells_with_floor": cells.len(), "vertices_snapped_to_hits": snapped, "flat_regions_levelled": planes},
         "floor_estimate": floor, "stats": stats,
         "convex_method": {"name": "vhacd", "implementation": "parry3d-f64", "version": "0.25.3", "license": "Apache-2.0",
             "resolution": 64, "max_convex_hulls": 64, "fill_mode": "surface_only", "max_vertices_per_hull": 128},
@@ -911,3 +1072,71 @@ const UNITY_META: &str = "fileFormatVersion: 2\nguid: GUID\nModelImporter:\n  se
 const UNITY_EDITOR: &str = include_str!("collision/UnitySetup.cs");
 const README: &str = include_str!("collision/README.md");
 const NOTICES: &str = include_str!("collision/THIRD_PARTY_NOTICES.md");
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A round table top (opaque, flat splats) under a layer of faint haze, a floor, and a ring of
+    /// handheld-height cameras looking at it. Returns the splats and views in a Y-up scene frame.
+    fn table_with_haze() -> (Gaussians, Vec<View>) {
+        let mut g = Gaussians::default();
+        let logit = |a: f32| (a / (1.0 - a)).ln();
+        let mut add = |p: [f32; 3], s: [f32; 3], a: f32| {
+            g.pos.push(p); g.scale.push(s.map(f32::ln)); g.rot.push([1.0, 0.0, 0.0, 0.0]); g.opacity.push(logit(a)); g.dc.push([0.0; 3]);
+        };
+        let mut seed = 7u32;
+        let mut rnd = move || { seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5; seed as f32 / u32::MAX as f32 };
+        let (top, rad) = (0.42f32, 0.38f32);
+        // table top: flat discs every 1.5 cm
+        let mut x = -rad;
+        while x <= rad { let mut z = -rad;
+            while z <= rad { if x * x + z * z <= rad * rad { add([x, top, z], [0.012, 0.002, 0.012], 0.95); } z += 0.015; }
+            x += 0.015; }
+        // floor out to 2.5 units
+        let mut x = -2.5f32;
+        while x <= 2.5 { let mut z = -2.5f32;
+            while z <= 2.5 { if (x * x + z * z).sqrt() > rad { add([x, 0.0, z], [0.03, 0.003, 0.03], 0.95); } z += 0.04; }
+            x += 0.04; }
+        // haze: faint splats 2..25 cm above the table, invisible in colour but enough to stop some views' median depth
+        // (optical depth ~1 along a grazing ray: some views stop in it, most see through)
+        for _ in 0..1000 {
+            let (r, a) = (rad * rnd().sqrt(), std::f32::consts::TAU * rnd());
+            add([r * a.cos(), top + 0.02 + 0.23 * rnd(), r * a.sin()], [0.015, 0.015, 0.015], 0.06);
+        }
+        let views = (0..48).map(|k| {
+            let a = std::f32::consts::TAU * k as f32 / 48.0;
+            let c = Vec3::new(2.0 * a.cos(), 1.45, 2.0 * a.sin());
+            let fwd = (Vec3::new(0.0, top, 0.0) - c).normalize();
+            let right = fwd.cross(Vec3::Y).normalize();
+            let down = fwd.cross(right);
+            View { name: format!("v{k}"), c, r: Mat3::from_cols(right, down, fwd), f: 300.0, w: 480, h: DEPTH_HEIGHT }
+        }).collect();
+        (g, views)
+    }
+
+    /// Height of the top solid sample in the column over the table centre.
+    fn top_over_centre(f: &Fused) -> f32 {
+        let gr = &f.grid;
+        let ix = ((0.0 - gr.lo.x) / gr.voxel).round() as usize;
+        let iz = ((0.0 - gr.lo.z) / gr.voxel).round() as usize;
+        (0..gr.n[1]).rev().find(|&y| f.solid[gr.at(ix, y, iz)] && (gr.lo.y + y as f32 * gr.voxel) < 1.0)
+            .map(|y| gr.lo.y + y as f32 * gr.voxel).unwrap_or(f32::NAN)
+    }
+
+    #[test]
+    fn haze_over_a_table_is_carved_not_fused() {
+        let (g, views) = table_with_haze();
+        let scene = json!({"floor": {"detected": true}});
+        let new = fuse(&g, &views, &scene, &FuseOpts::collision()).unwrap();
+        let top = top_over_centre(&new);
+        // collision surface = top sample + half a voxel; must sit within one voxel of the real table top
+        assert!((top + 0.5 * new.grid.voxel - 0.42).abs() <= new.grid.voxel + 0.005, "table top sample {top}");
+        // the previous rule (median depth, a third of views suffice, 5 cm voxels, wide closing) kept the haze as a shell
+        let old = FuseOpts { voxel: 0.05, close: 2, transmittance: 0.5, solid_ratio: 2.0, carve_gap: 2.5, ..FuseOpts::collision() };
+        let top_old = top_over_centre(&fuse(&g, &views, &scene, &old).unwrap());
+        let (err_new, err_old) = (top + 0.5 * new.grid.voxel - 0.42, top_old + 0.5 * old.voxel - 0.42);
+        eprintln!("collision table top error: new {err_new:.3}, old rule {err_old:.3}");
+        assert!(err_old > 0.04 && err_old > 2.0 * err_new.abs(), "old rule {err_old} vs new {err_new}");
+    }
+}
