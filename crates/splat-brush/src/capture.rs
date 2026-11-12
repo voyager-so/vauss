@@ -175,7 +175,10 @@ fn input_root(run: &dyn RunCtx) -> Result<Option<PathBuf>> {
     let mut bytes = 0u64;
     ensure!(zip.len() <= 100_000, "too many capture archive entries");
     for i in 0..zip.len() {
-        let mut file = zip.by_index(i)?;
+        let mut file = zip.by_index_with_options(
+            i,
+            zip::read::ZipReadOptions::new().enforce_header_consistency(true),
+        )?;
         let p = file.enclosed_name().context("unsafe capture ZIP path")?;
         ensure!(
             !file.is_symlink(),
