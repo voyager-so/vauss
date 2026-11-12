@@ -36,12 +36,12 @@ Archives are not code-signed or notarized yet. On macOS, clear the quarantine fl
 
 ```sh
 # Linux / macOS: read the script first; pass an explicit version (the release tag without "vauss-v")
-sh scripts/install.sh 0.1.20-rc
+sh scripts/install.sh 0.1.21-rc
 ```
 
 ```powershell
 # Windows
-./scripts/install.ps1 -Version 0.1.20-rc
+./scripts/install.ps1 -Version 0.1.21-rc
 ```
 
 The installers download the archive, check it against its SHA-256 sidecar, and need no admin rights. On
@@ -112,7 +112,7 @@ scripts/package.sh x86_64-unknown-linux-gnu ./dist-out      # Windows: ./scripts
 `package.sh` builds `splat-cli` from `Cargo.lock`, stages the bundled helpers with `scripts/bundle-tools.sh`,
 writes the license inventory, and produces the archive and its checksum.
 The maintainer release pipeline builds these archives natively for all three targets from the public source snapshot, then publishes them as a GitHub release.
-A pre-release tag such as `vauss-v0.1.20-rc` creates a visible prerelease, never marked Latest.
+A pre-release tag such as `vauss-v0.1.21-rc` creates a visible prerelease, never marked Latest.
 Platform archives are attached individually after their builds, smoke checks and payload scans pass;
 the release notes identify whether builds are still in progress. Each platform unpacks its archive and
 checks that `vauss doctor` reports every bundled helper ready with an empty cache and no network
