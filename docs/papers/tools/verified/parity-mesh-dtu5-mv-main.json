@@ -1,7 +1,7 @@
 {
  "claim": "parity-mesh-dtu5-mv-main-v1",
  "verified_at": "2026-10-24",
- "verifier": "parity-mesh lane recompute from raw per-run rows (CPU only), plus an independent Codex recompute (see independent_recompute). Not yet a publications pass.",
+ "verifier": "CPU recomputation from raw per-run rows, plus an independent recomputation (see independent_recompute). Results remain provisional.",
  "class": "PROVISIONAL (3 seeds 42/7/43, reused from earlier DTU work: dev-only; DTU is non-commercial research data)",
  "sources": {
   "evidence_root": "$SPLAT_DATA/research/parity-mesh-dtu5",
@@ -237,7 +237,7 @@
     }
    }
   },
-  "official_reference": "research/vmesh/official-v6-results.json (official 2DGS hbb1 f3e3b9f, run by us, single seed 0)"
+  "official_reference": "Official 2DGS (hbb1 commit f3e3b9f), single seed 0; aggregate reference values are recorded in per_scorer above."
  },
  "no_harm": {
   "rule": "M360 kitchen + room, seed 42, 30k, 800 px, every-8th held out, MV on vs off same runner; held-out PSNR on-off >= -0.3 dB on both",
@@ -374,5 +374,5 @@
   "unchanged across versions": "catchup.py 146755c2..., run_dtu_g1.py f74c7dd4..., official_score.py b88a179a...; training/scoring logic, decision rules and protocol unchanged",
   "staging evidence": "v2 and v3 hashes appear in the fal staging ledger (runs/fal/staged.json); v1 does not"
  },
- "independent_recompute": "Codex review of PR #23 at b5add370 (internal review file pr23.md): separate CPU script over all 120 metric files; 62/62 input hashes, 165/165 record fields match at displayed precision; reference read from research/vmesh/official-v6-results.json gives -0.012718 / -0.013555 mm."
+ "independent_recompute": "Independent CPU recomputation over all 120 metric files: 62/62 input hashes and 165/165 record fields match at displayed precision. The official 2DGS reference comparison gives -0.012718 / -0.013555 mm. Raw recomputation inputs are not included in this public record."
 }
