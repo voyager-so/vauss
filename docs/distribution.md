@@ -1,6 +1,6 @@
-# Installing and packaging splat
+# Installing and packaging Vauss
 
-`splat` is a single Rust executable per platform. It has no Python runtime dependency. GPU drivers come
+`vauss` is a single Rust executable per platform. It has no Python runtime dependency. GPU drivers come
 from your system; every other helper is either bundled in the release archive or downloaded on first use
 from a pinned, hash-checked URL.
 
@@ -15,7 +15,7 @@ Each [GitHub release](https://github.com/voyager-so/vauss/releases) has one arch
 | macOS Apple Silicon | `aarch64-apple-darwin` | `.tar.gz` | macOS 11+ |
 | Windows x64 | `x86_64-pc-windows-msvc` | `.zip` | Windows 10+, Vulkan or DX12 driver |
 
-An archive holds the `splat` executable and a `tools/` folder beside it, so a fresh install works offline:
+An archive holds the `vauss` executable (with `splat` and `voyager-splat` compatibility aliases) and a `tools/` folder beside it, so a fresh install works offline:
 
 | Bundled helper | Used for | License |
 |---|---|---|
@@ -36,20 +36,21 @@ Archives are not code-signed or notarized yet. On macOS, clear the quarantine fl
 
 ```sh
 # Linux / macOS: read the script first; pass an explicit version (the release tag without "vauss-v")
-sh scripts/install.sh 0.1.19-rc
+sh scripts/install.sh 0.1.20-rc
 ```
 
 ```powershell
 # Windows
-./scripts/install.ps1 -Version 0.1.19-rc
+./scripts/install.ps1 -Version 0.1.20-rc
 ```
 
 The installers download the archive, check it against its SHA-256 sidecar, and need no admin rights. On
-Linux and macOS the release goes to `~/.local/share/splat/<version>/` and `~/.local/bin/splat` links to it
-(add `~/.local/bin` to your `PATH` if it is not already). `SPLAT_INSTALL_DIR` / `-InstallDir` change the
-location; `SPLAT_RELEASE_BASE_URL` points at a mirror.
+Linux and macOS the release goes to `~/.local/share/vauss/<version>/`, with `vauss`, `splat` and
+`voyager-splat` links in `~/.local/bin` (add that directory to your `PATH`). Windows installs into
+`%LOCALAPPDATA%\vauss\bin`. `VAUSS_INSTALL_DIR` / `-InstallDir` change the executable location;
+`VAUSS_RELEASE_BASE_URL` points at a mirror. The older `SPLAT_` installer variables remain supported.
 
-You can also unpack an archive anywhere by hand and run `splat` from that folder: keep `tools/` next to it.
+You can also unpack an archive anywhere by hand and run `vauss` from that folder: keep `tools/` next to it.
 
 ## Build from source
 
@@ -90,8 +91,10 @@ Optional downloads that are never bundled:
 
 ## Licenses of what splat runs
 
-- splat's own code is Apache-2.0. `crates/splat-train*` are derived from
-  [Brush](https://github.com/ArthurBrussee/brush) (Apache-2.0); see [`NOTICE`](../NOTICE).
+- Original Vauss code uses the source-available [Vauss Preview License](../LICENSE).
+  Separately licensed components retain their original terms: Brush-derived `crates/splat-train*`
+  remain Apache-2.0, and vendored CubeCL remains MIT OR Apache-2.0. See the root license
+  and [`NOTICE`](../NOTICE) for the complete component scope and retained licenses.
 - The top-level [`deny.toml`](../deny.toml) (`cargo deny check licenses bans sources`) allows permissive licenses
   and MPL-2.0 for linked Rust dependencies, never GPL, AGPL or LGPL. `scripts/licenses.sh` generates the full inventory and fails if a license cannot be resolved.
 - FFmpeg, COLMAP, gltfpack and Spirula run as separate executables. The FFmpeg build reports
@@ -109,8 +112,11 @@ scripts/package.sh x86_64-unknown-linux-gnu ./dist-out      # Windows: ./scripts
 `package.sh` builds `splat-cli` from `Cargo.lock`, stages the bundled helpers with `scripts/bundle-tools.sh`,
 writes the license inventory, and produces the archive and its checksum.
 The maintainer release pipeline builds these archives natively for all three targets from the public source snapshot, then publishes them as a GitHub release.
-A pre-release tag such as `vauss-v0.1.19-rc` makes a draft pre-release that is never marked Latest. It then unpacks each archive and checks that `vauss doctor` reports every bundled
-helper ready with an empty cache and no network (`scripts/check-bundled-doctor.sh`).
+A pre-release tag such as `vauss-v0.1.20-rc` creates a visible prerelease, never marked Latest.
+Platform archives are attached individually after their builds, smoke checks and payload scans pass;
+the release notes identify whether builds are still in progress. Each platform unpacks its archive and
+checks that `vauss doctor` reports every bundled helper ready with an empty cache and no network
+(`scripts/check-bundled-doctor.sh`).
 
 The separate full Windows pipeline proof uses a clean, GPU-less runner and the WARP software adapter. As of Oct 24, 2026, it had **not been verified on the current main**: the last attempt was cancelled after about 1 h 50 min without a result. Archive builds and bundled-tool smoke tests are separate from that full reconstruction proof.
 

@@ -34,7 +34,7 @@ A Gaussian splat is a scene made from millions of tiny coloured 3D brushstrokes.
 On Linux x64 or macOS arm64, install the published preview:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/voyager-so/vauss/main/scripts/install.sh | sh -s -- 0.1.19-rc
+curl -fsSL https://raw.githubusercontent.com/voyager-so/vauss/main/scripts/install.sh | sh -s -- 0.1.20-rc
 export PATH="$HOME/.local/bin:$PATH"
 ```
 

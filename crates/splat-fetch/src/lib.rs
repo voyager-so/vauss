@@ -467,8 +467,11 @@ fn unpack(archive: &Path, destination: &Path, asset: &Asset) -> anyhow::Result<(
         Format::Zip => {
             let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
             for i in 0..zip.len() {
-                let mut entry = zip.by_index(i)?;
-                let path = PathBuf::from(entry.name());
+                let mut entry = zip.by_index_with_options(
+                    i,
+                    zip::read::ZipReadOptions::new().enforce_header_consistency(true),
+                )?;
+                let path = PathBuf::from(entry.name().context("invalid ZIP entry name")?.as_ref());
                 safe_relative(&path)?;
                 if entry.is_symlink() {
                     ensure!(entry.size() < 4096, "archive link target is too long");

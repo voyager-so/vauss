@@ -96,6 +96,9 @@ fn zip_traversal_and_links_are_rejected() {
         ("../escape", false),
         ("/absolute", false),
         ("C:\\escape", false),
+        ("dir/../escape", false),
+        ("dir\\escape", false),
+        ("//server/share/escape", false),
         ("link", true),
     ] {
         let dir = tempfile::tempdir().unwrap();
@@ -118,6 +121,51 @@ fn zip_traversal_and_links_are_rejected() {
             "accepted {name}"
         );
     }
+}
+
+#[test]
+fn zip_safe_nested_paths_are_extracted() {
+    let dir = tempfile::tempdir().unwrap();
+    let archive = dir.path().join("asset.zip");
+    let mut writer = zip::ZipWriter::new(File::create(&archive).unwrap());
+    writer
+        .start_file("tools/bin/helper", zip::write::SimpleFileOptions::default())
+        .unwrap();
+    writer.write_all(b"verified helper").unwrap();
+    writer.finish().unwrap();
+    let mut asset = fixture(b"data");
+    asset.format = Format::Zip;
+    let destination = dir.path().join("out");
+    fs::create_dir(&destination).unwrap();
+    unpack(&archive, &destination, &asset).unwrap();
+    assert_eq!(fs::read(destination.join("tools/bin/helper")).unwrap(), b"verified helper");
+}
+
+#[test]
+fn zip_disagreeing_local_and_central_names_are_rejected_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let archive = dir.path().join("asset.zip");
+    let mut writer = zip::ZipWriter::new(File::create(&archive).unwrap());
+    writer
+        .start_file("safe.txt", zip::write::SimpleFileOptions::default())
+        .unwrap();
+    writer.write_all(b"untrusted payload").unwrap();
+    writer.finish().unwrap();
+
+    // The central directory still advertises safe.txt, while the local header
+    // names a different file. Both names are harmless: the disagreement itself
+    // must fail instead of letting two ZIP readers see different archive contents.
+    let mut bytes = fs::read(&archive).unwrap();
+    assert_eq!(&bytes[..4], b"PK\x03\x04");
+    assert_eq!(u16::from_le_bytes([bytes[26], bytes[27]]), 8);
+    bytes[30..38].copy_from_slice(b"evil.txt");
+    fs::write(&archive, bytes).unwrap();
+    let mut asset = fixture(b"data");
+    asset.format = Format::Zip;
+    let destination = dir.path().join("out");
+    fs::create_dir(&destination).unwrap();
+    assert!(unpack(&archive, &destination, &asset).is_err());
+    assert_eq!(fs::read_dir(destination).unwrap().count(), 0);
 }
 
 #[test]
