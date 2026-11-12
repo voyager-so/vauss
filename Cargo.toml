@@ -30,7 +30,7 @@ windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_
 tempfile = "3"
 splat-contracts = { path = "crates/splat-contracts" }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
-zip = { version = "2.4", default-features = false, features = ["deflate"] }
+zip = { version = "9.0", default-features = false, features = ["deflate"] }
 tar = "0.4"
 flate2 = "1"
 splat-fetch = { path = "crates/splat-fetch" }
