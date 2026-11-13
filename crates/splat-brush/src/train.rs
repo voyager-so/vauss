@@ -868,6 +868,11 @@ async fn train(mut job: TrainJob, mut config: TrainConfig, pose_refine_env: Opti
         _ => None,
     };
     let init_ply = fork_local.clone().or_else(|| job.init_ply.clone());
+    let init_source = if init_ply.is_some() { "init_ply" } else if scene.init.is_some() { "scene_points" } else { "random_plus_z" };
+    let trusted_unseeded = init_source == "random_plus_z" && crate::capture_sfm::trusted(&job.dataset)?;
+    if trusted_unseeded {
+        eprintln!("WARNING: {}", crate::capture_sfm::NO_SEED_WARNING);
+    }
     let splats = if let Some(ply) = &init_ply {
         if job.plain_init_ply {
             engine::load_plain_init_ply(ply, job.max_splats as usize, mode, &device).await?
@@ -1302,6 +1307,9 @@ async fn train(mut job: TrainJob, mut config: TrainConfig, pose_refine_env: Opti
         "training_s": training_s, "wall_s": wall.elapsed().as_secs_f64(),
         "camera_source": read_json::<Value>(&job.dataset.join("health.json")).ok().map(|h| h["camera_source"].clone()),
         "sfm_skipped": trusted_cameras,
+        "init_source": init_source,
+        "seed_points": read_json::<Value>(&job.dataset.join("health.json")).ok().map(|h| h["seed_points"].clone()),
+        "init_warning": trusted_unseeded.then_some(crate::capture_sfm::NO_SEED_WARNING),
         "pose_refine": trainer.pose_refine().is_some(), "train_psnr_refined": train_psnr_refined,
         // Held-out alignment for evaluate (see views::evaluate); the scores above are unaligned.
         "heldout_pose_align": align,
@@ -1606,7 +1614,7 @@ pub fn complete(cfg: &BrushConfig, run: &dyn RunCtx, artifact_id: &str, exit_cod
         .find(|r| r["event"] == "gpu_lock")
         .map(|r| r["gpu_lock_wait_s"].clone());
     metrics.insert("gpu_lock_wait_s".into(), lock_wait.unwrap_or(Value::Null));
-    for k in ["train_psnr", "train_ssim", "training_s", "wall_s", "train_count", "heldout_count", "camera_source", "sfm_skipped"] {
+    for k in ["train_psnr", "train_ssim", "training_s", "wall_s", "train_count", "heldout_count", "camera_source", "sfm_skipped", "init_source", "seed_points"] {
         metrics.insert(k.into(), summary.get(k).cloned().unwrap_or(Value::Null));
     }
     let (train, held) = (summary["train_psnr"].as_f64(), metrics.get("psnr").and_then(Value::as_f64));
@@ -1628,6 +1636,9 @@ pub fn complete(cfg: &BrushConfig, run: &dyn RunCtx, artifact_id: &str, exit_cod
         warnings.push(brush_train::train::BLUR_MODE_NOTE.into());
     }
     warnings.extend(view_warning);
+    if let Some(w) = summary.get("init_warning").and_then(Value::as_str) {
+        warnings.push(w.into());
+    }
     if let Some(total) = summary.get("total_steps").and_then(Value::as_u64).filter(|&t| summary["step"].as_u64().is_some_and(|s| s < t)) {
         warnings.push(format!(
             "Training stopped at step {} of {total}: the job's time limit was near. The result is the splats at that step.",

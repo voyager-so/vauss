@@ -1828,6 +1828,151 @@ pub fn triangulation_command(
     Ok(stage)
 }
 
+/// One imported (authoritative) camera: world-to-camera pose and intrinsics, keyed by file name.
+#[derive(Clone, Debug)]
+pub struct FixedCamera {
+    pub name: String,
+    pub model: String,
+    pub width: u64,
+    pub height: u64,
+    pub params: Vec<f64>,
+    /// World-to-camera rotation (w, x, y, z) and translation.
+    pub qvec: [f64; 4],
+    pub tvec: [f64; 3],
+}
+
+#[derive(Debug, Serialize)]
+pub struct FixedPoseSeed {
+    pub model_dir: PathBuf,
+    pub points: usize,
+    pub images: usize,
+    pub stages: Vec<StageTiming>,
+}
+
+/// Triangulates points under imported cameras without ever re-solving them: features and matches
+/// come from COLMAP, the poses/intrinsics are written into the input model (with the database's
+/// own image/camera ids) and `point_triangulator` runs with fixed frames and intrinsics.
+/// Every stage is killed past `timeout` in total. Always CPU. `frames_dir` must hold exactly the images to use (callers exclude held-out views). The returned
+/// model's cameras/images are COLMAP's echo of the input; only its points are meaningful.
+pub fn triangulate_fixed_poses(frames_dir: &Path, cameras: &[FixedCamera], opts: &ReconstructOptions, timeout: Duration) -> Result<FixedPoseSeed> {
+    struct Reset;
+    impl Drop for Reset {
+        fn drop(&mut self) {
+            STAGE_DEADLINE.set(None);
+        }
+    }
+    STAGE_DEADLINE.set(Some(Instant::now() + timeout));
+    let _reset = Reset;
+    // Authored intrinsics are per image: never a shared camera, never GPU (no scheduling lock here).
+    let mut opts = opts.clone();
+    opts.single_camera = false;
+    opts.use_gpu = false;
+    let opts = &opts;
+    ensure!(cameras.len() >= 2, "need at least two imported cameras to triangulate");
+    fs::create_dir_all(&opts.output_dir)?;
+    let database = opts.output_dir.join("database.db");
+    let mut stages = Vec::new();
+    for mut stage in commands(frames_dir, opts)? {
+        match stage.name.as_str() {
+            "feature_extractor" => {
+                // Every image keeps its own authored intrinsics.
+                stage.option("ImageReader.single_camera_per_image", "1");
+            }
+            // Sequential matching skips verification and relies on this separate stage.
+            "exhaustive_matcher" | "sequential_matcher" | "geometric_verifier" => {}
+            _ => continue,
+        }
+        stages.push(run_stage(stage, &opts.output_dir, None)?);
+    }
+    let db = rusqlite::Connection::open(&database).context("opening the COLMAP database")?;
+    // image -> (camera, frame, rig), straight from the database: COLMAP 4 requires the input
+    // model's camera, rig and frame ids to match the database's.
+    let rows: Vec<(i64, String, i64, i64, i64)> = db
+        .prepare(
+            "SELECT i.image_id, i.name, i.camera_id, f.frame_id, f.rig_id FROM images i \
+             JOIN frame_data d ON d.data_id = i.image_id AND d.sensor_type = 0 \
+             JOIN frames f ON f.frame_id = d.frame_id ORDER BY i.image_id",
+        )
+        .context("the COLMAP database has no rig/frame tables (COLMAP 4 expected)")?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)))?
+        .collect::<rusqlite::Result<_>>()?;
+    let n_images: i64 = db.query_row("SELECT COUNT(*) FROM images", [], |r| r.get(0))?;
+    ensure!(rows.len() as i64 == n_images, "{} of {n_images} database images have no camera frame", rows.len());
+    let unique: BTreeSet<i64> = rows.iter().map(|r| r.2).collect();
+    ensure!(unique.len() == rows.len(), "the COLMAP database shares cameras between images; imported intrinsics are per image");
+    let frames: BTreeSet<i64> = rows.iter().map(|r| r.3).collect();
+    ensure!(frames.len() == rows.len(), "the COLMAP database shares frames between images");
+    let rig_sensors: i64 = db.query_row("SELECT COUNT(*) FROM rig_sensors", [], |r| r.get(0))?;
+    ensure!(rig_sensors == 0, "the COLMAP database has multi-sensor rigs; only single-camera rigs are supported");
+    let by_name: BTreeMap<&str, &FixedCamera> = cameras.iter().map(|c| (c.name.as_str(), c)).collect();
+    ensure!(rows.iter().all(|r| by_name.contains_key(r.1.as_str())), "the COLMAP database holds an image without an imported camera");
+    ensure!(rows.len() >= 2, "the COLMAP database holds fewer than two of the imported cameras' images");
+    // The extractor guessed intrinsics (SIMPLE_RADIAL...). Replace them with the authored cameras so
+    // the database and the input model agree on model, size and parameters; keypoints stay valid
+    // because the images are the ones the cameras describe.
+    for (_, name, camera_id, _, _) in &rows {
+        let c = by_name[name.as_str()];
+        let model_id = colmap_model_id(&c.model)?;
+        let (w, h): (i64, i64) = db.query_row("SELECT width, height FROM cameras WHERE camera_id = ?1", [camera_id], |r| Ok((r.get(0)?, r.get(1)?)))?;
+        ensure!((w as u64, h as u64) == (c.width, c.height), "{name}: image is {w}x{h} but the imported camera is {}x{}", c.width, c.height);
+        ensure!(c.params.len() == colmap_model_params(&c.model)? && c.params.iter().all(|v| v.is_finite()), "{name}: invalid {} parameters", c.model);
+        let blob: Vec<u8> = c.params.iter().flat_map(|v| v.to_le_bytes()).collect();
+        db.execute("UPDATE cameras SET model = ?1, params = ?2, prior_focal_length = 1 WHERE camera_id = ?3", rusqlite::params![model_id, blob, camera_id])?;
+    }
+    let ref_sensors: BTreeMap<i64, i64> = db
+        .prepare("SELECT rig_id, ref_sensor_id FROM rigs")?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+        .collect::<rusqlite::Result<_>>()?;
+    drop(db);
+    let input = opts.output_dir.join("fixed_input");
+    fs::create_dir_all(&input)?;
+    let (mut cams_txt, mut imgs_txt) = (String::from("# fixed imported cameras\n"), String::from("# fixed imported poses\n"));
+    let (mut rigs_txt, mut frames_txt) = (String::from("# fixed single-camera rigs\n"), String::from("# fixed imported frames\n"));
+    for (id, name, camera_id, frame_id, rig_id) in &rows {
+        let c = by_name[name.as_str()];
+        ensure!(ref_sensors.get(rig_id) == Some(camera_id), "{name}: rig {rig_id} is not the single-camera rig of camera {camera_id}");
+        let params: Vec<String> = c.params.iter().map(|v| format!("{v:.17e}")).collect();
+        let pose = format!("{:.17e} {:.17e} {:.17e} {:.17e} {:.17e} {:.17e} {:.17e}", c.qvec[0], c.qvec[1], c.qvec[2], c.qvec[3], c.tvec[0], c.tvec[1], c.tvec[2]);
+        cams_txt += &format!("{camera_id} {} {} {} {}\n", c.model, c.width, c.height, params.join(" "));
+        imgs_txt += &format!("{id} {pose} {camera_id} {name}\n\n");
+        rigs_txt += &format!("{rig_id} 1 CAMERA {camera_id}\n");
+        frames_txt += &format!("{frame_id} {rig_id} {pose} 1 CAMERA {camera_id} {id}\n");
+    }
+    fs::write(input.join("cameras.txt"), cams_txt)?;
+    fs::write(input.join("images.txt"), imgs_txt)?;
+    fs::write(input.join("rigs.txt"), rigs_txt)?;
+    fs::write(input.join("frames.txt"), frames_txt)?;
+    fs::write(input.join("points3D.txt"), "")?;
+    let out = opts.output_dir.join("triangulated");
+    fs::create_dir_all(&out)?;
+    stages.push(run_stage(triangulation_command(frames_dir, &input, &out, opts)?, &opts.output_dir, None)?);
+    let model = read_model(&out).context("reading the triangulated model")?;
+    Ok(FixedPoseSeed { model_dir: out, points: model.points.len(), images: model.images.len(), stages })
+}
+
+/// COLMAP's database id for a camera model name.
+fn colmap_model_id(model: &str) -> Result<i64> {
+    Ok(match model {
+        "SIMPLE_PINHOLE" => 0,
+        "PINHOLE" => 1,
+        "SIMPLE_RADIAL" => 2,
+        "RADIAL" => 3,
+        "OPENCV" => 4,
+        other => bail!("unsupported imported camera model {other}"),
+    })
+}
+
+fn colmap_model_params(model: &str) -> Result<usize> {
+    Ok(match model {
+        "SIMPLE_PINHOLE" => 3,
+        "PINHOLE" => 4,
+        "SIMPLE_RADIAL" => 4,
+        "RADIAL" => 5,
+        "OPENCV" => 8,
+        other => bail!("unsupported imported camera model {other}"),
+    })
+}
+
 /// Registers the database's other frames into `model_dir` by pose estimation alone (no bundle
 /// adjustment, no new points); cameras and existing poses are unchanged.
 pub fn registration_command(model_dir: &Path, output_dir: &Path, opts: &ReconstructOptions) -> Result<StageCommand> {
@@ -2007,11 +2152,45 @@ fn run_stage_at(
             });
         }
     }
+    let deadline = STAGE_DEADLINE.get();
+    // With a deadline the child leads its own process group so a timeout takes its descendants too.
+    #[cfg(unix)]
+    if deadline.is_some() {
+        use std::os::unix::process::CommandExt;
+        command.process_group(0);
+    }
     let mut child = command
         .spawn()
         .with_context(|| format!("starting {}", stage.name))?;
-    let cpu_seconds = wait_exited(&mut child)?;
-    let status = child.wait()?;
+    let (cpu_seconds, status, timed_out) = match deadline {
+        None => {
+            let cpu = wait_exited(&mut child)?;
+            (cpu, child.wait()?, false)
+        }
+        Some(deadline) => {
+            // One owner polls, kills and reaps the same handle: no pid is signalled after reaping.
+            let mut timed_out = false;
+            let status = loop {
+                if let Some(status) = child.try_wait()? {
+                    break status;
+                }
+                if Instant::now() >= deadline {
+                    timed_out = true;
+                    #[cfg(unix)]
+                    // SAFETY: the child is unreaped (try_wait just said so and only this thread
+                    // reaps it), so its pid, which is its process-group id, is not recycled.
+                    unsafe {
+                        libc::kill(-(child.id() as libc::pid_t), libc::SIGKILL);
+                    }
+                    let _ = child.kill();
+                    break child.wait()?;
+                }
+                std::thread::sleep(Duration::from_millis(20));
+            };
+            (None, status, timed_out)
+        }
+    };
+    ensure!(!timed_out, "{} timed out and was killed; see {}", stage.name, log_path.display());
     CHILD_CPU.set(CHILD_CPU.get() + cpu_seconds.unwrap_or(0.0));
     let elapsed = now.elapsed().as_secs_f64();
     ensure!(
@@ -2031,6 +2210,11 @@ fn run_stage_at(
         gpu_lock_held: gpu_lock.is_some(),
         cpu_seconds,
     })
+}
+
+thread_local! {
+    /// Wall-clock limit for every stage started on this thread (see [`triangulate_fixed_poses`]).
+    static STAGE_DEADLINE: Cell<Option<Instant>> = const { Cell::new(None) };
 }
 
 /// An environment override; an unset or unparsable variable keeps the product default.

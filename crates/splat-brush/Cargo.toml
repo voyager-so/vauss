@@ -27,6 +27,7 @@ ctrlc.workspace = true
 thiserror.workspace = true
 splat-eval.workspace = true
 splat-sfm.workspace = true
+tempfile.workspace = true
 splat-sfm-learned.workspace = true
 splat-mesh.workspace = true
 splat-inpaint.workspace = true
@@ -39,3 +40,4 @@ lzfse_rust = "0.2.1"
 splat-webexport.workspace = true
 splat-shots.workspace = true
 tempfile.workspace = true
+rusqlite = { version = "0.40", features = ["bundled"] }

@@ -22,7 +22,7 @@ pub(crate) fn is_capture(source: &Path) -> bool {
 }
 
 /// Explicit authority bypasses all SfM discovery, staging and execution.
-pub(crate) fn import_trusted(run: &dyn RunCtx, frames_id: &str) -> Result<ToolResult> {
+pub(crate) fn import_trusted(run: &dyn RunCtx, frames_id: &str, colmap: Option<&Path>) -> Result<ToolResult> {
     let source = run.path(frames_id)?;
     ensure!(is_capture(&source), "trusted frames have no calibrated capture manifest");
     let (artifact, out) = new_artifact(run, ArtifactKind::Sfm, json!({
@@ -33,7 +33,143 @@ pub(crate) fn import_trusted(run: &dyn RunCtx, frames_id: &str) -> Result<ToolRe
         "capture_pose_refinement_default":false, "camera_refinement":"disabled",
         "health_policy":"structural_validation", "reconstruction_quality":"unmeasured"});
     write_json(&out.join("capture_selection.json"), &selection)?;
-    capture::reconstruct(run, frames_id, artifact, &out, &selection)
+    let mut result = capture::reconstruct(run, frames_id, artifact, &out, &selection)?;
+    seed_if_unseeded(&out, colmap, seed_timeout(), &mut result)?;
+    Ok(result)
+}
+
+/// Fewer triangulated points than this cannot seed a scene; the +Z initializer takes over (loudly).
+pub(crate) const MIN_SEED_POINTS: usize = 1000;
+pub(crate) const NO_SEED_WARNING: &str = "Trusted camera import has NO seed points (no depth, no triangulation): training falls back to the +Z random initializer, which lost >10 dB held-out PSNR in controlled tests (issue #76). Provide seed points/depth or an SfM model.";
+
+/// A trusted import with no sensor-depth seed gets points triangulated under the imported
+/// cameras (COLMAP features + matching + fixed-pose point_triangulator over the training views
+/// only). Poses and intrinsics are never re-solved: the written cameras/images are untouched and
+/// a triangulated model whose poses moved is rejected. Too few points: warn, keep the +Z fallback.
+/// Total wall-clock budget for seeding (SPLAT_TRUSTED_SEED_TIMEOUT_S, default 20 min); a hung or
+/// slow COLMAP is killed and the loud +Z fallback is used.
+fn seed_timeout() -> std::time::Duration {
+    std::time::Duration::from_secs(std::env::var("SPLAT_TRUSTED_SEED_TIMEOUT_S").ok().and_then(|v| v.parse().ok()).unwrap_or(1200))
+}
+
+pub(crate) fn seed_if_unseeded(out: &Path, colmap: Option<&Path>, timeout: std::time::Duration, result: &mut ToolResult) -> Result<()> {
+    let sparse = out.join("sparse/0");
+    let existing = splat_eval::read_model(&sparse)?.points.len();
+    let mut seed = if existing > 0 {
+        json!({"source": "sensor_depth", "points": existing})
+    } else {
+        match triangulate_seed(out, colmap, timeout) {
+            Ok((points, mut info)) if points.len() >= MIN_SEED_POINTS => {
+                capture::write_points3d(&sparse.join("points3D.bin"), &points)?;
+                info["points"] = json!(points.len());
+                info["source"] = json!("colmap_triangulated_fixed_poses");
+                info
+            }
+            Ok((points, mut info)) => {
+                info["triangulated_points"] = json!(points.len());
+                info["reason"] = json!(format!("triangulation yielded {} points (< {MIN_SEED_POINTS})", points.len()));
+                fallback_seed(info)
+            }
+            Err(e) => fallback_seed(json!({"reason": format!("{e:#}")})),
+        }
+    };
+    seed["min_points"] = json!(MIN_SEED_POINTS);
+    let points = seed["points"].as_u64().unwrap_or(0);
+    if seed["source"] == "none_plus_z_fallback" {
+        let warning = format!("{NO_SEED_WARNING} ({})", seed["reason"].as_str().unwrap_or("no reason recorded"));
+        eprintln!("WARNING: {warning}");
+        seed["warning"] = json!(warning);
+        result.warnings.push(warning);
+    }
+    for name in ["health.json", "capture_selection.json"] {
+        let path = out.join(name);
+        let mut doc: Value = read_json(&path)?;
+        doc["n_points3d"] = json!(points);
+        doc["seed_points"] = seed.clone();
+        write_json(&path, &doc)?;
+    }
+    result.metrics.insert("n_points3d".into(), json!(points));
+    result.metrics.insert("seed_points".into(), seed);
+    Ok(())
+}
+
+fn fallback_seed(mut info: Value) -> Value {
+    info["source"] = json!("none_plus_z_fallback");
+    info["points"] = json!(0);
+    info
+}
+
+type SeedPoints = Vec<([f64; 3], [u8; 3])>;
+
+fn triangulate_seed(out: &Path, colmap: Option<&Path>, timeout: std::time::Duration) -> Result<(SeedPoints, Value)> {
+    let colmap = colmap.context("COLMAP not found: set SPLAT_COLMAP to triangulate seed points under the imported cameras")?;
+    // Scratch (staged images, fixed_input, triangulated models with their own cameras/points) must
+    // never sit inside the dataset: the loader would pick a scratch model over sparse/0.
+    let scratch = tempfile::tempdir().context("creating seed scratch")?;
+    let result = triangulate_in(out, colmap, timeout, scratch.path());
+    // Keep stage logs as evidence; loaders ignore them.
+    let logs = out.join("seed_logs");
+    if let Ok(entries) = fs::read_dir(scratch.path().join("colmap")) {
+        let _ = fs::create_dir_all(&logs);
+        for e in entries.flatten().filter(|e| e.path().extension().is_some_and(|x| x == "log")) {
+            let _ = fs::copy(e.path(), logs.join(e.file_name()));
+        }
+    }
+    result
+}
+
+fn triangulate_in(out: &Path, colmap: &Path, timeout: std::time::Duration, work: &Path) -> Result<(SeedPoints, Value)> {
+    let manifest: Manifest = read_json(&out.join("capture.json"))?;
+    // Same held-out rule as the depth seed: explicit names, else every eighth frame.
+    let train: Vec<&capture::Frame> = manifest.frames.iter().enumerate()
+        .filter(|(i, f)| !manifest.heldout_names.as_ref().map_or(i % 8 == 0, |h| h.contains(&f.name)))
+        .map(|(_, f)| f).collect();
+    ensure!(train.len() >= 2, "fewer than two training views to triangulate");
+    let images = work.join("images");
+    fs::create_dir_all(&images)?;
+    let mut cameras = vec![];
+    for f in &train {
+        link_or_copy(&out.join("images").join(&f.name), &images.join(&f.name))?;
+        let w2c = f.c2w.inverse();
+        let q = glam::DQuat::from_mat3(&glam::DMat3::from_mat4(w2c)).normalize();
+        cameras.push(splat_sfm::FixedCamera {
+            name: f.name.clone(), model: f.model.clone(), width: f.width as u64, height: f.height as u64,
+            params: f.params.clone(), qvec: [q.w, q.x, q.y, q.z], tvec: w2c.w_axis.truncate().to_array(),
+        });
+    }
+    let mut opts = splat_sfm::ReconstructOptions::new(work.join("colmap"));
+    opts.colmap = colmap.to_path_buf();
+    opts.max_image_size = 1600;
+    opts.max_features = 8192;
+    if train.len() > 300 { opts.matching = splat_sfm::Matching::Sequential; }
+    let started = std::time::Instant::now();
+    let seed = splat_sfm::triangulate_fixed_poses(&images, &cameras, &opts, timeout)?;
+    let model = splat_eval::read_model(&seed.model_dir)?;
+    // Postconditions: COLMAP must echo the imported poses, camera models, sizes and intrinsics.
+    let expected: BTreeMap<&str, &splat_sfm::FixedCamera> = cameras.iter().map(|c| (c.name.as_str(), c)).collect();
+    ensure!(model.images.len() == cameras.len(), "triangulated model holds {} of {} images", model.images.len(), cameras.len());
+    for image in model.images.values() {
+        let c = expected.get(image.name.as_str()).with_context(|| format!("triangulated model holds unexpected image {}", image.name))?;
+        // q and -q are the same rotation.
+        let sign = if image.qvec.iter().zip(c.qvec).map(|(a, b)| a * b).sum::<f64>() < 0.0 { -1.0 } else { 1.0 };
+        let diffs: Vec<f64> = image.qvec.iter().zip(c.qvec).map(|(a, b)| sign * a - b)
+            .chain(image.tvec.iter().zip(c.tvec).map(|(a, b)| a - b)).collect();
+        ensure!(diffs.iter().all(|d| d.is_finite()), "triangulated pose of {} is not finite", image.name);
+        let drift = diffs.iter().fold(0.0_f64, |m, d| m.max(d.abs()));
+        ensure!(drift < 1e-6, "triangulation moved the imported pose of {} by {drift:.2e}; rejecting its points", image.name);
+        let cam = model.cameras.get(&image.camera_id).with_context(|| format!("triangulated model lacks camera {} of {}", image.camera_id, image.name))?;
+        ensure!(cam.model == c.model && cam.width == c.width && cam.height == c.height && cam.params.len() == c.params.len()
+            && cam.params.iter().zip(&c.params).all(|(a, b)| a.is_finite() && (a - b).abs() <= 1e-6 * b.abs().max(1.0)),
+            "triangulation changed the imported camera model/size/intrinsics of {}", image.name);
+    }
+    let finite: SeedPoints = model.points.iter().filter(|p| p.xyz.iter().all(|v| v.is_finite())).map(|p| (p.xyz, p.rgb)).collect();
+    let info = json!({
+        "n_train_images": train.len(), "n_triangulated_images": model.images.len(),
+        "n_nonfinite_points_dropped": model.points.len() - finite.len(),
+        "triangulation_wall_s": started.elapsed().as_secs_f64(), "camera_authority": "imported_poses_fixed",
+        "gpu": false, "matching": if train.len() > 300 { "sequential" } else { "exhaustive" },
+    });
+    Ok((finite, info))
 }
 
 pub(crate) fn trusted(dataset: &Path) -> Result<bool> {
