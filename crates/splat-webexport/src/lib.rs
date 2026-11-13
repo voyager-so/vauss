@@ -8,6 +8,7 @@
 //! + scene.json (SHARED FORMATS, schema 1)
 //! and, when the run has a TSDF mesh, collider.glb re-rooted into the scene frame.
 
+pub mod cameras;
 pub mod cap;
 pub mod collision;
 pub mod first;
@@ -302,6 +303,14 @@ pub fn export_web_staged(input: &Path, data: Option<&Path>, out: &Path, o: &Scen
     let format = o.format;
     let t0 = Instant::now();
     let inputs = resolve(input, data)?;
+    // Reject before reading/cropping or writing ANY package member. Even when no sidecar is
+    // needed, overflow::write_package removes stale scene.ply; it must never be the input.
+    let standalone = out.join("scene.ply");
+    if format == ExportFormat::Spz && standalone.try_exists()? {
+        ensure!(!same_file::is_same_file(&inputs.ply, &standalone)?,
+            "standalone output {} aliases source {}; choose another export directory",
+            standalone.display(), inputs.ply.display());
+    }
     let info = source_info(input, &inputs);
     let ply_path = inputs.ply.clone();
     let frame = load_scene(&inputs.data, splat_shots::scene_transform_near(&ply_path).as_deref())?;
@@ -321,7 +330,6 @@ pub fn export_web_staged(input: &Path, data: Option<&Path>, out: &Path, o: &Scen
     let m = framing.m;
     let scale = m.x_axis.truncate().length();
     let r = DMat3::from_mat4(m) * (1.0 / scale);
-    let cams = scene_cams(&frame, &m);
 
     // Crop by visibility, not by a room box: a box sized from the floor/camera extent cut the far
     // half of real rooms and most of outdoor scenes (the metric scale can be off by 4x outdoors).
@@ -373,14 +381,7 @@ pub fn export_web_staged(input: &Path, data: Option<&Path>, out: &Path, o: &Scen
         smin = smin.min(v);
         smax = smax.max(v);
     }
-    let focus = framing.focus;
-    let look = |c: &SceneCam| c.0 + c.1 * c.0.distance(focus).max(0.5);
-    let stride = cams.len().div_ceil(32).max(1);
-    let capture: Vec<Value> = cams
-        .iter()
-        .step_by(stride)
-        .map(|c| json!({"position": r3(c.0), "look_at": r3(look(c)), "vfov_deg": r1(c.2), "image": c.3}))
-        .collect();
+    let capture = cameras::capture_cameras(&frame, &m);
     let name = out.file_name().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "scene".into());
     let scene = json!({
         "schema": 1,
@@ -410,7 +411,7 @@ pub fn export_web_staged(input: &Path, data: Option<&Path>, out: &Path, o: &Scen
         "capture_cameras": capture,
         "bounds": {"min": r3(smin), "max": r3(smax)},
         // Column-major 4x4 (three.js Matrix4.fromArray) mapping the source splat/COLMAP frame to this one.
-        "transform_from_source": m.to_cols_array().iter().map(|v| (v * 1e9).round() / 1e9).collect::<Vec<_>>(),
+        "transform_from_source": m.to_cols_array(),
         "source": {"ply": ply_path, "data": inputs.data, "mesh": inputs.mesh, "note": info.get("source"), "exporter": "splat export-web"},
         "license": info.get("license").cloned().unwrap_or_else(|| json!("unknown")),
         // The trainer's rasterizer settings (PLY comment SplatRenderMode); the viewer matches them.
@@ -422,6 +423,7 @@ pub fn export_web_staged(input: &Path, data: Option<&Path>, out: &Path, o: &Scen
             "publish_s": r2(t0.elapsed().as_secs_f64())},
     });
     let mut scene = scene;
+    scene["camera_convention"] = cameras::convention();
     // Median capture camera (see viewer::colmap_capture): lets viewers cap their FOV to the capture's.
     if let Some((aspect, height, focal)) = viewer::colmap_capture(&inputs.data) {
         scene["capture_aspect"] = json!((aspect * 1e5).round() / 1e5);
@@ -444,7 +446,7 @@ pub fn export_web_staged(input: &Path, data: Option<&Path>, out: &Path, o: &Scen
 }
 
 /// Map splats (positions, scales, rotations and SH) from the source frame through the similarity `m`.
-pub(crate) fn to_scene_frame(g: &mut ply::Gaussians, m: &DMat4) {
+pub fn to_scene_frame(g: &mut ply::Gaussians, m: &DMat4) {
     let scale = m.x_axis.truncate().length();
     let r = DMat3::from_mat4(*m) * (1.0 / scale);
     let q = DQuat::from_mat3(&r);
@@ -707,11 +709,23 @@ fn repair_frame(frame: &mut SceneFrame) -> bool {
 /// Splats whose 3-sigma footprint reaches into at least one capture camera's view frustum
 /// (10% margin). Anything else never appeared in a training image: a floater, safe to drop.
 fn visible_from_capture(g: &ply::Gaussians, frame: &SceneFrame) -> Vec<bool> {
-    // (world-to-camera, tan half-fov x, tan half-fov y); COLMAP cameras look down +z.
-    let views: Vec<(DMat4, f64, f64)> = frame
+    // Asymmetric pinhole frusta from exact K. Non-pinhole lenses are conservatively retained:
+    // a pinhole approximation must never discard splats that distortion brings into view.
+    if frame.cameras.iter().any(|c| !matches!(c.model.as_str(), "PINHOLE" | "SIMPLE_PINHOLE")) {
+        return vec![true; g.len()];
+    }
+    let views: Vec<(DMat4, [DVec3; 4])> = frame
         .cameras
         .iter()
-        .map(|c| (c.c2w.inverse(), 1.1 * c.width as f64 / (2.0 * c.fy), 1.1 * c.height as f64 / (2.0 * c.fy)))
+        .map(|c| {
+            let left = (-0.05 * c.width as f64 - c.cx) / c.fx;
+            let right = (1.05 * c.width as f64 - c.cx) / c.fx;
+            let top = (-0.05 * c.height as f64 - c.cy) / c.fy;
+            let bottom = (1.05 * c.height as f64 - c.cy) / c.fy;
+            (c.c2w.inverse(), [DVec3::new(1.0, 0.0, -left).normalize(),
+                DVec3::new(-1.0, 0.0, right).normalize(), DVec3::new(0.0, 1.0, -top).normalize(),
+                DVec3::new(0.0, -1.0, bottom).normalize()])
+        })
         .collect();
     if views.is_empty() {
         return vec![true; g.len()];
@@ -723,10 +737,10 @@ fn visible_from_capture(g: &ply::Gaussians, frame: &SceneFrame) -> Vec<bool> {
             |hint, i| {
                 let p = DVec3::new(g.pos[i][0] as f64, g.pos[i][1] as f64, g.pos[i][2] as f64);
                 let r = 3.0 * g.scale[i].iter().cloned().fold(f32::MIN, f32::max).exp() as f64;
-                let seen = |(w2c, tx, ty): &(DMat4, f64, f64)| {
+                let seen = |(w2c, planes): &(DMat4, [DVec3; 4])| {
                     let q = w2c.transform_point3(p);
-                    let z = q.z + r;
-                    z > 0.0 && q.x.abs() <= tx * z + r && q.y.abs() <= ty * z + r
+                    // Sphere versus unit-normal frustum planes (including its radius in z).
+                    q.z + r > 0.0 && planes.iter().all(|normal| normal.dot(q) >= -r)
                 };
                 // Neighbouring splats tend to be seen by the same camera; try the last hit first.
                 if seen(&views[*hint]) {
@@ -921,5 +935,68 @@ mod zstd_input_tests {
         std::fs::write(bare.join("splat.ply.zst"), &packed).unwrap();
         assert_eq!(resolve(&bare, Some(&run)).unwrap().ply, bare.join("splat.ply.zst"));
         std::fs::remove_dir_all(&dir).ok();
+    }
+}
+
+#[cfg(test)]
+mod source_alias_tests {
+    use super::*;
+
+    fn gaussian(far: bool) -> ply::Gaussians {
+        ply::Gaussians { pos: vec![[0.0, 0.0, 1.0], if far { [0.0, 0.0, 3173.0] } else { [1.0, 0.0, 4.0] }],
+            scale: vec![[-3.0; 3]; 2], rot: vec![[1.0, 0.0, 0.0, 0.0]; 2],
+            opacity: vec![1.0; 2], dc: vec![[0.2; 3]; 2], ..Default::default() }
+    }
+
+    #[test]
+    fn directory_input_is_resolved_before_alias_check() {
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("splat.ply");
+        ply::write_ply(&gaussian(true), &source).unwrap();
+        let before = std::fs::read(&source).unwrap();
+        let out = dir.path().join("export");
+        std::fs::create_dir(&out).unwrap();
+        std::fs::hard_link(&source, out.join("scene.ply")).unwrap();
+        let error = export_web_staged(dir.path(), Some(dir.path()), &out, &SceneOptions::default()).err().unwrap();
+        assert!(error.to_string().contains("aliases source"), "{error:#}");
+        assert_eq!(std::fs::read(source).unwrap(), before);
+        assert!(!out.join("scene.spz").exists());
+    }
+
+    #[test]
+    fn export_rejects_source_fallback_alias_before_any_write() {
+        for far in [false, true] {
+            for alias in ["same_path", "hardlink", "symlink"] {
+                #[cfg(not(unix))]
+                if alias == "symlink" { continue; } // Windows creation needs elevated privileges.
+                let dir = tempfile::tempdir().unwrap();
+                let out = dir.path().join("export");
+                std::fs::create_dir(&out).unwrap();
+                let source = if alias == "same_path" { out.join("scene.ply") } else { dir.path().join("source.ply") };
+                ply::write_ply(&gaussian(far), &source).unwrap();
+                if alias == "hardlink" { std::fs::hard_link(&source, out.join("scene.ply")).unwrap(); }
+                #[cfg(unix)]
+                if alias == "symlink" { std::os::unix::fs::symlink(&source, out.join("scene.ply")).unwrap(); }
+                let before = std::fs::read(&source).unwrap();
+                std::fs::write(out.join("scene.spz"), "existing package must not change").unwrap();
+                std::fs::write(dir.path().join("cameras.txt"), "1 PINHOLE 640 480 500 700 320 240\n").unwrap();
+                std::fs::write(dir.path().join("images.txt"), "1 1 0 0 0 0 0 0 1 frame.jpg\n\n").unwrap();
+                std::fs::write(dir.path().join("points3D.txt"), "1 0 0 4 255 0 0 0\n").unwrap();
+                // Pin identity so the far fixture really needs overflow while the near one does
+                // not. Without the guard these exercise overwrite and stale-file deletion.
+                let frame = json!({"transform_from_source":DMat4::IDENTITY.to_cols_array(),
+                    "focus":[0.0,0.0,4.0], "radius":4.0,"floor":null,"walls":[],
+                    "start_camera":{"position":[0,0,0],"look_at":[0,0,4],"vfov_deg":45},
+                    "scale_estimate":{"value":1.0,"confidence":1.0}});
+                std::fs::write(dir.path().join(FRAME_FILE), serde_json::to_vec(&frame).unwrap()).unwrap();
+                let error = export_web_staged(&source, Some(dir.path()), &out, &SceneOptions::default()).err().unwrap();
+                assert!(error.to_string().contains("aliases source"), "{alias}, far={far}: {error:#}");
+                assert_eq!(std::fs::read(&source).unwrap(), before);
+                assert_eq!(std::fs::read(out.join("scene.ply")).unwrap(), before);
+                assert_eq!(std::fs::read(out.join("scene.spz")).unwrap(), b"existing package must not change");
+                assert!(!out.join("scene.json").exists());
+                assert!(!out.join("scene.ovf1.zlib").exists());
+            }
+        }
     }
 }

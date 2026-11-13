@@ -135,3 +135,51 @@ same code path. See [agents.md](agents.md).
 vauss doctor             # GPU adapter, each helper and where it was found (bundled, cache, download)
 vauss fetch colmap       # download a pinned helper ahead of time
 ```
+
+## Frame inclusion, provenance, and matching
+
+`--target-count` is a selection budget, not a promise that every file is included. Sampling,
+black-frame filtering, duplicate filtering, and camera registration can all reduce coverage.
+Use the Brush backend's explicit preserve-all contract when every input must be retained:
+
+```sh
+vauss run ./extracted-frames --preserve-all --input-kind video --goal "reconstruct this capture"
+vauss run ./photos --preserve-all --goal "reconstruct these photos"
+```
+
+`--preserve-all` keeps every readable image or decoded source-video frame, including black frames
+and duplicates, regardless of `--target-count`. It disables sampled previews, resampling retries,
+SfM keyframe thinning, and training view caps (including `SPLAT_TRAIN_MAX_FRAMES`). A decode failure
+or suspected decoder corruption fails extraction instead of silently dropping frames. It cannot
+be combined with a trimmed time range or preview extraction. Resizing and image calibration still
+apply. It does not guarantee camera registration: unregistered views are reported separately, and
+held-out views remain reserved for evaluation. Large all-frame videos may cost substantially more.
+
+`--input-kind video` declares that an image folder contains chronological frames from one video.
+Use filenames that express that order (`frame_2` sorts before `frame_10`); the selection manifest
+records each original filename and index. Video files carry video provenance automatically.
+Ordinary folders default to `images`; filenames alone never change their calibration assumptions.
+
+Video auto-calibration uses the existing shared square-pixel RADIAL model and available focal
+prior. Photo auto-calibration retains PINHOLE with independent fx/fy. For known anisotropic frames,
+use `--camera-model pinhole` or `--camera-model opencv`, even with video provenance. When metadata is unavailable,
+the existing video recovery policy can use a labeled 65-degree default lens prior; explicit
+PINHOLE/OPENCV models retain independent fx/fy through video calibration retries.
+
+Video auto matching starts sequentially with vocabulary-tree loop detection, retaining the
+existing hybrid coverage recovery. Photo auto matching is exhaustive. `--pairs sequential` and
+`--pairs exhaustive` explicitly choose the initial matcher; sequential retains loop detection,
+while exhaustive is never silently replaced with hybrid. Without a configured vocabulary tree,
+the API uses sequential quadratic long-range pairs and warns that visual loop detection is absent.
+
+For tool/API callers, `extract_frames` accepts `preserve_all: true` and `input_kind: "video"`.
+`reconstruct_sfm` accepts `pairs` and `camera_model`; `run_default_pipeline` accepts all four
+options and otherwise inherits the CLI settings. Preserve-all follows the frame artifact into
+training. Spirula rejects these new extraction options explicitly; use Brush for this contract.
+
+`selection.json` and extraction metrics report `input_count`, `selected_count`, `dropped_count`,
+`drop_reasons`, and `input_count_basis`. A normal sampled video counts its decoded sampling timeline;
+preserve-all counts decoded source frames, avoiding constant-rate resampling of variable-rate video.
+`report.json.frame_counts` binds input/selected/dropped/registered/train/heldout counts to the selected
+candidate, with separate unregistered and training-cap exclusions. Planned training counts are not
+reported as completed training. Missing or legacy-stage counts remain null with an explanation.

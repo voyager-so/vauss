@@ -521,3 +521,38 @@ fn preflight_without_token_reports_release_helpers_downloadable() {
     assert_eq!(ffmpeg["status"], "download_on_first_use", "{ffmpeg}");
     assert_eq!(ffmpeg["github_api_fallback"], true, "{ffmpeg}");
 }
+
+#[test]
+fn input_contract_flags_and_api_schemas_are_explicit() {
+    let help = invoke(&["run", "--help"]);
+    assert!(help.status.success());
+    let help = String::from_utf8_lossy(&help.stdout);
+    for flag in ["--preserve-all", "--input-kind", "--pairs", "--camera-model"] { assert!(help.contains(flag), "{flag}: {help}"); }
+    let schemas = parse(invoke(&["tools", "--json"]));
+    for tool in ["extract_frames", "run_default_pipeline"] {
+        for field in ["preserve_all", "input_kind"] { assert!(schemas[tool]["properties"][field].is_object(), "{schemas}"); }
+    }
+    for field in ["pairs", "camera_model"] { assert!(schemas["run_default_pipeline"]["properties"][field].is_object()); }
+}
+
+#[test]
+fn input_contract_pipeline_inherits_and_forwards_declared_controls() {
+    let tmp = tempfile::tempdir().unwrap();
+    let source = tmp.path().join("input.mp4");
+    fs::write(&source, "fixture").unwrap();
+    let run = tmp.path().join("run");
+    parse(invoke(&["init", root(&source), "--goal", "a splat", "--backend", "fake", "--run-dir", root(&run)]));
+    fs::write(run.join("fixed.json"), serde_json::json!({
+        "steps":321,"target_count":40,"max_edge":800,"cap_max":100000,
+        "resolution_divisor":1,"no_mesh":true,"no_lpips":true,"steps_explicit":true,
+        "preserve_all":true,"input_kind":"video","pairs":"exhaustive","camera_model":"pinhole"
+    }).to_string()).unwrap();
+    let result = parse(invoke(&["tool", "run_default_pipeline", "--run-dir", root(&run)]));
+    assert_eq!(result["status"], "succeeded", "{result}");
+    assert_eq!(result["metrics"]["options"]["preserve_all"], true);
+    let journal = fs::read_to_string(run.join("journal.jsonl")).unwrap();
+    let rows: Vec<Value> = journal.lines().map(|l| serde_json::from_str(l).unwrap()).collect();
+    // Normalized tool request events preserve exactly what the fixed pipeline sends to the backend.
+    assert!(rows.iter().any(|row| row.to_string().contains("extract_frames") && row.to_string().contains("preserve_all")));
+    assert!(rows.iter().any(|row| row.to_string().contains("reconstruct_sfm") && row.to_string().contains("exhaustive") && row.to_string().contains("pinhole")));
+}

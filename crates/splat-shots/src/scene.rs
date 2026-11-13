@@ -16,7 +16,13 @@ pub struct CaptureCamera {
     pub c2w: DMat4,
     pub width: u32,
     pub height: u32,
+    pub fx: f64,
     pub fy: f64,
+    pub cx: f64,
+    pub cy: f64,
+    /// Original COLMAP lens model and parameters; K alone cannot describe distortion.
+    pub model: String,
+    pub params: Vec<f64>,
 }
 
 impl CaptureCamera {
@@ -154,11 +160,13 @@ fn cameras_from_model(model: &Model) -> Result<Vec<CaptureCamera>> {
     let mut cams = Vec::with_capacity(model.images.len());
     for im in model.images.values() {
         let cam = model.cameras.get(&im.camera_id).context("image references a missing camera")?;
-        // SIMPLE_* / FOV-style models share one focal length
-        let fy = match cam.model.as_str() {
-            "SIMPLE_PINHOLE" | "SIMPLE_RADIAL" | "RADIAL" | "FOV" | "SIMPLE_RADIAL_FISHEYE" | "RADIAL_FISHEYE" => cam.params[0],
-            _ => cam.params[1],
-        };
+        // COLMAP FOV has fx, fy, cx, cy, omega (not a shared focal length).
+        let single = matches!(cam.model.as_str(), "SIMPLE_PINHOLE" | "SIMPLE_RADIAL" | "RADIAL" | "SIMPLE_RADIAL_FISHEYE" | "RADIAL_FISHEYE");
+        anyhow::ensure!(cam.params.len() >= if single { 3 } else { 4 }, "camera {} has incomplete intrinsics", cam.id);
+        let fx = cam.params[0];
+        let (fy, cx, cy) = if single { (fx, cam.params[1], cam.params[2]) } else { (cam.params[1], cam.params[2], cam.params[3]) };
+        anyhow::ensure!(cam.width > 0 && cam.height > 0 && fx > 0.0 && fy > 0.0
+            && [fx, fy, cx, cy].iter().all(|v| v.is_finite()), "camera {} has invalid intrinsics", cam.id);
         let r = Model::rotation(im.qvec);
         let r_w2c = DMat3::from_cols_array_2d(&std::array::from_fn(|c| std::array::from_fn(|row| r[row][c])));
         let r_c2w = r_w2c.transpose();
@@ -173,7 +181,9 @@ fn cameras_from_model(model: &Model) -> Result<Vec<CaptureCamera>> {
             ),
             width: cam.width as u32,
             height: cam.height as u32,
-            fy,
+            fx, fy, cx, cy,
+            model: cam.model.clone(),
+            params: cam.params.clone(),
         });
     }
     cams.sort_by(|a, b| a.name.cmp(&b.name));

@@ -6,6 +6,7 @@
 pub mod colmap;
 pub mod frame_arms;
 pub mod frameplan;
+pub mod geometry;
 pub mod color;
 pub mod images;
 pub mod lpips;
@@ -17,6 +18,7 @@ pub mod sfm;
 pub mod ssim;
 pub mod undistort;
 pub mod video;
+pub mod view_quality;
 
 pub use colmap::{read_model, Model};
 pub use images::{pair_dirs, spirula_pairs, spirula_unique_pairs, Pair};

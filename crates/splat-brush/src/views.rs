@@ -66,6 +66,7 @@ pub fn run_job(job: RenderJob) -> anyhow::Result<i32> {
             std::fs::create_dir_all(job.out.join(d))?;
         }
         let mut scores = vec![];
+        let mut rendered_cameras = vec![];
         if let Some(n) = job.orbit {
             let mut capture = vec![];
             for v in &scene.views {
@@ -85,6 +86,10 @@ pub fn run_job(job: RenderJob) -> anyhow::Result<i32> {
                     .with_context(|| format!("view {name} not in dataset"))?;
                 let gt = engine::load_gt(view).await?;
                 let size = UVec2::new(gt.width(), gt.height());
+                let camera = RenderCamera::from_brush(&view.camera, size.x, size.y);
+                rendered_cameras.push(json!({"source_name":name, "position":camera.position.to_array(),
+                    "c2w_xyzw":camera.rotation.to_array(), "pinhole_K":[camera.fx,camera.fy,camera.cx,camera.cy],
+                    "size":[size.x,size.y], "note":"K is the pinhole approximation; rendering retains the dataset lens model"}));
                 let sample = eval_stats(splats.clone(), &view.camera, gt.clone(), engine::gt_alpha_mode(view), &device).await?;
                 let s = stem(name);
                 scores.push(ViewScore {
@@ -101,6 +106,13 @@ pub fn run_job(job: RenderJob) -> anyhow::Result<i32> {
             }
         }
         write_json(&job.out.join("scores.json"), &scores)?;
+        if job.orbit.is_none() {
+            let quality = splat_eval::view_quality::view_quality(scores.iter().map(|s| (s.name.as_str(), Some(s.psnr))));
+            write_json(&job.out.join("view_quality.json"), &quality)?;
+            if let Some(warning) = quality.warning() { eprintln!("[eval] {warning}"); }
+            write_json(&job.out.join("camera_provenance.json"), &json!({"source":"dataset_cameras",
+                "training_pose_corrections_applied":false, "views":rendered_cameras}))?;
+        }
         let dropped = brush_render::render::surfel_lens_dropped();
         if dropped > 0 {
             write_json(&job.out.join("surfel_lens_dropped.json"), &json!({"renders": dropped}))?;
@@ -359,12 +371,15 @@ pub fn evaluate(cfg: &BrushConfig, run: &dyn RunCtx, req: Evaluate) -> anyhow::R
     // Scorer backend (ONNX Runtime provider); with lpips_scale it pins which LPIPS numbers compare.
     metrics.insert("lpips_device".into(), json!(summary.device));
     scores.sort_by(|a, b| a.psnr.total_cmp(&b.psnr));
+    let view_quality = splat_eval::view_quality::view_quality(scores.iter().map(|s| (s.name.as_str(), Some(s.psnr))));
+    metrics.insert("view_quality".into(), serde_json::to_value(&view_quality)?);
     metrics.insert("worst_views".into(), json!(scores.iter().take(8).map(|s| json!({"image": s.stem, "source_name": s.name, "psnr": s.psnr, "ssim": s.ssim})).collect::<Vec<_>>()));
     add_lock_wait(&out, &mut metrics);
     write_json(&out.join("summary.json"), &metrics)?;
     let worst: Vec<String> = scores.iter().take(8).map(|s| s.stem.clone()).collect();
     let images = comparisons(&src.join("gt"), &render_dir, &worst, &out.join("comparisons"))?;
     let mut warnings = vec![];
+    warnings.extend(view_quality.warning());
     if metrics.get("cc_psnr").and_then(Value::as_f64).zip(metrics.get("psnr").and_then(Value::as_f64)).is_some_and(|(cc, p)| cc - p > 1.5) {
         warnings.push("Colour correction adds more than 1.5 dB; inspect exposure variation.".into());
     }
@@ -390,11 +405,14 @@ pub fn render_views(cfg: &BrushConfig, run: &dyn RunCtx, req: RenderViews) -> an
         let stride = (names.len() as f64 / k as f64).max(1.0);
         (0..k.min(names.len())).map(|i| names[(i as f64 * stride) as usize].clone()).collect()
     };
-    let (names, orbit) = match req.views {
+    let (mut names, orbit) = match req.views {
         ViewSet::Heldout => (pick(&manifest.heldout_names), None),
         ViewSet::TrainingSample => (pick(&manifest.train_names), None),
         ViewSet::Orbit => (vec![], Some(k)),
     };
+    if !req.image_names.is_empty() {
+        names = requested_views(&req, &manifest.train_names, &manifest.heldout_names)?;
+    }
     let views = serde_json::to_value(req.views)?;
     let (artifact, out) = new_artifact(run, ArtifactKind::Images, json!({"candidate_id": req.candidate_id, "views": views, "ply": rel(run, &ply)}))?;
     render_sync(cfg, &RenderJob {
@@ -408,11 +426,15 @@ pub fn render_views(cfg: &BrushConfig, run: &dyn RunCtx, req: RenderViews) -> an
         gpu_lock: cfg.gpu_lock.clone(),
     })?;
     let mut metrics = serde_json::Map::new();
+    let mut warnings = vec![];
     let images = if orbit.is_some() {
         metrics.insert("layout".into(), json!("render"));
         splat_eval::budget_jpegs(&list_images(&out.join("renders"))?, &out.join("previews"), splat_eval::RESULT_IMAGE_BUDGET)?
     } else {
         let scores: Vec<ViewScore> = read_json(&out.join("scores.json"))?;
+        let quality = splat_eval::view_quality::view_quality(scores.iter().map(|s| (s.name.as_str(), Some(s.psnr))));
+        warnings.extend(quality.warning());
+        metrics.insert("view_quality".into(), serde_json::to_value(quality)?);
         metrics.insert("layout".into(), json!("ground_truth|render"));
         metrics.insert("views".into(), json!(scores));
         let stems: Vec<String> = scores.iter().map(|s| s.stem.clone()).collect();
@@ -426,7 +448,42 @@ pub fn render_views(cfg: &BrushConfig, run: &dyn RunCtx, req: RenderViews) -> an
         artifacts: vec![artifact],
         metrics: metrics.into_iter().collect(),
         images: images.iter().map(|p| rel(run, p)).collect(),
+        warnings,
         wall_s: Some(start.elapsed().as_secs_f64()),
         ..result("render_views", Status::Succeeded)
     })
+}
+
+fn requested_views(req: &RenderViews, train: &[String], heldout: &[String]) -> anyhow::Result<Vec<String>> {
+    anyhow::ensure!(!matches!(req.views, ViewSet::Orbit), "image_names cannot be used with orbit views");
+    anyhow::ensure!(req.image_names.len() <= req.max_views as usize, "image_names exceeds max_views");
+    let mut seen = std::collections::HashSet::new();
+    for name in &req.image_names {
+        anyhow::ensure!(train.contains(name) || heldout.contains(name), "unregistered image_names entry: {name}");
+        anyhow::ensure!(seen.insert(name), "duplicate image_names entry: {name}");
+    }
+    Ok(req.image_names.clone())
+}
+
+#[cfg(test)]
+mod qa_tests {
+    use super::*;
+
+    #[test]
+    fn named_qa_keeps_requested_order_across_splits_and_rejects_unknown_views() {
+        let mut req: RenderViews = serde_json::from_value(json!({"candidate_id":"c", "max_views":4,
+            "image_names":["capture104.jpg", "capture100.jpg", "capture101.jpg", "capture103.jpg"]})).unwrap();
+        let train = vec!["capture100.jpg".into(), "capture101.jpg".into(), "capture104.jpg".into()];
+        let held = vec!["capture103.jpg".into()];
+        assert_eq!(requested_views(&req, &train, &held).unwrap(), req.image_names);
+        req.image_names.push("capture999.jpg".into());
+        assert!(requested_views(&req, &train, &held).is_err());
+        req.max_views = 8;
+        assert!(requested_views(&req, &train, &held).is_err());
+        req.image_names = vec![train[0].clone(), train[0].clone()];
+        assert!(requested_views(&req, &train, &held).is_err());
+        req.image_names.pop();
+        req.views = ViewSet::Orbit;
+        assert!(requested_views(&req, &train, &held).is_err());
+    }
 }

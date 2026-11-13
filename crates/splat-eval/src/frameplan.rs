@@ -123,7 +123,7 @@ fn decode(
     frame_bytes: usize,
     each: impl FnMut(u64, &[u8]) -> Result<()>,
 ) -> Result<u64> {
-    decode_with(ffmpeg, source, time_range, None, filter, pix_fmt, frame_bytes, each)
+    decode_with(ffmpeg, source, time_range, None, false, filter, pix_fmt, frame_bytes, each)
 }
 
 /// [`decode`]; `sampled` = Some(decoder threads) also skips non-reference frames (`-skip_frame
@@ -135,6 +135,7 @@ fn decode_with(
     source: &Path,
     time_range: Option<(f64, f64)>,
     sampled: Option<usize>,
+    strict: bool,
     filter: &str,
     pix_fmt: &str,
     frame_bytes: usize,
@@ -142,6 +143,7 @@ fn decode_with(
 ) -> Result<u64> {
     let mut cmd = Command::new(ffmpeg);
     cmd.args(["-v", "error", "-nostdin", "-threads", "4", "-filter_threads", "4"]);
+    if strict { cmd.arg("-xerror"); }
     if let Some(threads) = sampled {
         // No deblocking either (h264/hevc in-loop filter): ~15-25% faster 4K decode on an M4, and the
         // check's statistics are taken on a 640 px downscale.
@@ -186,7 +188,7 @@ fn decode_with(
     let status = child.wait()?;
     let err = err.join().unwrap_or_default();
     outcome?;
-    if !status.success() && i == 0 {
+    if !status.success() && (strict || i == 0) {
         bail!("ffmpeg failed ({status}): {}", err.trim());
     }
     Ok(i)
@@ -206,7 +208,7 @@ pub fn decode_sampled(
     frame_bytes: usize,
     each: impl FnMut(u64, &[u8]) -> Result<()>,
 ) -> Result<u64> {
-    decode_with(ffmpeg, source, time_range, Some(threads), filter, pix_fmt, frame_bytes, each)
+    decode_with(ffmpeg, source, time_range, Some(threads), false, filter, pix_fmt, frame_bytes, each)
 }
 
 /// `-fps_mode passthrough` needs ffmpeg 5.1+; older builds spell it `-vsync passthrough`.
@@ -618,6 +620,10 @@ fn thumb(img: &RgbImage) -> Vec<f32> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExtractOptions {
+    /// Decode every source frame, bypassing selection and black/duplicate filters.
+    /// Any detected decoder corruption fails instead of dropping a frame.
+    #[serde(default)]
+    pub preserve_all: bool,
     pub uniform: bool,
     pub drop_black: bool,
     pub drop_duplicates: bool,
@@ -1086,6 +1092,7 @@ pub fn extract(
     opts: &ExtractOptions,
     dest: &Path,
 ) -> Result<Extracted> {
+    ensure!(!opts.preserve_all || (time_range.is_none() && opts.excluded.is_empty() && opts.anchors.is_empty() && opts.fill.is_empty()), "preserve_all cannot trim, exclude or anchor a subset");
     ensure!(fps > 0.0 && fps <= 1000.0, "implausible video frame rate {fps}");
     let (w, h) = size;
     let excluded = |i: u64| opts.excluded.iter().any(|r| r.contains(&i));
@@ -1148,7 +1155,7 @@ pub fn extract(
         // Anchors already passed the quick extraction's black/duplicate checks. Rechecking
         // at a different scale can discard a shared camera and break the world alignment.
         let anchored = anchors.contains(&idx);
-        if !anchored && opts.drop_duplicates && last.as_ref().is_some_and(|t| mean_abs_diff(&th, t) < DUP_DIFF) {
+        if !opts.preserve_all && !anchored && opts.drop_duplicates && last.as_ref().is_some_and(|t| mean_abs_diff(&th, t) < DUP_DIFF) {
             out.dropped_duplicates += 1;
             return Ok(());
         }
@@ -1163,6 +1170,7 @@ pub fn extract(
         let src = idx + opts.start_index;
         let name = format!("frame_{src:06}.jpg");
         if off_green > OFF_GREEN_MAX {
+            ensure!(!opts.preserve_all, "preserve_all: suspected decoder corruption in {name}; no frames may be silently dropped");
             corrupt.push(format!("{name} ({:.0}%)", off_green * 100.0));
             corrupt_run += 1;
             corrupt_run_max = corrupt_run_max.max(corrupt_run);
@@ -1190,7 +1198,7 @@ pub fn extract(
     let hdr = probe.transfer;
     out.tone_mapped = hdr.map(|t| if t == Transfer::Hlg { "hlg" } else { "pq" });
     let luts = hdr.map(|t| (transfer_lut(t), srgb_lut(), eetf_gain_lut()));
-    let resample = if opts.preserve_source_frames { String::new() } else { format!("fps={fps},") };
+    let resample = if opts.preserve_all || opts.preserve_source_frames { String::new() } else { format!("fps={fps},") };
     let resample = match opts.crop {
         Some(c) => format!("crop={}:{}:{}:{},{resample}", c.w, c.h, c.x, c.y),
         None => resample,
@@ -1203,15 +1211,15 @@ pub fn extract(
     };
     // fps= resamples variable-frame-rate phone video to constant rate, so frame i is at i/fps
     // exactly (planned instants and time_range_s starts don't drift).
-    out.decoded = decode(ffmpeg, source, time_range, &filter, pix_fmt, bytes, |i, raw| {
-        while k < targets.len() && i > targets[k] + half(k) {
+    out.decoded = decode_with(ffmpeg, source, time_range, None, opts.preserve_all, &filter, pix_fmt, bytes, |i, raw| {
+        while !opts.preserve_all && k < targets.len() && i > targets[k] + half(k) {
             flush(&mut best, &mut out)?;
             k += 1;
         }
-        if k >= targets.len() || i + half(k) < targets[k] {
+        if !opts.preserve_all && (k >= targets.len() || i + half(k) < targets[k]) {
             return Ok(());
         }
-        if excluded(i) {
+        if !opts.preserve_all && excluded(i) {
             out.skipped_excluded_candidates += 1;
             return Ok(());
         }
@@ -1225,11 +1233,15 @@ pub fn extract(
         };
         // Black = nearly every pixel near zero (fades, lens cap); dark but real footage is kept.
         let near_black = px.iter().step_by(31).filter(|&&v| v < 16).count() as f32 / px.iter().step_by(31).count().max(1) as f32;
-        if !anchors.contains(&i) && opts.drop_black && near_black > 0.98 {
+        if !opts.preserve_all && !anchors.contains(&i) && opts.drop_black && near_black > 0.98 {
             out.dropped_black += 1;
             return Ok(());
         }
         let s = sharpness_raw(px, w, h);
+        if opts.preserve_all {
+            best = Some((s, i, RgbImage::from_raw(w, h, px.to_vec()).expect("sized buffer")));
+            return flush(&mut best, &mut out);
+        }
         let replace = match &best {
             None => true,
             // Uniform keeps the frame nearest the planned instant.
@@ -1616,5 +1628,42 @@ mod black_bar_tests {
         let f = frame(w, h, 0, 0, 10, 120);
         let c = detect_black_bars(w, h, [f.as_slice()]).expect("bars");
         assert_eq!((c.x, c.y, c.w, c.h), (10, 0, 190, 100));
+    }
+}
+
+#[cfg(test)]
+mod preserve_all_tests {
+    use super::*;
+    #[test]
+    fn preserve_all_video_keeps_every_black_duplicate_frame_beyond_target() {
+        let tmp = tempfile::tempdir().unwrap();
+        let video = tmp.path().join("black.mkv");
+        // Lossless, all-black video is both a black-frame and duplicate-filter regression.
+        let status = Command::new("ffmpeg").args(["-v","error","-f","lavfi","-i","color=black:s=32x32:r=12:d=2","-c:v","ffv1"])
+            .arg(&video).status().expect("ffmpeg is required for this regression");
+        assert!(status.success());
+        let dest = tmp.path().join("images");
+        std::fs::create_dir(&dest).unwrap();
+        let plan = plan(&[], 2.0, 24, &PlanOptions::spaced(2, false));
+        let opts: ExtractOptions = serde_json::from_value(json!({"preserve_all":true,"uniform":false,
+            "drop_black":true,"drop_duplicates":true,"rotate_deg":0,"start_index":0,"excluded":[],
+            "pick_radius":1,"preserve_source_frames":false,"crop":null})).unwrap();
+        let all = extract(Path::new("ffmpeg"), &video, None, (32,32), 12.0, &plan, &opts, &dest).unwrap();
+        assert_eq!(all.decoded,24);
+        assert_eq!(all.kept.len(),24);
+        assert_eq!((all.dropped_black,all.dropped_duplicates), (0,0));
+        for (i,k) in all.kept.iter().enumerate() { assert_eq!(k["source_index"],i); }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn preserve_all_partial_decoder_failure_is_not_success() {
+        use std::os::unix::fs::PermissionsExt;
+        let tmp = tempfile::tempdir().unwrap();
+        let ffmpeg = tmp.path().join("decoder");
+        std::fs::write(&ffmpeg, "#!/bin/sh\nprintf '\\000\\000\\000'\nexit 1\n").unwrap();
+        std::fs::set_permissions(&ffmpeg, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let result = decode_with(&ffmpeg, Path::new("input"), None, None, true, "null", "rgb24", 3, |_, _| Ok(()));
+        assert!(result.unwrap_err().to_string().contains("ffmpeg failed"));
     }
 }

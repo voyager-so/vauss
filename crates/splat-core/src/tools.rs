@@ -104,6 +104,7 @@ fn request(name: &str, payload: Value) -> Result<Value> {
         ("steps", 200., 10000.),
         ("height_offset", -2., 2.),
     ] {
+        if field == "target_count" && value["preserve_all"] == true { continue; }
         if let Some(n) = value.get(field).and_then(Value::as_f64) {
             check(
                 n.is_finite() && n >= min && n <= max,
