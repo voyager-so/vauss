@@ -1420,11 +1420,32 @@ fn keyframe_mapper_threads(opts: &ReconstructOptions) -> usize {
 /// Reject a known-bad video trajectory after the caller has saved its diagnostics.
 /// Insufficient continuity evidence remains reported by the evaluator, not a fabricated pass.
 pub fn ensure_video_continuity(health: &SfmHealth, video: bool) -> Result<()> {
+    ensure_geometry_health(health)?;
     if video && health.gates.get("pose_continuity") == Some(&false) {
         return Err(ContinuityFailure.into());
     }
     Ok(())
 }
+
+/// Hard failure independent of input provenance/registration coverage. Kept separate from camera
+/// flips: deleting stationary frames is not a repair for an inconsistent model scale.
+pub fn ensure_geometry_health(health: &SfmHealth) -> Result<()> {
+    if !health.geometry.pass {
+        return Err(GeometryFailure.into());
+    }
+    Ok(())
+}
+
+#[derive(Debug)]
+pub struct GeometryFailure;
+
+impl std::fmt::Display for GeometryFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("SfM geometry is incoherent (depth, translation or observation components); inspect health.geometry before training")
+    }
+}
+
+impl std::error::Error for GeometryFailure {}
 
 /// A video trajectory that failed pose continuity (a camera flip). Callers can find it under
 /// added context with `downcast_ref` and retry with other mapper settings.

@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{Context, Result, ensure};
 use serde_json::{Value, json};
-use splat_contracts::{Artifact, ToolResult};
+use splat_contracts::{Artifact, ArtifactKind, ToolResult};
 use splat_core::RunCtx;
 use splat_eval::Model;
 
@@ -19,6 +19,34 @@ use crate::{
 
 pub(crate) fn is_capture(source: &Path) -> bool {
     source.join("capture.json").is_file()
+}
+
+/// Explicit authority bypasses all SfM discovery, staging and execution.
+pub(crate) fn import_trusted(run: &dyn RunCtx, frames_id: &str) -> Result<ToolResult> {
+    let source = run.path(frames_id)?;
+    ensure!(is_capture(&source), "trusted frames have no calibrated capture manifest");
+    let (artifact, out) = new_artifact(run, ArtifactKind::Sfm, json!({
+        "frames_id": frames_id, "sparse_dir":"sparse/0", "input_kind":"capture",
+        "camera_source":"imported", "sfm_skipped":true, "engine":"capture_import"
+    }))?;
+    let selection = json!({"camera_source":"imported", "sfm_skipped":true,
+        "capture_pose_refinement_default":false, "camera_refinement":"disabled",
+        "health_policy":"structural_validation", "reconstruction_quality":"unmeasured"});
+    write_json(&out.join("capture_selection.json"), &selection)?;
+    capture::reconstruct(run, frames_id, artifact, &out, &selection)
+}
+
+pub(crate) fn trusted(dataset: &Path) -> Result<bool> {
+    if !dataset.join("capture_selection.json").is_file() { return Ok(false); }
+    let selection: Value = read_json(&dataset.join("capture_selection.json"))?;
+    Ok(selection["camera_source"] == "imported")
+}
+
+pub(crate) fn lock_cameras(config: &mut brush_train::config::TrainConfig) {
+    config.pose_refine = false;
+    config.pose_refine_focal = false;
+    config.pose_align_eval_steps = 0;
+    config.camera_motion_blur = false;
 }
 
 /// Called on the client after the ordinary SfM worker has completed. A failed
@@ -94,9 +122,24 @@ pub(crate) fn training_overrides(
     dataset: &Path,
     preview: bool,
 ) -> Result<Option<serde_json::Map<String, Value>>> {
+    training_overrides_for(dataset, preview, crate::train::pose_refine_env())
+}
+
+pub(crate) fn training_overrides_for(
+    dataset: &Path,
+    preview: bool,
+    pose_refine_env: Option<bool>,
+) -> Result<Option<serde_json::Map<String, Value>>> {
+    if trusted(dataset)? {
+        return Ok(Some(serde_json::Map::from_iter([
+            ("pose-refine".into(), json!(false)),
+            ("pose-refine-focal".into(), json!(false)),
+            ("pose-align-eval-steps".into(), json!(0)),
+        ])));
+    }
     if preview
         || !dataset.join("capture_selection.json").is_file()
-        || std::env::var("SPLAT_POSE_REFINE").is_ok_and(|s| s.trim() != "1")
+        || pose_refine_env == Some(false)
     {
         return Ok(None);
     }
@@ -105,9 +148,9 @@ pub(crate) fn training_overrides(
         return Ok(None);
     }
     let over = serde_json::Map::from_iter([
-        ("pose_refine".into(), json!(true)),
+        ("pose-refine".into(), json!(true)),
         (
-            "pose_align_eval_steps".into(),
+            "pose-align-eval-steps".into(),
             json!(crate::train::POSE_ALIGN_DEFAULT_STEPS),
         ),
     ]);

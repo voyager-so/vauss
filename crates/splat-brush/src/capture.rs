@@ -524,6 +524,22 @@ fn nerfstudio(root: &Path, dir: &Path) -> Result<Capture> {
         .context("transforms.json has no frames")?;
     let mut out = vec![];
     for (i, f) in frames.iter().enumerate() {
+        for record in [&v, f] {
+            for key in ["w", "h", "fl_x", "fl_y", "cx", "cy", "camera_angle_x", "camera_angle_y",
+                "k1", "k2", "k3", "k4", "k5", "k6", "p1", "p2", "depth_unit_scale_factor"] {
+                if let Some(value) = record.get(key) {
+                    let number = value.as_f64().filter(|n| n.is_finite())
+                        .with_context(|| format!("invalid capture calibration field {key}"))?;
+                    if matches!(key, "w" | "h") {
+                        ensure!(number > 0.0 && number.fract() == 0.0 && number <= u32::MAX as f64,
+                            "invalid capture dimensions {key}");
+                    }
+                }
+            }
+            if let Some(model) = record.get("camera_model") {
+                ensure!(model.is_string(), "camera_model must be a string");
+            }
+        }
         let get = |key: &str| f[key].as_f64().or_else(|| v[key].as_f64());
         let image = inside(
             root,
@@ -613,26 +629,34 @@ fn nerfstudio(root: &Path, dir: &Path) -> Result<Capture> {
         .as_str()
         .map(|p| inside(root, dir, p))
         .transpose()?;
-    Ok(Capture {
-        format: "nerfstudio".into(),
-        frames: out,
-        init_ply,
-        heldout_images: v["test_filenames"]
-            .as_array()
-            .map(|names| {
-                names
-                    .iter()
-                    .map(|n| {
-                        inside(
-                            root,
-                            dir,
-                            n.as_str().context("test_filenames must contain paths")?,
-                        )
-                    })
-                    .collect::<Result<Vec<_>>>()
-            })
-            .transpose()?,
-    })
+    let read_names = |key: &str| -> Result<Option<Vec<PathBuf>>> {
+        v.get(key).map(|value| {
+            let names = value.as_array().with_context(|| format!("{key} must be an array"))?;
+            names.iter().map(|n| inside(root, dir,
+                n.as_str().with_context(|| format!("{key} must contain paths"))?)).collect()
+        }).transpose()
+    };
+    let mut heldout_images = read_names("test_filenames")?;
+    let train_images = read_names("train_filenames")?;
+    let all: std::collections::BTreeSet<_> = out.iter().map(|f| f.image.clone()).collect();
+    for (key, names) in [("test_filenames", &heldout_images), ("train_filenames", &train_images)] {
+        if let Some(names) = names {
+            let unique: std::collections::BTreeSet<_> = names.iter().cloned().collect();
+            ensure!(unique.len() == names.len() && unique.is_subset(&all),
+                "{key} contains duplicate or unknown frames");
+        }
+    }
+    if let Some(train) = train_images {
+        ensure!(!train.is_empty(), "train_filenames must not be empty");
+        let complement: Vec<_> = all.iter().filter(|p| !train.contains(p)).cloned().collect();
+        if let Some(test) = &heldout_images {
+            ensure!(test.len() == complement.len() && test.iter().all(|p| complement.contains(p)),
+                "train_filenames and test_filenames must be disjoint and cover every frame");
+        } else {
+            heldout_images = Some(complement);
+        }
+    }
+    Ok(Capture { format: "nerfstudio".into(), frames: out, init_ply, heldout_images })
 }
 
 fn polycam(root: &Path, dir: &Path) -> Result<Capture> {
@@ -820,27 +844,67 @@ fn arkitscenes(root: &Path, dir: &Path) -> Result<Capture> {
     })
 }
 
+/// Trusted mode validates structure, not reconstruction quality. Never repair a pose or infer
+/// camera authority from registration coverage. Straight camera paths remain supported.
+fn validate_trusted(capture: &Capture) -> Result<()> {
+    use std::collections::BTreeSet;
+    let mut paths = BTreeSet::new();
+    let mut names = BTreeSet::new();
+    for source in &capture.frames {
+        let f = &source.camera;
+        ensure!(paths.insert(&source.image) && names.insert(&f.name),
+            "trusted import contains duplicate image/frame names");
+        validate_pose(f.c2w)?;
+        let r = DMat3::from_mat4(f.c2w);
+        ensure!(f.c2w.row(3).abs_diff_eq(glam::DVec4::W, 1e-9)
+            && (r.transpose() * r).abs_diff_eq(DMat3::IDENTITY, 1e-6)
+            && (r.determinant() - 1.0).abs() <= 1e-6,
+            "trusted camera {} must be rigid within 1e-6 (no pose repair)", f.name);
+        ensure!(f.params.len() >= 4 && f.params.iter().all(|v| v.is_finite())
+            && f.params[0] > 0.0 && f.params[1] > 0.0,
+            "trusted camera {} has invalid K (positive focal lengths and finite principal point required)", f.name);
+        ensure!(image::image_dimensions(&source.image)? == (f.width, f.height),
+            "trusted camera {} calibration dimensions differ from stored RGB", f.name);
+    }
+    ensure!(capture.frames.len() >= 2, "trusted import needs at least two calibrated views");
+    let origin = capture.frames[0].camera.c2w.w_axis.truncate();
+    let baseline = capture.frames.iter().map(|f| f.camera.c2w.w_axis.truncate().distance(origin))
+        .fold(0.0_f64, f64::max);
+    ensure!(baseline > 1e-9 && baseline.is_finite(),
+        "trusted import has no usable camera baseline (>1e-9 source units required)");
+    if let Some(heldout) = &capture.heldout_images {
+        let unique: BTreeSet<_> = heldout.iter().collect();
+        ensure!(unique.len() == heldout.len() && unique.is_subset(&paths)
+            && heldout.len() < capture.frames.len(), "invalid trusted split: duplicate/unknown held-out names or empty TRAIN");
+    }
+    Ok(())
+}
+
 pub(crate) fn extract(
     run: &dyn RunCtx,
     req: ExtractFrames,
     capture: Capture,
 ) -> Result<ToolResult> {
     let start = Instant::now();
+    if req.trust_poses {
+        ensure!(req.target_count == 600, "trust_poses retains all views; target_count overrides are incompatible");
+        validate_trusted(&capture)?;
+    }
     ensure!(
         req.rotate_deg == 0 && req.time_range_s.is_none(),
         "capture cameras are calibrated to their stored pixels: rotate_deg/time_range_s are unavailable"
     );
     ensure!(
-        req.target_count >= 2 && req.max_edge > 0,
+        (req.preserve_all || req.target_count >= 2) && req.max_edge > 0,
         "captures require target_count >= 2 and positive max_edge"
     );
     let (artifact, out) = new_artifact(
         run,
         ArtifactKind::Frames,
-        json!({"input_kind":"capture", "capture_format":capture.format}),
+        json!({"input_kind":"capture", "capture_format":capture.format, "preserve_all":req.preserve_all, "trust_poses":req.trust_poses}),
     )?;
     fs::create_dir_all(out.join("images"))?;
-    let n = capture.frames.len().min(req.target_count as usize);
+    let n = if req.preserve_all { capture.frames.len() } else { capture.frames.len().min(req.target_count as usize) };
     let indices: Vec<usize> = (0..n)
         .map(|i| i * (capture.frames.len() - 1) / (n - 1).max(1))
         .collect();
@@ -896,7 +960,7 @@ pub(crate) fn extract(
     if let Some(ply) = capture.init_ply {
         link_or_copy(&ply, &out.join("init.ply"))?;
     }
-    let heldout_names = capture
+    let mut heldout_names = capture
         .heldout_images
         .as_ref()
         .map(|images| {
@@ -917,6 +981,7 @@ pub(crate) fn extract(
                 .collect::<Result<Vec<_>>>()
         })
         .transpose()?;
+    if req.trust_poses && heldout_names.is_none() { heldout_names = Some(vec![]); }
     write_json(
         &out.join(MANIFEST),
         &Manifest {
@@ -928,7 +993,7 @@ pub(crate) fn extract(
             heldout_names,
         },
     )?;
-    let metrics = json!({"input_kind":"capture","capture_format":capture.format,"frame_count":kept.len(),"frames_decoded":capture.frames.len(),"sensor_depth_frames":kept.iter().filter(|k| out.join("depths").join(Path::new(k["name"].as_str().unwrap()).with_extension("png")).is_file()).count(),"max_edge":req.max_edge,"dropped_black":0,"dropped_duplicates":0});
+    let metrics = json!({"input_kind":"capture","capture_format":capture.format,"frame_count":kept.len(),"frames_decoded":capture.frames.len(),"input_count":capture.frames.len(),"selected_count":kept.len(),"dropped_count":capture.frames.len()-kept.len(),"drop_reasons":{"sampling":capture.frames.len()-kept.len()},"preserve_all":req.preserve_all,"sensor_depth_frames":kept.iter().filter(|k| out.join("depths").join(Path::new(k["name"].as_str().unwrap()).with_extension("png")).is_file()).count(),"max_edge":req.max_edge,"dropped_black":0,"dropped_duplicates":0});
     write_json(
         &out.join("selection.json"),
         &json!({"request":req,"metrics":metrics,"frames":kept}),
@@ -941,7 +1006,7 @@ pub(crate) fn extract(
     })
 }
 
-/// Restore calibrated cameras after an SfM attempt registered fewer than 90%.
+/// Materialize calibrated cameras, either explicitly trusted or after an SfM coverage fallback.
 pub(crate) fn reconstruct(
     run: &dyn RunCtx, frames_id: &str, artifact: Artifact, out: &Path,
     selection: &Value,
@@ -1016,7 +1081,7 @@ pub(crate) fn reconstruct(
         artifacts: vec![artifact],
         metrics: health.as_object().unwrap().clone().into_iter().collect(),
         wall_s: Some(start.elapsed().as_secs_f64()),
-        warnings: vec![format!("SfM placed {} of {} frames (below 90%); using capture-app poses with training pose refinement.", selection["sfm_registered"], manifest.frames.len())],
+        warnings: if selection["sfm_skipped"] == true { vec![] } else { vec![format!("SfM placed {} of {} frames (below 90%); using capture-app poses with training pose refinement.", selection["sfm_registered"], manifest.frames.len())] },
         ..result("reconstruct_sfm", Status::Succeeded)
     })
 }
@@ -1027,10 +1092,11 @@ pub(crate) fn freeze_split(
 ) -> Result<()> {
     if source.join("frozen_split.json").is_file() { return Ok(()); }
     if let Some(heldout) = manifest.heldout_names.clone() {
+        let trusted = run.artifact(frames_id)?.meta.get("trust_poses") == Some(&json!(true));
         let names: Vec<_> = manifest.frames.iter().map(|f| f.name.clone()).collect();
         let heldout_set: std::collections::BTreeSet<_> = heldout.iter().collect();
         ensure!(
-            !heldout.is_empty()
+            (trusted || !heldout.is_empty())
                 && heldout_set.len() == heldout.len()
                 && heldout.len() < names.len(),
             "invalid capture held-out split"
@@ -1038,7 +1104,7 @@ pub(crate) fn freeze_split(
         let frozen = splat_core::split::FrozenSplit {
             frames_id: Some(frames_id.into()),
             sfm_id: artifact.id.clone(),
-            mode: "capture_explicit".into(),
+            mode: if trusted { "imported_explicit" } else { "capture_explicit" }.into(),
             interval: 8,
             train_names: names
                 .iter()

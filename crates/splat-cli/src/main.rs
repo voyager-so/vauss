@@ -398,6 +398,15 @@ fn open(root: &Path, cfg: &Config, verify: bool, prepare: bool) -> Result<Run> {
     let config: splat_core::RunConfig = serde_json::from_slice(&fs::read(root.join("run.json"))?)?;
     Run::open_with_registry(root, cfg.registry(&config.backend, prepare)?, verify)
 }
+/// Refining geometry keeps the original camera authority and never requires a new solve.
+fn open_for_refine(root: &Path, cfg: &Config) -> Result<(Run, FixedOptions)> {
+    let config: splat_core::RunConfig = serde_json::from_slice(&fs::read(root.join("run.json"))?)?;
+    let previous: FixedOptions = fs::read(root.join("fixed.json")).ok()
+        .map(|b| serde_json::from_slice(&b)).transpose()?.unwrap_or_default();
+    cfg.for_run(root)?.preflight_with_camera_policy(&config.backend, previous.trust_poses)?;
+    Ok((open(root, cfg, true, true)?, previous))
+}
+
 fn budget(text: Option<&str>) -> Result<Option<Duration>> {
     text.map(|s| {
         let (n, m) = match s.chars().last() {
@@ -1274,7 +1283,7 @@ fn execute(cli: Cli) -> Result<i32> {
                 // remote::enable records it in cloud.json.
                 unsafe { std::env::set_var(splat_core::remote::FETCH_ALL_ENV, "1") };
             }
-            cfg.preflight(&backend)?;
+            cfg.preflight_with_camera_policy(&backend, fixed.trust_poses)?;
             let registry = cfg.registry(&backend, true)?;
             registry.backend(&backend)?;
             let root = run_dir.unwrap_or_else(new_run_root);
@@ -1369,7 +1378,9 @@ fn execute(cli: Cli) -> Result<i32> {
                 .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
                 .is_some_and(|s| s["status"] == "succeeded");
             if !finished {
-                cfg.for_run(root)?.preflight(&config.backend)?;
+                let saved: FixedOptions = fs::read(root.join("fixed.json")).ok()
+                    .map(|b| serde_json::from_slice(&b)).transpose()?.unwrap_or_default();
+                cfg.for_run(root)?.preflight_with_camera_policy(&config.backend, fixed.trust_poses.unwrap_or(saved.trust_poses))?;
             }
             let run = open(root, &cfg, true, true)?;
             splat_core::remote::resume(root)?;
@@ -1427,17 +1438,11 @@ fn execute(cli: Cli) -> Result<i32> {
                 }
                 None => source,
             };
-            let config: splat_core::RunConfig = serde_json::from_slice(&fs::read(root.join("run.json"))?)?;
-            cfg.for_run(&root)?.preflight(&config.backend)?;
-            let run = open(&root, &cfg, true, true)?;
+            let (run, previous) = open_for_refine(&root, &cfg)?;
             let finish = run.root().join("agent/finish.json");
             if finish.is_file() {
                 fs::rename(&finish, run.root().join(format!("agent/finish-{}.json", run.state()?.seq)))?;
             }
-            let previous: FixedOptions = fs::read(run.root().join("fixed.json"))
-                .ok()
-                .and_then(|b| serde_json::from_slice(&b).ok())
-                .unwrap_or_default();
             // Refinement has its own step budget; a prior --fast does not opt this command into it.
             let meshed = run.state()?.operations.values().any(|op| op["tool"] == "extract_mesh" && op["result"]["status"] == "succeeded");
             let prior_max_edge = previous.max_edge;
@@ -1647,3 +1652,29 @@ mod fill_tests {
     }
 }
 
+
+#[cfg(test)]
+mod trusted_refine_tests {
+    use super::*;
+    #[test]
+    fn trusted_refine_opens_without_colmap_and_retains_saved_policy() -> Result<()> {
+        let tmp = tempfile::tempdir()?;
+        let source = tmp.path().join("source.png");
+        fs::write(&source, b"fixture")?;
+        let root = tmp.path().join("run");
+        Run::create(&root, &source, "test", "brush")?;
+        let helper = tmp.path().join("unused-media-helper");
+        fs::write(&helper, b"unused")?;
+        let cfg = Config { ffmpeg:Some(helper.clone()), ffprobe:Some(helper),
+            colmap:Some(tmp.path().join("missing-colmap")), cache_dir:Some(tmp.path().join("cache")),
+            ..Default::default() };
+        assert!(open_for_refine(&root, &cfg).is_err());
+        let options = FixedOptions { trust_poses:true, ..Default::default() };
+        splat_core::atomic_json(root.join("fixed.json"), &options)?;
+        let (run, saved) = open_for_refine(&root, &cfg)?;
+        assert!(saved.trust_poses);
+        assert_eq!(run.config().backend, "brush");
+        assert!(run.state()?.jobs.is_empty());
+        Ok(())
+    }
+}

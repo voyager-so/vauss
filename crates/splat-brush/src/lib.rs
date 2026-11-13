@@ -12,8 +12,11 @@ use splat_core::{Backend, RunCtx};
 
 mod align_eval;
 mod capture;
+mod calibration_health;
 mod capture_depth;
 mod capture_sfm;
+#[cfg(test)]
+mod trusted_tests;
 mod depth_prior;
 mod engine;
 pub mod fixture;

@@ -31,3 +31,5 @@ hashbrown.workspace = true
 meshopt = "=0.6.2"
 parry3d = { package = "parry3d-f64", version = "=0.25.3", default-features = false, features = ["required-features", "std", "alloc"] }
 sha2.workspace = true
+# same-file MIT/Unlicense: detect source/output aliases, including hardlinks on Windows.
+same-file = "=1.0.6"

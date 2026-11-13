@@ -91,7 +91,8 @@ pub fn load(run: &dyn RunCtx, split_id: &str) -> Result<FrozenSplit> {
         && train.len() == split.train_names.len() && heldout.is_disjoint(&train)
         && heldout.union(&train).copied().collect::<BTreeSet<_>>() == registered,
         "Frozen split contains duplicate or inconsistent membership");
-    ensure!(!heldout.is_empty() && !train.is_empty(), "Frozen split needs training and held-out frames");
+    ensure!((!heldout.is_empty() || (split.mode == "imported_explicit"
+        && run.artifact(&original_frames)?.meta.get("trust_poses") == Some(&serde_json::json!(true)))) && !train.is_empty(), "Frozen split needs training and held-out frames");
     let images = run.path(&original_frames)?.join("images");
     for name in &split.registered_names {
         let expected = split.image_sha256.get(name).with_context(|| format!("Frozen split has no digest for {name}"))?;

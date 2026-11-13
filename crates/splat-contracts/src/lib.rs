@@ -134,9 +134,30 @@ pub enum FrameSpacing {
     Motion,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum InputKind {
+    #[default]
+    Auto,
+    Images,
+    Video,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ExtractFrames {
+    /// Use calibrated imported cameras unchanged, retain every view, and skip SfM.
+    #[serde(default)]
+    pub trust_poses: bool,
+    /// Keep every input image / decoded source video frame. Overrides target_count, strategy,
+    /// black/duplicate filtering and automatic training subsampling; held-out views stay held out.
+    /// Decode failures fail the extraction rather than silently violating this contract.
+    #[serde(default)]
+    pub preserve_all: bool,
+    /// Declare pre-extracted chronological video frames; auto treats image folders as photos.
+    /// Video folders must have filenames in chronological (natural numeric) order.
+    #[serde(default)]
+    pub input_kind: InputKind,
     #[serde(default = "d_sharpness")]
     pub strategy: FrameStrategy,
     /// Maximum frames kept. Video keeps about 2 frames per second (denser in turns, sparser when
@@ -365,6 +386,10 @@ pub struct RenderViews {
     #[serde(default = "d_8")]
     #[schemars(range(min = 1, max = 48))]
     pub max_views: u32,
+    /// Exact registered source names for targeted QA (training or held-out). Overrides sampling;
+    /// at most max_views unique names. Not valid for orbit views.
+    #[serde(default)]
+    pub image_names: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
@@ -586,6 +611,11 @@ pub struct JobSpec {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RunDefaultPipeline {
+    pub trust_poses: Option<bool>,
+    pub preserve_all: Option<bool>,
+    pub input_kind: Option<InputKind>,
+    pub pairs: Option<Pairs>,
+    pub camera_model: Option<CameraModel>,
     pub steps: Option<u32>,
     pub target_count: Option<u32>,
     pub max_edge: Option<u32>,
@@ -661,5 +691,22 @@ mod tests {
     #[test]
     fn schemas_build() {
         assert_eq!(super::tool_schemas().len(), 21);
+    }
+}
+
+#[cfg(test)]
+mod input_contract_tests {
+    use super::*;
+    #[test]
+    fn input_contract_legacy_defaults_and_explicit_declarations() {
+        let legacy: ExtractFrames = serde_json::from_value(serde_json::json!({})).unwrap();
+        assert!(!legacy.trust_poses && !legacy.preserve_all && legacy.drop_duplicates && legacy.drop_black);
+        assert_eq!(legacy.input_kind, InputKind::Auto);
+        let explicit: ExtractFrames = serde_json::from_value(serde_json::json!({"preserve_all":true,"input_kind":"video"})).unwrap();
+        assert!(explicit.preserve_all);
+        assert_eq!(explicit.input_kind, InputKind::Video);
+        let pipeline: RunDefaultPipeline = serde_json::from_value(serde_json::json!({"preserve_all":true,"input_kind":"video","pairs":"exhaustive","camera_model":"pinhole"})).unwrap();
+        assert_eq!(pipeline.preserve_all,Some(true));
+        assert!(matches!(pipeline.pairs,Some(Pairs::Exhaustive)));
     }
 }

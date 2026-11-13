@@ -1,0 +1,18 @@
+{
+  "source": "COLMAP cameras.bin from the default reconstruction of the authored-camera capture",
+  "sha256": "2f8938916a03b165512a41c7820d54d8af6280db1c552c9f394909260385131a",
+  "cameras": [
+    {
+      "id": 1,
+      "model": "PINHOLE",
+      "width": 1024,
+      "height": 576,
+      "params": [
+        1348.5809478553736,
+        8406.5200824053,
+        512.0,
+        288.0
+      ]
+    }
+  ]
+}

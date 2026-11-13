@@ -3,6 +3,7 @@ use brush_render::{
     bounding_box::BoundingBox,
     camera::Camera,
     gaussian_splats::{SplatRenderMode, Splats, inverse_sigmoid},
+    kernels::camera_model::CameraModel,
 };
 use brush_serde::SplatData;
 use burn::{config::Config, tensor::Device};
@@ -62,33 +63,7 @@ pub fn create_random_splats(
     let num_points = config.init_count;
     let scene_scale = scene_scale_override.unwrap_or_else(|| estimate_scene_scale(cameras));
 
-    let near = scene_scale * 0.05;
-    let far = scene_scale;
-    let ln_near = near.ln();
-    let ln_far = far.ln();
-
-    // Sample points in camera frustums
-    let positions: Vec<f32> = (0..num_points)
-        .flat_map(|_| {
-            let cam = &cameras[rng.random_range(0..cameras.len())];
-            let local_to_world = cam.local_to_world();
-
-            // Random direction within the camera's FOV
-            let half_fov_x = (cam.fov_x * 0.5) as f32;
-            let half_fov_y = (cam.fov_y * 0.5) as f32;
-            let dx = rng.random_range(-half_fov_x..half_fov_x).tan();
-            let dy = rng.random_range(-half_fov_y..half_fov_y).tan();
-
-            // Log-uniform depth so we don't over-pack near the camera
-            let depth = (rng.random_range(ln_near..ln_far)).exp();
-
-            // Camera looks along -Z in local space
-            let local_point = Vec3::new(dx * depth, dy * depth, -depth);
-            let world_point = local_to_world.transform_point3(local_point);
-
-            [world_point.x, world_point.y, world_point.z]
-        })
-        .collect();
+    let positions = sample_random_positions(num_points, cameras, scene_scale, rng);
 
     // Random colors
     let sh_coeffs: Vec<f32> = (0..num_points)
@@ -126,6 +101,57 @@ pub fn create_random_splats(
     Splats::from_raw(
         positions, rotations, log_scales, sh_coeffs, opacities, mode, device,
     )
+}
+
+/// CPU-only position sampling, shared by initialization and frustum regression tests.
+fn sample_random_positions(
+    num_points: usize,
+    cameras: &[Camera],
+    scene_scale: f32,
+    rng: &mut impl Rng,
+) -> Vec<f32> {
+    let near = scene_scale * 0.05;
+    let far = scene_scale;
+    let ln_near = near.ln();
+    let ln_far = far.ln();
+
+    (0..num_points)
+        .flat_map(|_| {
+            let cam = &cameras[rng.random_range(0..cameras.len())];
+            let local_to_world = cam.local_to_world();
+
+            // Random direction within the camera's FOV
+            let half_fov_x = (cam.fov_x * 0.5) as f32;
+            let half_fov_y = (cam.fov_y * 0.5) as f32;
+            let angle_range = |half_fov: f32, center: f32| {
+                // Pinhole FOV encodes focal length, not symmetric image bounds
+                // when the principal point is off-center. Preserve the existing
+                // angular distribution (and exact centered-camera RNG stream).
+                if cam.camera_model == CameraModel::Pinhole && center != 0.5 {
+                    let span = 2.0 * half_fov.tan();
+                    (-center * span).atan()..((1.0 - center) * span).atan()
+                } else {
+                    // Distorted lenses retain the existing FOV approximation.
+                    -half_fov..half_fov
+                }
+            };
+            let dx = rng
+                .random_range(angle_range(half_fov_x, cam.center_uv.x))
+                .tan();
+            let dy = rng
+                .random_range(angle_range(half_fov_y, cam.center_uv.y))
+                .tan();
+
+            // Log-uniform depth so we don't over-pack near the camera
+            let depth = (rng.random_range(ln_near..ln_far)).exp();
+
+            // Camera poses and the renderer use OpenCV camera space: +Z forward.
+            let local_point = Vec3::new(dx * depth, dy * depth, depth);
+            let world_point = local_to_world.transform_point3(local_point);
+
+            [world_point.x, world_point.y, world_point.z]
+        })
+        .collect()
 }
 
 /// Surfels ignore the third (normal) log-scale; pin it to the smaller tangent
@@ -264,7 +290,9 @@ pub fn to_init_splats(data: SplatData, mode: SplatRenderMode, device: &Device) -
         Some(c) if !single_colour(&c, n_splats) => c,
         _ => {
             let mut rng = rand::rngs::StdRng::seed_from_u64(0);
-            (0..n_splats * 3).map(|_| rng.random_range(0.0..1.0)).collect()
+            (0..n_splats * 3)
+                .map(|_| rng.random_range(0.0..1.0))
+                .collect()
         }
     };
 
@@ -276,6 +304,126 @@ pub fn to_init_splats(data: SplatData, mode: SplatRenderMode, device: &Device) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn pinhole_camera(position: Vec3, rotation: glam::Quat, center: glam::Vec2) -> Camera {
+        let image_size = glam::uvec2(1280, 720);
+        Camera::new(
+            position,
+            rotation,
+            brush_render::camera::focal_to_fov(900.0, image_size.x, &CameraModel::Pinhole),
+            brush_render::camera::focal_to_fov(650.0, image_size.y, &CameraModel::Pinhole),
+            center,
+            CameraModel::Pinhole,
+        )
+    }
+
+    fn assert_samples_in_frustum(camera: Camera) {
+        let scene_scale = 4.0;
+        let count = 4096;
+        let positions = sample_random_positions(
+            count,
+            &[camera],
+            scene_scale,
+            &mut rand::rngs::StdRng::seed_from_u64(42),
+        );
+        assert_eq!(positions.len(), count * 3);
+        let image_size = glam::uvec2(1280, 720);
+        let params = camera.build_pinhole_params(image_size);
+        let mut min_uv = glam::Vec2::ONE;
+        let mut max_uv = glam::Vec2::ZERO;
+        let mut min_depth = f32::INFINITY;
+        let mut max_depth = 0.0f32;
+        for point in positions.chunks_exact(3) {
+            let local = camera
+                .world_to_local()
+                .transform_point3(Vec3::from_slice(point));
+            assert!(local.is_finite());
+            // In front of the renderer near plane and within the configured depth range.
+            assert!(local.z >= 0.01, "point behind camera: {local:?}");
+            assert!((scene_scale * 0.05 - 1e-5..=scene_scale + 1e-5).contains(&local.z));
+            // Same pinhole equations as project_pinhole, using independently specified fx/fy.
+            let uv = glam::vec2(
+                (params.fx * local.x / local.z + params.cx) / image_size.x as f32,
+                (params.fy * local.y / local.z + params.cy) / image_size.y as f32,
+            );
+            assert!((-1e-5..=1.0 + 1e-5).contains(&uv.x), "u: {}", uv.x);
+            assert!((-1e-5..=1.0 + 1e-5).contains(&uv.y), "v: {}", uv.y);
+            min_uv = min_uv.min(uv);
+            max_uv = max_uv.max(uv);
+            min_depth = min_depth.min(local.z);
+            max_depth = max_depth.max(local.z);
+        }
+        // Catch a degenerate sampler that puts all points on the optical axis or one plane.
+        assert!(min_uv.max_element() < 0.02);
+        assert!(max_uv.min_element() > 0.98);
+        assert!(min_depth < scene_scale * 0.06);
+        assert!(max_depth > scene_scale * 0.95);
+    }
+
+    #[test]
+    fn random_positions_are_in_front_of_identity_and_transformed_cameras() {
+        for (position, rotation) in [
+            (Vec3::ZERO, glam::Quat::IDENTITY),
+            (Vec3::new(3.0, -2.0, 5.0), glam::Quat::IDENTITY),
+            (
+                Vec3::ZERO,
+                glam::Quat::from_rotation_y(std::f32::consts::PI),
+            ),
+            (
+                Vec3::new(-4.0, 2.0, 3.0),
+                glam::Quat::from_euler(glam::EulerRot::YXZ, 1.2, -0.4, 0.3),
+            ),
+        ] {
+            assert_samples_in_frustum(pinhole_camera(position, rotation, glam::Vec2::splat(0.5)));
+        }
+    }
+
+    #[test]
+    fn random_positions_respect_off_center_principal_points() {
+        for center in [
+            glam::vec2(0.2, 0.8),
+            glam::vec2(0.75, 0.3),
+            glam::vec2(1.1, -0.1),
+        ] {
+            assert_samples_in_frustum(pinhole_camera(
+                Vec3::new(2.0, -3.0, 1.0),
+                glam::Quat::from_euler(glam::EulerRot::YXZ, -0.9, 0.2, -0.5),
+                center,
+            ));
+        }
+    }
+
+    #[test]
+    fn random_positions_preserve_seeded_sampling_and_rng_consumption() {
+        let cameras = [
+            pinhole_camera(Vec3::ZERO, glam::Quat::IDENTITY, glam::Vec2::splat(0.5)),
+            pinhole_camera(
+                Vec3::new(4.0, -2.0, 3.0),
+                glam::Quat::from_rotation_y(0.7),
+                glam::Vec2::splat(0.5),
+            ),
+        ];
+        let mut rng = rand::rngs::StdRng::seed_from_u64(123);
+        let mut reference_rng = rand::rngs::StdRng::seed_from_u64(123);
+        let count = 128;
+        let positions = sample_random_positions(count, &cameras, 4.0, &mut rng);
+        for point in positions.chunks_exact(3) {
+            // Original centered-camera draw order and distribution, with corrected +Z.
+            let camera = &cameras[reference_rng.random_range(0..cameras.len())];
+            let half_x = (camera.fov_x * 0.5) as f32;
+            let half_y = (camera.fov_y * 0.5) as f32;
+            let dx = reference_rng.random_range(-half_x..half_x).tan();
+            let dy = reference_rng.random_range(-half_y..half_y).tan();
+            let depth = reference_rng.random_range(0.2f32.ln()..4.0f32.ln()).exp();
+            let expected =
+                camera
+                    .local_to_world()
+                    .transform_point3(Vec3::new(dx * depth, dy * depth, depth));
+            assert_eq!(point, expected.to_array());
+        }
+        // Later color/rotation/opacity draws must remain reproducible too.
+        assert_eq!(rng.random::<u64>(), reference_rng.random::<u64>());
+    }
 
     #[test]
     fn bounds_from_pos_all_nan_does_not_panic() {

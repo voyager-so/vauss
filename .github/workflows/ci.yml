@@ -3,6 +3,7 @@ name: Rust CI
 # PRs get one fast Linux build; the macOS and Windows builds run on release tags or a manual run.
 on:
   pull_request:
+  merge_group:
   push:
     tags: ['vauss-v*']
   workflow_dispatch:
@@ -20,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"label":"ubuntu-22.04","os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"}]' || '[{"label":"ubuntu-22.04","os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"},{"label":"macos-15","os":"macos-15","target":"aarch64-apple-darwin"},{"label":"windows-2022","os":"windows-2022","target":"x86_64-pc-windows-msvc"}]') }}
+        include: ${{ fromJSON((github.event_name == 'pull_request' || github.event_name == 'merge_group') && '[{"label":"ubuntu-22.04","os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"}]' || '[{"label":"ubuntu-22.04","os":"ubuntu-22.04","target":"x86_64-unknown-linux-gnu"},{"label":"macos-15","os":"macos-15","target":"aarch64-apple-darwin"},{"label":"windows-2022","os":"windows-2022","target":"x86_64-pc-windows-msvc"}]') }}
     runs-on: ${{ matrix.os }}
     env:
       CARGO_BUILD_JOBS: '4'
@@ -60,6 +61,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Install video fixture test dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
       - uses: actions/cache@v5
         with:
           path: |
@@ -67,7 +72,19 @@ jobs:
             ~/.cargo/git
             target
           key: vauss-ci-tests-v2-${{ github.repository }}-x86_64-unknown-linux-gnu-${{ hashFiles('Cargo.lock') }}
-      - run: cargo test --locked -p splat-fetch -p splat-sfm -p splat-webexport
+      - run: cargo test --locked -p splat-fetch -p splat-sfm -p splat-eval -p splat-webexport
+      - name: Input, geometry, trusted training config and per-view QA contracts (CPU only)
+        run: cargo test --locked -p splat-contracts -p splat-brush --lib
+      - name: Random initialization camera frustums (CPU only)
+        run: cargo test --locked -p splat-train --lib splat_init::tests
+      - name: Input inclusion through runtime and CLI
+        run: |
+          cargo test --locked -p splat-core --test runtime input_contract
+          cargo test --locked -p splat-cli --test cli input_contract
+      - name: Trusted-camera readiness, resume settings and refinement (CPU only)
+        run: cargo test --locked -p splat-cli --bin vauss trusted_
+      - name: Complete Blender packs and camera metadata
+        run: cargo test --locked -p splat-cli --bin vauss blender::tests
       # Free-roam packaging and walk checks: generated pages, provenance scrub, raw scenes, the
       # walk/floor/pivot harness on the viewer template.
       - uses: actions/setup-node@v4
@@ -82,4 +99,6 @@ jobs:
           python-version: '3.12'
       - run: python3 -m pip install --quiet numpy
       - run: python3 -m unittest discover -s dev/free-roam -p 'test_*.py' -v
+      - run: python3 -m unittest discover -s dev/camera-fidelity -v
+      - run: OPENBLAS_NUM_THREADS=1 python3 -m unittest discover -s eval -p test_demo_geometry_qa.py -v
       - run: node scripts/accept/viewer-roam.js
