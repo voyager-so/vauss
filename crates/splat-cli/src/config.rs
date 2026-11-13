@@ -226,6 +226,9 @@ impl Config {
     /// Offline answer to "what will `vauss run` need on this machine": each dependency's source, or what
     /// first use will download, or why it cannot be resolved. Never downloads.
     pub fn readiness(&self, backend: &str) -> Result<Value> {
+        self.readiness_with_camera_policy(backend, false)
+    }
+    fn readiness_with_camera_policy(&self, backend: &str, trust_poses: bool) -> Result<Value> {
         let fetcher = self.fetcher()?;
         let token = std::env::var("SPLAT_GITHUB_TOKEN").is_ok_and(|t| !t.is_empty());
         let locate = |id: &str| -> Value {
@@ -252,7 +255,7 @@ impl Config {
             (None, Some(tree)) => file(&tree.join("bin").join(if cfg!(windows) { "ffmpeg.exe" } else { "ffmpeg" }), "voyager"),
             (None, None) => locate("ffmpeg"),
         });
-        if backend == "brush" {
+        if backend == "brush" && !trust_poses {
             let found = self.colmap.clone().map(|p| (p, "configured"))
                 .or_else(|| bundled("colmap").map(|p| (p, "bundled")))
                 .or_else(|| splat_brush::BrushConfig::from_env().colmap.map(|p| (p, "env_or_path")))
@@ -312,10 +315,14 @@ impl Config {
     /// be resolved. Optional gaps only print a warning. A missing agent CLI is not fatal: the run falls
     /// back to the fixed pipeline (splat_agent::DriverResult::unavailable).
     pub fn preflight(&self, backend: &str) -> Result<()> {
+        self.preflight_with_camera_policy(backend, false)
+    }
+    pub fn preflight_with_camera_policy(&self, backend: &str, trust_poses: bool) -> Result<()> {
+        ensure!(!trust_poses || backend == "brush", "--trust-poses requires the brush backend");
         if !matches!(backend, "brush" | "spirula") {
             return Ok(());
         }
-        let report = self.readiness(backend)?;
+        let report = self.readiness_with_camera_policy(backend, trust_poses)?;
         let mut problems = vec![];
         for (name, entry) in report["required"].as_object().into_iter().flatten() {
             if entry["status"] == "missing" {
@@ -424,6 +431,18 @@ impl Config {
 #[cfg(test)]
 mod spirula_consent {
     use super::Config;
+
+    #[test]
+    fn trusted_readiness_does_not_require_or_resolve_colmap() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = Config { colmap: Some(dir.path().join("missing-colmap")),
+            cache_dir: Some(dir.path().join("cache")), ..Default::default() };
+        let normal = cfg.readiness("brush").unwrap();
+        assert_eq!(normal["required"]["colmap"]["status"], "missing");
+        let trusted = cfg.readiness_with_camera_policy("brush", true).unwrap();
+        assert!(trusted["required"].get("colmap").is_none());
+        assert!(cfg.preflight_with_camera_policy("spirula", true).unwrap_err().to_string().contains("brush"));
+    }
 
     #[test]
     fn never_fetched_without_consent() {

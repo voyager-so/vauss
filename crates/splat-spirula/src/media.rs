@@ -262,6 +262,8 @@ pub(crate) fn extract(
     run: &dyn RunCtx,
     req: ExtractFrames,
 ) -> Result<ToolResult> {
+    ensure!(!req.preserve_all && matches!(req.input_kind, splat_contracts::InputKind::Auto),
+        "preserve_all and declared input_kind require the brush backend");
     ensure!(
         (20..=1500).contains(&req.target_count),
         "target_count must be 20..1500"
@@ -358,7 +360,7 @@ pub(crate) fn extract(
                 start_index: req.time_range_s.map_or(0, |(a, _)| (a * fps).round() as u64),
                 excluded: Vec::new(),
                 pick_radius: 1,
-                preserve_source_frames: false,
+                preserve_all: false, preserve_source_frames: false,
                 crop: None,
                 fill: Vec::new(),
                 anchors: Vec::new(),

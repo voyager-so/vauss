@@ -46,6 +46,17 @@ impl PresetFlags {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FixedOptions {
+    #[serde(default)]
+    pub trust_poses: bool,
+    #[serde(default)]
+    pub preserve_all: bool,
+    #[serde(default = "auto_option")]
+    pub input_kind: String,
+    #[serde(default = "auto_option")]
+    pub pairs: String,
+    #[serde(default = "auto_option")]
+    pub camera_model: String,
+
     pub steps: u32,
     pub target_count: u32,
     pub max_edge: u32,
@@ -64,11 +75,18 @@ pub struct FixedOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub eval_every: Option<u32>,
 }
+fn auto_option() -> String { "auto".into() }
+
 impl Default for FixedOptions {
     fn default() -> Self {
         Self {
             steps: 7000,
             target_count: 600,
+            preserve_all: false,
+            trust_poses: false,
+            input_kind: auto_option(),
+            pairs: auto_option(),
+            camera_model: auto_option(),
             max_edge: 1600,
             cap_max: 1_000_000,
             resolution_divisor: 1,
@@ -122,6 +140,22 @@ impl FixedOptions {
 }
 #[derive(Debug, Clone, Default, clap::Args)]
 pub struct FixedOverrides {
+    /// Trust calibrated imported cameras: skip SfM, retain all views, disable camera refinement.
+    #[arg(long, num_args=0..=1, default_missing_value="true", conflicts_with_all=["target_count", "input_kind", "pairs", "camera_model"])]
+    pub trust_poses: Option<bool>,
+    /// Keep every input frame (including duplicates/black frames), ignoring target-count and
+    /// training subsampling. Held-out views remain reserved for evaluation.
+    #[arg(long, num_args=0..=1, default_missing_value="true")]
+    pub preserve_all: Option<bool>,
+    /// Declare chronological pre-extracted video frames; images retains photo calibration.
+    #[arg(long, value_parser = ["auto", "images", "video"])]
+    pub input_kind: Option<String>,
+    /// SfM matcher override. Auto uses sequential with loop closure for video; exhaustive for photos.
+    #[arg(long, value_parser = ["auto", "sequential", "exhaustive"])]
+    pub pairs: Option<String>,
+    /// Camera calibration model. Auto uses shared square-pixel RADIAL for video, PINHOLE for photos.
+    #[arg(long, value_parser = ["auto", "pinhole", "opencv", "opencv-fisheye"])]
+    pub camera_model: Option<String>,
     /// Training steps; overrides --fast/--max. Default run: 7000 (cloud may raise it).
     #[arg(long)]
     pub steps: Option<u32>,
@@ -149,6 +183,11 @@ pub struct FixedOverrides {
 }
 impl FixedOverrides {
     pub fn apply(self, mut options: FixedOptions) -> FixedOptions {
+        if let Some(v) = self.trust_poses { options.trust_poses = v; }
+        if let Some(v) = self.preserve_all { options.preserve_all = v; }
+        if let Some(v) = self.input_kind { options.input_kind = v; }
+        if let Some(v) = self.pairs { options.pairs = v; }
+        if let Some(v) = self.camera_model { options.camera_model = v; }
         if let Some(v) = self.steps {
             options.steps = v;
             options.steps_explicit = true;
@@ -272,6 +311,11 @@ pub fn run_default_pipeline(run: &Run, input: Value) -> Result<ToolResult> {
         FixedOptions::default()
     };
     let options = FixedOverrides {
+        trust_poses: overrides.trust_poses,
+        preserve_all: overrides.preserve_all,
+        input_kind: overrides.input_kind.map(|v| serde_json::to_value(v).unwrap().as_str().unwrap().to_owned()),
+        pairs: overrides.pairs.map(|v| serde_json::to_value(v).unwrap().as_str().unwrap().to_owned()),
+        camera_model: overrides.camera_model.map(|v| serde_json::to_value(v).unwrap().as_str().unwrap().to_owned()),
         steps: overrides.steps,
         target_count: overrides.target_count,
         max_edge: overrides.max_edge,
@@ -282,7 +326,7 @@ pub fn run_default_pipeline(run: &Run, input: Value) -> Result<ToolResult> {
         seed: None,
         eval_every: None,
     }.apply(options);
-    ensure!(options.steps > 0 && options.target_count > 0 && options.max_edge > 0
+    ensure!(options.steps > 0 && (options.preserve_all || options.target_count > 0) && options.max_edge > 0
         && options.cap_max > 0 && options.resolution_divisor > 0, "Pipeline budgets must be positive");
     let started = std::time::Instant::now();
     run.journal("default_pipeline_started", json!({"options":options}))?;
@@ -290,7 +334,7 @@ pub fn run_default_pipeline(run: &Run, input: Value) -> Result<ToolResult> {
     let mut result: ToolResult = serde_json::from_value(json!({
         "schema_version":splat_contracts::SCHEMA_VERSION, "tool":"run_default_pipeline",
         "status":"succeeded", "job_id":null, "error":null, "wall_s":started.elapsed().as_secs_f64(),
-        "metrics":{"candidate_id":output["candidate_id"], "evaluated":!options.is_fast(),
+        "metrics":{"candidate_id":output["candidate_id"], "evaluated":!options.is_fast() && output["evaluation"]["metrics"]["evaluated"] != false,
             "options":options, "evaluation":output["evaluation"]["metrics"]},
         "images":output["evaluation"]["images"].as_array().cloned().unwrap_or_default(),
     }))?;
@@ -302,23 +346,30 @@ pub fn run_default_pipeline(run: &Run, input: Value) -> Result<ToolResult> {
     Ok(result)
 }
 
+fn extraction_request(options: &FixedOptions) -> Value {
+    json!({"target_count":options.target_count,"max_edge":options.max_edge,
+        "preserve_all":options.preserve_all,"trust_poses":options.trust_poses,"input_kind":options.input_kind})
+}
+
 fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: bool) -> Result<Value> {
-    let wants_preview = splat_core::remote::preset().is_some()
+    let wants_preview = !options.trust_poses && !options.preserve_all && splat_core::remote::preset().is_some()
         && run.config().backend == "brush"
         && !splat_core::remote::goal_wants_mesh(run.goal());
     let inspection = invoke(run, "inspect_input", json!({}))?;
     // Videos: their full SfM takes minutes (night 6+). Photos from PHOTO_QUICK_MIN up: garden's (185)
     // full SfM took 279 s and its first view 5.8 min; the bench's room-every4 (78) waited 210 s for its
     // full SfM on a busy fleet.
-    let video = inspection.metrics.get("input_kind").and_then(Value::as_str) == Some("video");
+    let video = options.input_kind == "video" || inspection.metrics.get("input_kind").and_then(Value::as_str) == Some("video");
     let capture = inspection.metrics.get("input_kind").and_then(Value::as_str) == Some("capture");
+    ensure!(!options.trust_poses || (options.target_count == 600 && options.input_kind == "auto" && options.pairs == "auto" && options.camera_model == "auto"), "--trust-poses cannot override target-count, input-kind, pairs or camera-model");
+    ensure!(!options.trust_poses || capture, "--trust-poses requires a supported calibrated capture (for example Nerfstudio transforms.json)");
     let photos = inspection.metrics.get("image_count").and_then(Value::as_u64).filter(|_| !video);
     let photo_quick = photos.filter(|&n| !capture && n >= PHOTO_QUICK_MIN);
     // A few keyframes are solved quickly and their preview trains, so first view doesn't wait
     // minutes for the full solve. Poll it during the detached full extraction as well: otherwise
     // a ready quick solve waited behind a 30-44 s decode before its training could even start.
     let quick = (wants_preview && (video || photo_quick.is_some()))
-        .then(|| start_quick_sfm(run, options, photo_quick));
+        .then(|| start_quick_sfm(run, options, inspection.metrics.get("image_count").and_then(Value::as_u64).or(photo_quick)));
     let mut quick = QuickPreview::new(run, quick)?;
     // The quick SfM's upload (first view) has the run's uplink until its inputs are staged: every
     // other upload of the run (frame prestaging, the full SfM's own staging) yields to it on one
@@ -333,7 +384,7 @@ fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: b
     let frames_before: std::collections::BTreeSet<String> = run.state()?.artifacts.into_keys().collect();
     let mut prestage: Option<Option<splat_core::remote::FramePrestage>> = (!video).then_some(None);
     let extraction_started = std::time::Instant::now();
-    let mut extraction = dispatch(run, "extract_frames", json!({"target_count":options.target_count,"max_edge":options.max_edge}));
+    let mut extraction = dispatch(run, "extract_frames", extraction_request(options));
     while extraction.status == Status::Running {
         quick.advance(run)?;
         let state = run.state()?;
@@ -371,8 +422,8 @@ fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: b
     } else {
         sky.then_some("sky; person")
     };
-    let mut sfm_request = json!({"frames_id":frames});
-    if let Some(prompt) = prompt {
+    let mut sfm_request = json!({"frames_id":frames,"pairs":options.pairs,"camera_model":options.camera_model});
+    if let Some(prompt) = prompt.filter(|_| !options.trust_poses) {
         if run.backend_capabilities()["sfm_inline_masks"] == true {
             sfm_request["mask_prompt"] = json!(prompt);
         } else if run.backend_capabilities()["mask_distractors"] == true {
@@ -402,7 +453,7 @@ fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: b
     }
     ensure!(full.status == Status::Succeeded, "reconstruct_sfm: {:?}", full.error.map(|e| e.message));
     let mut sfm = artifact(full, ArtifactKind::Sfm)?;
-    if video {
+    if !options.trust_poses && video && run.config().backend == "brush" {
         sfm = placement_retry(run, options, &mut quick, &frames, sfm, &sfm_request)?;
     }
     quick.stop_solve(run)?;
@@ -469,10 +520,10 @@ fn placement_retry(run: &Run, options: &FixedOptions, quick: &mut QuickPreview, 
     let attempt = (|| -> Result<(String, f64, usize)> {
         let selection: Value = serde_json::from_slice(&std::fs::read(run.path(frames)?.join("selection.json"))?)?;
         let thinned = selection["metrics"]["low_detail_ranges_s"].as_array().is_some_and(|r| !r.is_empty());
-        let resample = thinned || selection["metrics"]["frame_base_fps"].as_f64() != Some(RETRY_FRAME_FPS);
+        let resample = !options.preserve_all && (thinned || selection["metrics"]["frame_base_fps"].as_f64() != Some(RETRY_FRAME_FPS));
         let frames = if resample {
             let mut extraction = dispatch(run, "extract_frames", json!({"target_count":options.target_count,
-                "max_edge":options.max_edge,"thin_low_detail":false,"base_fps":RETRY_FRAME_FPS}));
+                "max_edge":options.max_edge,"input_kind":options.input_kind,"thin_low_detail":false,"base_fps":RETRY_FRAME_FPS}));
             while extraction.status == Status::Running {
                 quick.advance(run)?;
                 ensure!(!matches!(run.state()?.status.as_str(), "stopping" | "cancelled"), "Run stopped");
@@ -609,7 +660,7 @@ const PHOTO_SUBSET_MIN: u64 = 100;
 /// take every n-th photo (`photos`: the set's size, see PHOTO_FAST_FRAMES). It passes on
 /// the preview floor (40% of its frames in one model): the full SfM replaces it.
 fn start_quick_sfm(run: &Run, options: &FixedOptions, photos: Option<u64>) -> Result<ToolResult> {
-    let request = match photos {
+    let mut request = match photos {
         None => json!({"target_count":FAST_FRAMES.min(options.target_count),"max_edge":FAST_EDGE.min(options.max_edge),"spacing":"motion",
             "max_motion_widths":FAST_FRAMES as f64 * FAST_GAP_WIDTHS,"preview":true}),
         Some(n) => {
@@ -620,6 +671,7 @@ fn start_quick_sfm(run: &Run, options: &FixedOptions, photos: Option<u64>) -> Re
             json!({"target_count":count,"max_edge":PHOTO_FAST_EDGE.min(options.max_edge),"strategy":"uniform","sfm_copies":false})
         }
     };
+    request["input_kind"] = json!(options.input_kind);
     let frames = artifact(
         invoke(run, "extract_frames", request)?,
         ArtifactKind::Frames,
@@ -627,7 +679,7 @@ fn start_quick_sfm(run: &Run, options: &FixedOptions, photos: Option<u64>) -> Re
     // Cloud: the same fal job trains the preview right after the solve (FAST_STEPS, FAST_CAP, full
     // frame size), saving the second job's upload, queue and the solve's result round trip; a
     // missing or failed chained preview falls back to its own train job (QuickPreview::advance).
-    Ok(dispatch(run, "reconstruct_sfm", json!({"frames_id":frames,"quality":"low","preview":true,
+    Ok(dispatch(run, "reconstruct_sfm", json!({"frames_id":frames,"quality":"low","preview":true,"pairs":options.pairs,"camera_model":options.camera_model,
         "preview_train":{"total_steps":FAST_STEPS,"cap_max":FAST_CAP,"resolution_divisor":1}})))
 }
 
@@ -900,6 +952,9 @@ fn train_to_finish(run: &Run, options: &FixedOptions, mut request: Value, what: 
         return Ok(json!({"candidate_id":candidate, "evaluation":evaluation}));
     }
     let mut defects = Vec::new();
+    if evaluation.metrics.get("evaluated") == Some(&json!(false)) {
+        defects.push("No authored held-out views; quality has not been evaluated.".into());
+    }
     let candidate = match removal_target(run.goal()) {
         Some(target) => remove_target(run, &candidate, &target, &mut defects)?,
         None => {
@@ -953,7 +1008,9 @@ fn train_to_finish(run: &Run, options: &FixedOptions, mut request: Value, what: 
     } else {
         "partial"
     };
-    let mut explanation = if mesh_missing {
+    let mut explanation = if evaluation.metrics.get("evaluated") == Some(&json!(false)) {
+        format!("{what}; no authored held-out views, quality unmeasured.")
+    } else if mesh_missing {
         format!("{what} with held-out evaluation; no mesh (see remaining defects).")
     } else {
         format!("{what} with held-out evaluation.")
@@ -1199,6 +1256,17 @@ fn remove_target(run: &Run, candidate: &str, (noun, singular): &(String, bool), 
 mod tests {
     use super::{FixedOptions, FixedOverrides};
     use serde_json::json;
+
+    #[test]
+    fn trusted_authority_survives_saved_options_and_extraction_request() {
+        let options = FixedOverrides { trust_poses: Some(true), ..Default::default() }.apply(FixedOptions::default());
+        let resumed: FixedOptions = serde_json::from_value(serde_json::to_value(&options).unwrap()).unwrap();
+        assert_eq!(super::extraction_request(&resumed)["trust_poses"], true);
+        assert!(!FixedOptions::default().trust_poses);
+        let mut legacy = serde_json::to_value(FixedOptions::default()).unwrap();
+        legacy.as_object_mut().unwrap().remove("trust_poses");
+        assert!(!serde_json::from_value::<FixedOptions>(legacy).unwrap().trust_poses);
+    }
 
     #[test]
     fn seed_and_eval_every_reach_the_training_request_only_when_given() {

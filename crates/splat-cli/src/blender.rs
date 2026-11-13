@@ -2,7 +2,7 @@
 //! full splat and the web export's scene.spz (hardlinks, never recomputed), coloured surface voxels from
 //! that mesh, and a README with the import steps. `vauss run` writes it at the end; `vauss export-blender <run>` rebuilds it.
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, ensure};
 use serde_json::{Value, json};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -44,6 +44,9 @@ fn deliverable(root: &Path, report: &Value, key: &str) -> Option<PathBuf> {
 /// Hardlink (copy across filesystems) `src` to `dst`, downloading a `--cloud` result left on fal first.
 fn place(root: &Path, src: &Path, dst: &Path) -> Result<()> {
     splat_core::fal::materialize(root, src).with_context(|| format!("downloading {} from fal", src.display()))?;
+    if src.canonicalize().ok().zip(dst.canonicalize().ok()).is_some_and(|(a, b)| a == b) {
+        return Ok(());
+    }
     let _ = fs::remove_file(dst);
     if fs::hard_link(src, dst).is_err() {
         fs::copy(src, dst).with_context(|| format!("copying {}", src.display()))?;
@@ -69,6 +72,8 @@ pub fn run(a: &ExportBlenderArgs) -> Result<Value> {
     let report: Value = serde_json::from_slice(&fs::read(root.join("report.json")).context("the run has no report.json (unfinished?)")?)?;
     let out = a.out.clone().unwrap_or_else(|| root.join(DIR));
     fs::create_dir_all(&out)?;
+    ensure!(root.join("exports/web").canonicalize().ok() != Some(out.canonicalize()?),
+        "Blender output must not overwrite the source web package; choose another --out directory");
     let t0 = std::time::Instant::now();
     let mut files: Vec<String> = vec![];
     let mut warnings = vec![];
@@ -79,18 +84,47 @@ pub fn run(a: &ExportBlenderArgs) -> Result<Value> {
     } else {
         warnings.push("the run has no splat PLY".to_string());
     }
-    // The web export's SPZ (+Y up, metres, floor at 0), which Blender 5.3+ imports natively upright.
-    // Optional: a failure here leaves the pack without it rather than failing the pack.
-    let mut web = web_scene(root).filter(|w| w["splat"] == "scene.spz" && root.join("exports/web/scene.spz").is_file());
-    if let Some(Err(e)) = web.as_ref().map(|_| place(root, &root.join("exports/web/scene.spz"), &out.join("scene.spz"))) {
-        warnings.push(format!("scene.spz not added ({e:#})"));
-        web = None;
+    // The web SPZ can be only a core; ordinary importers do not read its sidecars.
+    // Deliver a full PLY in that same frame whenever either positions or colours need patches.
+    let web = web_scene(root);
+    for stale in ["scene.spz", "scene.ply", "cameras.json", "import_cameras.py"] {
+        let _ = fs::remove_file(out.join(stale));
     }
-    if web.is_some() {
-        files.push("scene.spz".into());
-    } else {
-        // A previous pack's scene.spz would not match this run's web export.
-        let _ = fs::remove_file(out.join("scene.spz"));
+    if let Some(w) = &web {
+        if !w["splat_neural"].is_null() {
+            warnings.push("Blender's ordinary importer does not evaluate the neural appearance sidecar; exported colour is the SH/base-colour approximation.".into());
+        }
+        if w["splat"] == "scene.spz" {
+            let ov = &w["splat_overflow"];
+            let incomplete = ["overflow_count", "dc_patch_count"].iter().any(|k| ov[k].as_u64().unwrap_or(0) > 0)
+                || ov["positions"].as_str().is_some() || ov["dc"].as_str().is_some();
+            if incomplete {
+                let src = root.join("exports/web/scene.ply");
+                if ov["standalone_splat"] == "scene.ply" && src.is_file() {
+                    place(root, &src, &out.join("scene.ply"))?;
+                } else {
+                    // Older exports have no standalone file: reconstruct all the sidecars.
+                    let g = splat_webexport::spz::read_package_splats(&root.join("exports/web"))?;
+                    splat_webexport::ply::write_ply(&g, &out.join("scene.ply"))?;
+                }
+                files.push("scene.ply".into());
+                warnings.push(format!("Web scene.spz is not standalone: {} omitted splats and {} colour patches. Delivered complete scene.ply instead.", ov["overflow_count"], ov["dc_patch_count"]));
+            } else if root.join("exports/web/scene.spz").is_file() {
+                place(root, &root.join("exports/web/scene.spz"), &out.join("scene.spz"))?;
+                files.push("scene.spz".into());
+            }
+        }
+        if w["capture_cameras"].as_array().is_some_and(|cs| !cs.is_empty() && cs.iter().all(|c| c["source_c2w"].is_array() && c["K"].is_array())) {
+            let cameras = json!({"schema": 1, "camera_convention": w["camera_convention"], "capture_cameras": w["capture_cameras"], "transform_from_source": w["transform_from_source"], "bounds": w["bounds"]});
+            fs::write(out.join("cameras.json"), serde_json::to_vec_pretty(&cameras)?)?;
+            fs::write(out.join("import_cameras.py"), splat_webexport::cameras::BLENDER_IMPORT_SCRIPT)?;
+            files.extend(["cameras.json".into(), "import_cameras.py".into()]);
+        } else {
+            warnings.push("Exact capture calibration is absent; rerun export-web then export-blender to include cameras.json. Approximate look-at poses are not exact cameras.".into());
+        }
+    }
+    if web.is_none() {
+        warnings.push("No web scene metadata: exact capture cameras are unavailable. Run export-web then export-blender.".into());
     }
     let mesh = deliverable(root, &report, "mesh_full_scene").or_else(|| deliverable(root, &report, "mesh")).filter(|p| p.extension().is_some_and(|e| e == "glb"));
     let scale = metric_scale(root);
@@ -162,6 +196,9 @@ fn readme(gaussians: Option<u64>, web: Option<&Value>, files: &[String], voxels:
             "- `scene.spz`: the run's web export{n} (the same file as `exports/web/scene.spz`): upright (Z up in Blender), in metres, floor at 0, with all its colour (spherical harmonics). Blender 5.3+: File → Import → SPZ. No add-on needed. The easiest way to see the splat.\n"
         );
     }
+    if has("scene.ply") {
+        s += "- `scene.ply`: complete web-export splat, including all overflow positions and colour patches, in the web scene frame. Import as Stanford PLY with numeric XYZ unchanged. The incomplete web SPZ is deliberately not included.\n";
+    }
     if has("splat.ply") {
         s += &format!(
             "- `splat.ply`: the full Gaussian splat{}, with all its colour (spherical harmonics), opacity, scale and rotation, in the run's reconstruction frame (lines up with the mesh and voxels). Blender 5.3+: File → Import → Stanford PLY.\n",
@@ -182,17 +219,17 @@ fn readme(gaussians: Option<u64>, web: Option<&Value>, files: &[String], voxels:
             voxels["occupied_cells"], voxels["triangles"]
         );
     }
+    if has("cameras.json") {
+        s += "\n## Exact capture camera\n\n`cameras.json` preserves every capture image, native width/height, unequal fx/fy, principal point, lens model and column-major OpenCV camera-to-world matrices. `source_c2w` matches the raw `splat.ply`; `c2w` matches the transformed web scene. No look-at reconstruction is needed.\n\nRun `blender scene.blend --python import_cameras.py -- --image <capture-image-name> --frame source` after importing `splat.ply` with numeric XYZ unchanged (do not apply the orientation-only rotation below). Use `--frame scene` for `scene.ply`, also with numeric XYZ unchanged, or `--frame spz` for Blender's SPZ importer (+90 degrees about X). The script selects one camera and sets its native resolution, pixel aspect and principal-point shifts. Rotate/scale the object and camera together if you want another world convention. Distorted lenses are rejected: undistort and re-export first. This guarantees calibrated framing, not equality between Blender and the native Gaussian rasterizer.\n";
+    }
+    if !has("cameras.json") {
+        s += "\nExact capture cameras are unavailable in this pack. Regenerate export-web then export-blender with the current version; a position/look-at/FOV record cannot recover unequal focal lengths, principal point or roll.\n";
+    }
     s += "\n## Import the splat (Blender 5.3 and later)\n\n";
     if has("scene.spz") {
         s += "- **`scene.spz`** (recommended): File → Import → SPZ (Python: `bpy.ops.wm.spz_import(filepath=...)`). It loads upright, in metres, with the floor at 0; a million splats import in well under a second. \
 The capture cameras in the run's `exports/web/scene.json` (`capture_cameras`, +Y up) line up with it once mapped to Blender's Z up (rotate +90° about X).\n";
-        let ovf = web.map(|w| &w["splat_overflow"]);
-        let (far, bright) = ovf.map_or((0, 0), |o| (o["overflow_count"].as_u64().unwrap_or(0), o["dc_patch_count"].as_u64().unwrap_or(0)));
-        if far + bright > 0 {
-            s += &format!(
-                "  Blender reads the SPZ alone, not the viewer's overflow sidecars next to it: {far} far-away splats are missing and {bright} very bright colours are clipped. Use `splat.ply` if that matters.\n"
-            );
-        }
+
     }
     if has("splat.ply") {
         s += "- **`splat.ply`**: File → Import → Stanford PLY (Python: `bpy.ops.wm.ply_import(filepath=...)`) imports it as a Gaussian-splat point cloud. Rotate it **−90° about X** to stand it upright. \
@@ -219,4 +256,53 @@ Rotate the KIRI-imported splat about X until it lines up with the mesh, if KIRI 
     s += "The mesh and voxels approximate the captured surfaces, with the captured lighting baked into their colours: uncaptured areas can leave holes and floaters. They are not watertight or CAD-accurate. \
 Files here may be hardlinks to the run's own results: save edited scenes and exports under new names.\n";
     s
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use splat_webexport::{overflow, ply, spz};
+
+    #[test]
+    fn blender_pack_never_recommends_an_incomplete_spz_and_recovers_old_sidecars() {
+        let root = tempfile::tempdir().unwrap();
+        let web = root.path().join("exports/web");
+        fs::create_dir_all(&web).unwrap();
+        fs::write(root.path().join("report.json"), "{\"deliverables\":{}}").unwrap();
+        let g = ply::Gaussians {
+            pos: vec![[0.0, 0.0, 1.0], [3173.0, 6000.0, -8000.0]],
+            scale: vec![[-2.0; 3]; 2], rot: vec![[1.0, 0.0, 0.0, 0.0]; 2],
+            opacity: vec![1.0; 2], dc: vec![[0.2; 3]; 2], ..Default::default()
+        };
+        let opts = spz::Options { version: 3, sh1_bits: 6, sh_rest_bits: 6, antialiased: false, symmetric_sh: true };
+        let meta = overflow::write_package(&g, &web, "scene", opts).unwrap();
+        fs::write(web.join("scene.json"), serde_json::to_vec(&json!({"splat":"scene.spz", "splat_overflow":meta})).unwrap()).unwrap();
+        let unsafe_args = ExportBlenderArgs { run: root.path().to_path_buf(), out: Some(web.clone()), voxel: None };
+        assert!(run(&unsafe_args).unwrap_err().to_string().contains("source web package"));
+        assert!(web.join("scene.spz").exists());
+        let args = ExportBlenderArgs { run: root.path().to_path_buf(), out: None, voxel: None };
+        let out = root.path().join(DIR);
+        fs::create_dir_all(&out).unwrap();
+        fs::write(out.join("scene.spz"), "stale partial export").unwrap();
+        let summary = run(&args).unwrap();
+        assert_eq!(ply::read_ply(&out.join("scene.ply")).unwrap().pos, g.pos);
+        assert!(!out.join("scene.spz").exists());
+        assert!(summary["warnings"].as_array().unwrap().iter().any(|v| v.as_str().unwrap().contains("not standalone")));
+        let readme = fs::read_to_string(out.join("README.md")).unwrap();
+        assert!(readme.contains("complete web-export splat"));
+        assert!(!readme.contains("**`scene.spz`** (recommended)"));
+        // Pre-fix package has only sidecars, no complete PLY: recover all positions there too.
+        fs::remove_file(web.join("scene.ply")).unwrap();
+        run(&args).unwrap();
+        let recovered = ply::read_ply(&out.join("scene.ply")).unwrap();
+        assert_eq!(recovered.pos, g.pos);
+        // A later compatible export must remove the old full-scene fallback, not leave stale files.
+        let mut small = g;
+        small.pos[1] = [1.0, 2.0, 3.0];
+        let meta = overflow::write_package(&small, &web, "scene", opts).unwrap();
+        fs::write(web.join("scene.json"), serde_json::to_vec(&json!({"splat":"scene.spz", "splat_overflow":meta})).unwrap()).unwrap();
+        run(&args).unwrap();
+        assert!(out.join("scene.spz").exists());
+        assert!(!out.join("scene.ply").exists());
+    }
 }

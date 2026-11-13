@@ -106,6 +106,28 @@ pub fn is_video(source: &Path) -> bool {
     source.is_file() && !is_image(source)
 }
 
+fn natural_cmp(a: &str, b: &str) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+    let (mut x, mut y) = (a.as_bytes(), b.as_bytes());
+    while !x.is_empty() && !y.is_empty() {
+        if x[0].is_ascii_digit() && y[0].is_ascii_digit() {
+            let nx = x.iter().take_while(|c| c.is_ascii_digit()).count();
+            let ny = y.iter().take_while(|c| c.is_ascii_digit()).count();
+            let ax = &x[..nx]; let by = &y[..ny];
+            let ax = &ax[ax.iter().take_while(|&&c| c == b'0').count()..];
+            let by = &by[by.iter().take_while(|&&c| c == b'0').count()..];
+            let order = ax.len().cmp(&by.len()).then_with(|| ax.cmp(by));
+            if order != Ordering::Equal { return order; }
+            x = &x[nx..]; y = &y[ny..];
+        } else {
+            let order = x[0].cmp(&y[0]);
+            if order != Ordering::Equal { return order; }
+            x = &x[1..]; y = &y[1..];
+        }
+    }
+    x.len().cmp(&y.len()).then_with(|| a.cmp(b))
+}
+
 fn scaled_size(w: u32, h: u32, max_edge: u32) -> (u32, u32) {
     let s = (max_edge as f64 / w.max(h) as f64).min(1.0);
     let even = |x: u32| (((x as f64 * s) / 2.0).round() as u32 * 2).max(2);
@@ -991,6 +1013,7 @@ fn pick_candidates(
     let dir = VideoAnalysis::dir(run);
     let window = sel.window;
     sel.window = 1.0;
+    let decoded = picks.len() as u64;
     for p in picks {
         let mut img = image::open(dir.join(format!("s{p:06}.jpg")))?.to_rgb8();
         if let Some((c, w, h)) = crop {
@@ -1014,18 +1037,30 @@ fn pick_candidates(
             k
         })
         .collect();
-    Ok(frameplan::Extracted { kept, dropped_black: sel.black, dropped_duplicates: sel.dup, ..Default::default() })
+    Ok(frameplan::Extracted { decoded, kept, dropped_black: sel.black, dropped_duplicates: sel.dup, ..Default::default() })
 }
 
-pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -> anyhow::Result<ToolResult> {
-    if let Some(capture) = crate::capture::load(run)? { return crate::capture::extract(run, req, capture); }
+pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrames) -> anyhow::Result<ToolResult> {
+    if req.trust_poses { req.preserve_all = true; }
+    if let Some(capture) = crate::capture::load(run)? {
+        anyhow::ensure!(req.input_kind == InputKind::Auto, "calibrated captures retain sensor provenance; input_kind must be auto");
+        anyhow::ensure!(!req.preserve_all || (req.time_range_s.is_none() && req.max_motion_widths.is_none() && !req.preview), "preserve_all requires the full capture");
+        return crate::capture::extract(run, req, capture);
+    }
+    anyhow::ensure!(!req.trust_poses, "trust_poses requires a supported calibrated capture; SfM will not be used");
     let start = Instant::now();
     if ![0, 90, 180, 270].contains(&req.rotate_deg) {
         return Err(invalid("rotate_deg must be 0, 90, 180 or 270"));
     }
     let source = run.source();
     let video = is_video(source);
-    let (artifact, out) = new_artifact(run, ArtifactKind::Frames, json!({"input_kind": if video { "video" } else { "images" }}))?;
+    anyhow::ensure!(!video || req.input_kind != InputKind::Images, "input_kind=images cannot describe a video file");
+    anyhow::ensure!(!req.preserve_all || (req.time_range_s.is_none() && req.max_motion_widths.is_none() && !req.preview),
+        "preserve_all requires the full capture (no time_range_s, max_motion_widths or preview)");
+    let ordered_video = video || req.input_kind == InputKind::Video;
+    let (artifact, out) = new_artifact(run, ArtifactKind::Frames, json!({"input_kind": if ordered_video { "video" } else { "images" },
+        "source_kind": if video { "video_file" } else { "image_files" }, "preserve_all": req.preserve_all,
+        "chronology": if ordered_video { "source_order" } else { "unspecified" }}))?;
     let dest = out.join("images");
     std::fs::create_dir_all(&dest)?;
     let mut sel = Selector {
@@ -1034,8 +1069,8 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
         best: None,
         last_thumb: None,
         uniform: matches!(req.strategy, FrameStrategy::Uniform),
-        drop_black: req.drop_black,
-        drop_duplicates: req.drop_duplicates,
+        drop_black: req.drop_black && !req.preserve_all,
+        drop_duplicates: req.drop_duplicates && !req.preserve_all,
         rotate_deg: req.rotate_deg,
         dest: dest.clone(),
         start_index: 0,
@@ -1067,6 +1102,7 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
         let mut span = req.time_range_s.map_or(info.duration_s, |(a, b)| b - a);
         let mut time_range = req.time_range_s;
         let mut track = match &analysis {
+            _ if req.preserve_all => vec![],
             Some(a) => a.track.clone(),
             None => frameplan::motion_track(&cfg.ffmpeg, source, req.time_range_s, info.width, info.height)?,
         };
@@ -1104,7 +1140,7 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
         }
         let mut plan = frameplan::plan(&track, span, estimate, &options);
         let omitted = if req.max_motion_widths.is_none() && req.time_range_s.is_none()
-            && req.thin_low_detail && matches!(req.strategy, FrameStrategy::SharpnessWindow) {
+            && !req.preserve_all && req.thin_low_detail && matches!(req.strategy, FrameStrategy::SharpnessWindow) {
             analysis.as_ref().map_or_else(Vec::new, |a| reallocate_clear_views(&mut plan, &a.sharpness, info.fps))
         } else { vec![] };
         if !omitted.is_empty() {
@@ -1163,7 +1199,7 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
         let windowed = quick && time_range.is_some();
         let from_candidates = analysis.as_ref().filter(|a| windowed && size.0.max(size.1) <= a.size.0.max(a.size.1)
             && plan.instants_s.iter().all(|t| (t * frameplan::ANALYSIS_FPS).round() as u64 + 1 <= a.candidates_through));
-        let quick_picks = if !quick && req.time_range_s.is_none() {
+        let quick_picks = if !req.preserve_all && !quick && req.time_range_s.is_none() {
             // The separate manifest includes rotation. Falling back to the analysis cache's
             // indices after a rotation mismatch would silently anchor a different extraction.
             QuickPicks::load(run, source, &info, req.rotate_deg).unwrap_or_default()
@@ -1173,6 +1209,7 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
             Some(a) => {
                 let picked = pick_candidates(run, a, &plan, info.fps, crop.map(|c| (c, info.width, info.height)), size, &mut sel)?;
                 metrics.insert("from_analysis".into(), json!(true));
+                metrics.insert("input_count".into(), json!(info.frame_count));
                 frameplan::Extracted { tone_mapped: match a.tone_mapped.as_deref() {
                     Some("hlg") => Some("hlg"), Some("pq") => Some("pq"), _ => None,
                 }, ..picked }
@@ -1186,13 +1223,13 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
                 &plan,
                 &frameplan::ExtractOptions {
                     uniform: sel.uniform,
-                    drop_black: req.drop_black,
-                    drop_duplicates: req.drop_duplicates,
+                    drop_black: req.drop_black && !req.preserve_all,
+                    drop_duplicates: req.drop_duplicates && !req.preserve_all,
                     rotate_deg: req.rotate_deg,
                     start_index: sel.start_index,
                     excluded: low_detail_exclusions(&omitted, &plan.instants_s, info.fps),
                     pick_radius: 1,
-                    preserve_source_frames: false,
+                    preserve_all: req.preserve_all, preserve_source_frames: req.preserve_all,
                     crop,
                     // The quick frames where the plan leaves room for them (sparse walks gain views;
                     // dense plans such as night-soccer's take none).
@@ -1211,8 +1248,11 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
             }
         }
         let times = extracted.kept.iter().filter_map(|k| k["decoded_index"].as_f64()).map(|i| i / info.fps).collect::<Vec<_>>();
-        let mut frame_plan = plan.metrics();
-        frame_plan["spacing"] = plan.audit(&times);
+        let mut frame_plan = if req.preserve_all {
+            json!({"mode":"preserve_all","count":extracted.kept.len(),
+                "reason":"Every decoded source frame; target_count and sampling plan ignored."})
+        } else { plan.metrics() };
+        if !req.preserve_all { frame_plan["spacing"] = plan.audit(&times); }
         // HDR (HLG/PQ) phone video is tone-mapped to SDR for SfM and training.
         frame_plan["tone_mapped_from"] = serde_json::json!(extracted.tone_mapped);
         frame_plan["analysis_lifted"] = serde_json::json!(extracted.analysis_lifted);
@@ -1233,11 +1273,12 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
             return Err(invalid("time_range_s requires a video"));
         }
         let root = image_dir(source);
-        let inputs = list_images(&root)?;
+        let mut inputs = list_images(&root)?;
+        if ordered_video { inputs.sort_by(|a, b| natural_cmp(&a.to_string_lossy(), &b.to_string_lossy())); }
         if inputs.is_empty() {
             return Err(invalid("no input images"));
         }
-        sel.window = (inputs.len() as f64 / req.target_count as f64).max(1.0);
+        sel.window = if req.preserve_all { 1.0 } else { (inputs.len() as f64 / req.target_count as f64).max(1.0) };
         // Photos larger than the training frames also get an SfM copy (see SFM_EDGE).
         let sfm_copies = req.sfm_copies && sel.sfm_edge > req.max_edge;
         if sfm_copies {
@@ -1248,11 +1289,13 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
         if let Some((size, c)) = photo_crop {
             metrics.insert("black_bar_crop".into(), json!({"source": [size.0, size.1], "crop": c}));
         }
+        let mut decoded_images = 0;
         for (i, path) in inputs.iter().enumerate() {
             if !sel.wants(i as u64) {
                 continue;
             }
             let native = load_oriented(path)?.0;
+            decoded_images += 1;
             let native = match photo_crop {
                 Some((size, c)) if (native.width(), native.height()) == size => native.crop_imm(c.x, c.y, c.w, c.h),
                 _ => native,
@@ -1276,7 +1319,7 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
             let name = path.strip_prefix(&root).unwrap_or(path).to_string_lossy().into_owned();
             sel.push(i as u64, img.to_rgb8(), Some(name), splat_eval::images::exif_upright(path), sfm)?;
         }
-        decoded = inputs.len() as u64;
+        decoded = decoded_images;
         metrics.insert("input_count".into(), json!(inputs.len()));
     }
     sel.flush()?;
@@ -1308,6 +1351,20 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, req: ExtractFrames) -
         return Err(invalid("extraction wrote no frames"));
     }
     metrics.insert("frames_decoded".into(), json!(decoded));
+    metrics.entry("input_count").or_insert(json!(decoded));
+    let input = metrics["input_count"].as_u64().unwrap();
+    let selected = sel.kept.len() as u64;
+    let corrupt = metrics.get("frame_plan").and_then(|p| p["dropped_corrupt"].as_u64()).unwrap_or(0);
+    let dropped = input.saturating_sub(selected);
+    anyhow::ensure!(!req.preserve_all || dropped == 0, "preserve_all: selected {selected} of {input} inputs");
+    metrics.insert("selected_count".into(), json!(selected));
+    metrics.insert("dropped_count".into(), json!(dropped));
+    metrics.insert("drop_reasons".into(), json!({"black":sel.black,"duplicate":sel.dup,"decoder_corrupt":corrupt,
+        "sampling":dropped.saturating_sub(u64::from(sel.black) + u64::from(sel.dup) + corrupt)}));
+    metrics.insert("input_count_basis".into(), json!(if !video { "image_files" } else if metrics.get("from_analysis") == Some(&json!(true)) { "probed_source_frames" } else if req.preserve_all { "decoded_source_frames" } else { "decoded_sampling_timeline" }));
+    metrics.insert("preserve_all".into(), json!(req.preserve_all));
+    metrics.insert("selection_policy".into(), json!(if req.preserve_all { "all" } else { "sample_and_filter" }));
+    metrics.insert("input_kind".into(), json!(if ordered_video { "video" } else { "images" }));
     metrics.insert("frame_count".into(), json!(sel.kept.len()));
     metrics.insert("dropped_black".into(), json!(sel.black));
     metrics.insert("dropped_duplicates".into(), json!(sel.dup));
@@ -1463,5 +1520,42 @@ mod tests {
         let (_tmp, dir, r) = extract(&[(3000, 2000), (2100, 1400)], 0);
         assert!(!dir.join("sfm_images").exists());
         assert!(r.metrics["sfm_images_skipped"].is_string());
+    }
+}
+
+#[cfg(test)]
+mod input_contract_tests {
+    use super::*;
+    use splat_core::Run;
+
+    #[test]
+    fn input_contract_241_images_preserve_duplicates_black_and_chronology() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source = tmp.path().join("source");
+        std::fs::create_dir(&source).unwrap();
+        for i in 1..=241 {
+            let value = if i == 1 { 0 } else { 120 };
+            RgbImage::from_pixel(16, 16, image::Rgb([value; 3])).save(source.join(format!("frame_{i}.png"))).unwrap();
+        }
+        let run = Run::create(tmp.path().join("run"), &source, "input contract", "brush").unwrap();
+        let cfg = BrushConfig::from_env();
+        let req = |v| serde_json::from_value::<ExtractFrames>(v).unwrap();
+        // A requested count alone does not override filtering.
+        let filtered = extract_frames(&cfg, &run, req(json!({"target_count":241}))).unwrap();
+        assert_eq!(filtered.metrics["input_count"], 241);
+        assert!(filtered.metrics["frame_count"].as_u64().unwrap() < 241);
+        let all = extract_frames(&cfg, &run, req(json!({"target_count":20,"preserve_all":true,"input_kind":"video"}))).unwrap();
+        assert_eq!(all.metrics["input_count"], 241);
+        assert_eq!(all.metrics["selected_count"], 241);
+        assert_eq!(all.metrics["dropped_count"], 0);
+        assert_eq!(all.metrics["dropped_black"], 0);
+        assert_eq!(all.metrics["dropped_duplicates"], 0);
+        assert_eq!(all.artifacts[0].meta["input_kind"], "video");
+        let selection: Value = read_json(&run.path(&all.artifacts[0].id).unwrap().join("selection.json")).unwrap();
+        for (i, frame) in selection["frames"].as_array().unwrap().iter().enumerate() {
+            assert_eq!(frame["source_name"], format!("frame_{}.png", i + 1));
+            assert_eq!(frame["source_index"], i);
+        }
+        assert!(extract_frames(&cfg, &run, req(json!({"preserve_all":true,"time_range_s":[0,1]}))).is_err());
     }
 }

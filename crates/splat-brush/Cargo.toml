@@ -36,4 +36,6 @@ exr = { version = "1.74", default-features = false }
 lzfse_rust = "0.2.1"
 
 [dev-dependencies]
+splat-webexport.workspace = true
+splat-shots.workspace = true
 tempfile.workspace = true

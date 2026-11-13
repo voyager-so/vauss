@@ -133,7 +133,11 @@ impl Backend for PreparedBackend {
         self.backend.inpaint_removed(run, req)
     }
     fn evaluate(&self, run: &dyn RunCtx, req: Evaluate) -> Result<ToolResult> {
-        if !req.lpips { return self.backend.evaluate(run, req); }
+        let no_heldout = run.artifact(&req.split_id).ok().and_then(|a| run.path(&a.id).ok())
+            .and_then(|p| fs::read(p.join("manifest.json")).ok())
+            .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
+            .is_some_and(|v| v["mode"] == "imported_explicit" && v["heldout_names"].as_array().is_some_and(Vec::is_empty));
+        if !req.lpips || no_heldout { return self.backend.evaluate(run, req); }
         match lpips(&self.cfg) {
             Ok(ready) => ready.backend(self.name)?.evaluate(run, req),
             Err(error) => {

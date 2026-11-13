@@ -97,8 +97,20 @@ pub fn write_package(g: &Gaussians, dir: &Path, stem: &str, options: spz::Option
             let _ = std::fs::remove_file(dir.join(name));
         }
     }
+    // A single SPZ cannot represent these splats. Supply a complete ordinary-importer
+    // alternative in exactly the same frame, rather than calling the SPZ core a full scene.
+    let standalone = format!("{stem}.ply");
+    let needs_sidecars = !ovf.is_empty() || !dcp.is_empty();
+    if needs_sidecars {
+        crate::ply::write_ply(g, &dir.join(&standalone))?;
+        eprintln!("export: {core_name} requires sidecars ({} omitted splats, {} colour patches); import {standalone} for the complete scene", ovf.len(), dcp.len());
+    } else {
+        let _ = std::fs::remove_file(dir.join(&standalone));
+    }
     Ok(json!({
         "format": FORMAT,
+        "standalone_splat": if needs_sidecars { standalone.as_str() } else { core_name.as_str() },
+        "spz_standalone_complete": !needs_sidecars,
         "core": core_name,
         "positions": ovf_bytes.map(|_| ovf_name),
         "dc": dcp_bytes.map(|_| dcp_name),
@@ -113,4 +125,49 @@ pub fn write_package(g: &Gaussians, dir: &Path, stem: &str, options: spz::Option
         "bytes": {"core": core_bytes, "positions": ovf_bytes, "dc": dcp_bytes,
             "total": core_bytes + ovf_bytes.unwrap_or(0) + dcp_bytes.unwrap_or(0)},
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ordinary_import_retains_overflow_and_colour_and_removes_stale_fallback() {
+        let dir = tempfile::tempdir().unwrap();
+        // Failed-demo scale: almost every point lies outside fixed-12-bit SPZ range.
+        let n = 73;
+        let mut g = Gaussians {
+            pos: (0..n).map(|i| if i == 0 { [0.0, 0.0, 1.0] } else { [i as f32 * 3173.2133, -7000.0, 9000.0] }).collect(),
+            scale: vec![[-2.0, -3.0, -4.0]; n], rot: vec![[1.0, 0.0, 0.0, 0.0]; n],
+            opacity: vec![1.5; n], dc: vec![[4.0, -5.0, 0.3]; n],
+            sh_degree: 3, rest: (0..n * 45).map(|i| (i % 13) as f32 * 0.01).collect(),
+            ..Default::default()
+        };
+        let o = spz::Options { version: 3, sh1_bits: 6, sh_rest_bits: 6, antialiased: false, symmetric_sh: true };
+        let meta = write_package(&g, dir.path(), "scene", o).unwrap();
+        assert_eq!(meta["core_count"], 1);
+        assert_eq!(meta["overflow_count"], 72);
+        assert_eq!(meta["standalone_splat"], "scene.ply");
+        assert_eq!(meta["spz_standalone_complete"], false);
+        // An ordinary PLY importer needs no manifest/sidecar knowledge and loses no attributes.
+        let full = crate::ply::read_ply(&dir.path().join("scene.ply")).unwrap();
+        assert_eq!(full.pos, g.pos);
+        assert_eq!(full.scale, g.scale);
+        assert_eq!(full.rot, g.rot);
+        assert_eq!(full.opacity, g.opacity);
+        assert_eq!(full.dc, g.dc);
+        assert_eq!(full.rest, g.rest);
+        for p in &mut g.pos { *p = [0.0, 1.0, 2.0]; }
+        // Bright-colour patch alone must also select the complete file.
+        let meta = write_package(&g, dir.path(), "scene", o).unwrap();
+        assert_eq!(meta["overflow_count"], 0);
+        assert_eq!(meta["standalone_splat"], "scene.ply");
+        for c in &mut g.dc { *c = [0.2, 0.3, 0.4]; }
+        let meta = write_package(&g, dir.path(), "scene", o).unwrap();
+        assert_eq!(meta["standalone_splat"], "scene.spz");
+        assert_eq!(meta["spz_standalone_complete"], true);
+        assert!(!dir.path().join("scene.ply").exists());
+        assert!(!dir.path().join("scene.ovf1.zlib").exists());
+        assert!(!dir.path().join("scene.dcp1.zlib").exists());
+    }
 }

@@ -81,7 +81,7 @@ pub fn run(args: &[String]) -> Result<()> {
         let images = out.join("test/images");
         std::fs::create_dir_all(&images)?;
         let ex = frameplan::extract(&ffmpeg, video, None, size, p.fps, &test_plan,
-            &ExtractOptions { uniform: true, drop_black: true, drop_duplicates: false, rotate_deg: 0, start_index: 0, excluded: vec![], pick_radius: 0, preserve_source_frames: true, crop: None, fill: vec![], anchors: vec![] }, &images)?;
+            &ExtractOptions { uniform: true, drop_black: true, drop_duplicates: false, rotate_deg: 0, start_index: 0, excluded: vec![], pick_radius: 0, preserve_all: false, preserve_source_frames: true, crop: None, fill: vec![], anchors: vec![] }, &images)?;
         let tests: Vec<Value> = ex.kept.iter().map(|k| {
             let index = k["decoded_index"].as_u64().expect("decoded index");
             let elapsed = index as f64 / p.fps;
@@ -138,7 +138,7 @@ pub fn run(args: &[String]) -> Result<()> {
         std::fs::create_dir_all(&images)?;
         let start = Instant::now();
         let mut ex = frameplan::extract(&ffmpeg, video, None, size, p.fps, &plan,
-            &ExtractOptions { uniform, drop_black: true, drop_duplicates: true, rotate_deg: 0, start_index: 0, excluded: excluded.clone(), pick_radius: 1, preserve_source_frames: true, crop: None, fill: vec![], anchors: vec![] }, &images)
+            &ExtractOptions { uniform, drop_black: true, drop_duplicates: true, rotate_deg: 0, start_index: 0, excluded: excluded.clone(), pick_radius: 1, preserve_all: false, preserve_source_frames: true, crop: None, fill: vec![], anchors: vec![] }, &images)
             .with_context(|| format!("arm {arm}"))?;
         let mut dropped_blur = 0;
         if arm == "blur_reject" {

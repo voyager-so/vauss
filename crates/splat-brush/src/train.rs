@@ -182,6 +182,7 @@ pub struct Checkpoint {
 
 pub fn train_splats(cfg: &BrushConfig, run: &dyn RunCtx, mut req: TrainSplats) -> anyhow::Result<ToolResult> {
     let manifest = split::resolve(run, &req.split_id, &req.sfm_id)?;
+    let preserve_all = run.artifact(&manifest.frames_id)?.meta.get("preserve_all") == Some(&json!(true));
     // Cloud and explicit --max use the MAX recipe; explicit steps/caps override its budget.
     // Mesh (surfel) goals keep the default recipe.
     let surfel = wants_mesh(run);
@@ -281,7 +282,7 @@ pub fn train_splats(cfg: &BrushConfig, run: &dyn RunCtx, mut req: TrainSplats) -
         out: out.clone(),
         preview: req.preview,
         video,
-        train_names: train_subset(&manifest.train_names, video, surfel),
+        train_names: contract_train_subset(&manifest.train_names, video, surfel, preserve_all),
         heldout_names: manifest.heldout_names.clone(),
         total_steps: req.total_steps,
         blur_total_steps: preset
@@ -333,6 +334,11 @@ pub fn train_splats(cfg: &BrushConfig, run: &dyn RunCtx, mut req: TrainSplats) -
     r.warnings.extend(warnings);
     r.metrics.insert("max_resolution".into(), json!(max_resolution));
     r.metrics.insert("preset".into(), json!(preset_name));
+    r.metrics.insert("registered_count".into(), json!(manifest.registered_names.len()));
+    r.metrics.insert("planned_train_count".into(), json!(job.train_names.len()));
+    r.metrics.insert("planned_heldout_count".into(), json!(job.heldout_names.len()));
+    r.metrics.insert("training_dropped_count".into(), json!(manifest.train_names.len() - job.train_names.len()));
+    r.metrics.insert("training_drop_reason".into(), json!(if manifest.train_names.len() > job.train_names.len() { "training_view_cap" } else { "none" }));
     // Scene-adaptive MAX budgets reach 8M splats on unbounded scenes.
     let forecast = vram_forecast_mib(if max_budget { 8_000_000 } else { max_splats }, max_resolution);
     r.metrics.insert("vram_forecast_mib".into(), json!(forecast));
@@ -354,6 +360,9 @@ pub fn train_splats(cfg: &BrushConfig, run: &dyn RunCtx, mut req: TrainSplats) -
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ChainedPreview {
+    /// Inherited from the source Frames artifact, including manual API preview requests.
+    #[serde(default)]
+    pub preserve_all: bool,
     /// The preview's train job as [`train_splats`] would submit it, less what the solve decides:
     /// the split's names and `max_resolution` ([`run_chained`] fills them in).
     pub job: TrainJob,
@@ -372,7 +381,7 @@ const CHAINED_TIMEOUT_S: f64 = 180.0;
 /// The [`ChainedPreview`] for the quick SfM dataset `dataset`, trained into the (unregistered)
 /// candidate dir `out`. Mirrors [`train_splats`] for a preview request: no MAX preset, explicit cap,
 /// no checkpoints or held-out scoring.
-pub(crate) fn chained_preview(cfg: &BrushConfig, sfm_id: &str, dataset: &Path, out: &Path, req: &PreviewTrain, video: bool) -> anyhow::Result<ChainedPreview> {
+pub(crate) fn chained_preview(cfg: &BrushConfig, sfm_id: &str, dataset: &Path, out: &Path, req: &PreviewTrain, video: bool, preserve_all: bool) -> anyhow::Result<ChainedPreview> {
     let request: TrainSplats = serde_json::from_value(json!({"sfm_id": sfm_id, "split_id": "", "preview": true,
         "total_steps": req.total_steps, "cap_max": req.cap_max, "cap_max_explicit": true, "resolution_divisor": req.resolution_divisor}))?;
     let job = TrainJob {
@@ -417,7 +426,7 @@ pub(crate) fn chained_preview(cfg: &BrushConfig, sfm_id: &str, dataset: &Path, o
     };
     // define_split's default interval: the pipeline's split of the quick solve.
     let interval = serde_json::from_value::<DefineSplit>(json!({"sfm_id": sfm_id}))?.interval;
-    Ok(ChainedPreview { job, request, interval })
+    Ok(ChainedPreview { job, request, interval, preserve_all })
 }
 
 /// Training views by default: an even spread of this many registered non-held-out views. Dense frame
@@ -436,6 +445,10 @@ const VIDEO_TRAIN_MAX_FRAMES: usize = 600;
 /// The training views: an even spread of SPLAT_TRAIN_MAX_FRAMES (0 = every view; default
 /// VIDEO_TRAIN_MAX_FRAMES for gaussian training on video, else DEFAULT_TRAIN_MAX_FRAMES) of the
 /// registered non-held-out names.
+fn contract_train_subset(names: &[String], video: bool, surfel: bool, preserve_all: bool) -> Vec<String> {
+    if preserve_all { names.to_vec() } else { train_subset(names, video, surfel) }
+}
+
 pub(crate) fn train_subset(names: &[String], video: bool, surfel: bool) -> Vec<String> {
     let cap = match std::env::var("SPLAT_TRAIN_MAX_FRAMES").ok().and_then(|v| v.trim().parse::<usize>().ok()) {
         Some(n) => Some(n).filter(|&n| n >= 2),
@@ -459,7 +472,7 @@ pub(crate) fn run_chained(dataset: &Path, chain: &ChainedPreview) -> anyhow::Res
     let train_names: Vec<String> = registered.iter().filter(|n| !heldout.contains(n)).map(|n| (*n).clone()).collect();
     let mut job = chain.job.clone();
     job.max_resolution = max_image_edge(&dataset.join("images"), &names)?.div_ceil(chain.request.resolution_divisor).max(64);
-    job.train_names = train_subset(&train_names, job.video, job.surfel);
+    job.train_names = chained_train_names(chain, &train_names);
     job.heldout_names = heldout;
     std::fs::create_dir_all(&job.out)?;
     let path = job.out.join("train_job.json");
@@ -496,6 +509,16 @@ pub(crate) fn run_chained(dataset: &Path, chain: &ChainedPreview) -> anyhow::Res
     Ok(())
 }
 
+fn chained_train_names(chain: &ChainedPreview, names: &[String]) -> Vec<String> {
+    contract_train_subset(names, chain.job.video, chain.job.surfel, chain.preserve_all)
+}
+
+fn validate_chained_views(chain: &ChainedPreview, trained: &TrainJob, train: &[String], heldout: &[String]) -> anyhow::Result<()> {
+    anyhow::ensure!(trained.train_names == chained_train_names(chain, train) && trained.heldout_names == heldout,
+        "chained training views violate the source inclusion contract");
+    Ok(())
+}
+
 /// Client side, when the quick SfM `sfm_id` completed: register the preview its job trained
 /// ([`run_chained`]) on the run's split for that solve (made here, as define_split makes it, so the
 /// pipeline's define_split finds the same one). Its train job must name exactly that split's
@@ -512,8 +535,10 @@ pub(crate) fn adopt_chained(run: &dyn RunCtx, sfm_id: &str, chain: &ChainedPrevi
     anyhow::ensure!(split.status == Status::Succeeded, "define_split: {:?}", split.error.map(|e| e.message));
     let split_id = split.artifacts.first().context("define_split returned no split")?.id.clone();
     let manifest = split::resolve(run, &split_id, sfm_id)?;
-    anyhow::ensure!(trained.train_names == train_subset(&manifest.train_names, trained.video, trained.surfel) && trained.heldout_names == manifest.heldout_names,
-        "the chained preview trained on another split than {split_id}");
+    let preserve_all = run.artifact(&manifest.frames_id)?.meta.get("preserve_all") == Some(&json!(true));
+    anyhow::ensure!(chain.preserve_all == preserve_all, "chained preview preserve_all differs from source frames");
+    validate_chained_views(chain, &trained, &manifest.train_names, &manifest.heldout_names)
+        .with_context(|| format!("the chained preview trained on another split than {split_id}"))?;
     let id = out.file_name().context("candidate dir")?.to_string_lossy().into_owned();
     let mut request = chain.request.clone();
     request.split_id = split_id.clone();
@@ -655,6 +680,7 @@ async fn score(splats: &Splats, views: &[SceneView], device: &Device, save: Opti
 /// [`score`] with optional per-view cameras (test-time pose alignment) in place of the views' own.
 async fn score_with(splats: &Splats, views: &[SceneView], cameras: Option<&[brush_render::camera::Camera]>, device: &Device, save: Option<&Path>) -> anyhow::Result<(f64, f64)> {
     let (mut psnr, mut ssim) = (0.0, 0.0);
+    let mut per_view = Vec::new();
     for (i, view) in views.iter().enumerate() {
         let gt = engine::load_gt(view).await?;
         let camera = cameras.map_or(&view.camera, |c| &c[i]);
@@ -665,120 +691,24 @@ async fn score_with(splats: &Splats, views: &[SceneView], cameras: Option<&[brus
         psnr += view_psnr;
         ssim += sample.ssim.clone().into_scalar_async::<f32>().await? as f64;
         if let Some(dir) = save {
+            per_view.push(json!({"image": engine::view_name(view), "psnr": view_psnr}));
             let s = stem(&engine::view_name(view));
             gt.to_rgb8().save(dir.join("gt").join(format!("{s}.png")))?;
             sample.save_to_disk(&dir.join("renders").join(format!("{s}.png"))).await?;
         }
     }
+    if let Some(dir) = save { write_json(&dir.join("view_scores.json"), &per_view)?; }
     let n = views.len().max(1) as f64;
     Ok((psnr / n, ssim / n))
 }
 
-/// Worker body. Exit 0 = finished; 130 = stopped by signal after writing a checkpoint.
-pub fn run_job(job: TrainJob) -> anyhow::Result<i32> {
-    anyhow::ensure!(!job.fresh_init_ply || (job.init_ply.is_some() && job.start_step == 0),
-        "fresh_init_ply requires a PLY and start_step=0");
-    anyhow::ensure!(!job.plain_init_ply || job.fresh_init_ply, "plain_init_ply requires fresh_init_ply");
-    let stop = Arc::new(AtomicBool::new(false));
-    {
-        let stop = stop.clone();
-        // The job runner sends one SIGINT to the process group and waits; finish the step,
-        // checkpoint, exit.
-        ctrlc::set_handler(move || stop.store(true, Ordering::SeqCst)).context("installing signal handler")?;
-    }
-    let wait = Instant::now();
-    let _gpu = crate::gpu_lock(job.gpu_lock.as_deref())?;
-    emit(&job.out, &json!({"event": "gpu_lock", "gpu_lock_wait_s": wait.elapsed().as_secs_f64()}));
-    let rt = engine::runtime()?;
-    rt.block_on(async {
-        let result = train(job, stop).await;
-        // Lagged render-count readbacks still in flight at process exit race the
-        // driver's teardown (SIGSEGV after a finished run). Settle on every exit
-        // path, including errors.
-        brush_render::render::settle_lagged_counts().await;
-        result
-    })
+pub(crate) fn pose_refine_env() -> Option<bool> {
+    std::env::var("SPLAT_POSE_REFINE").ok().map(|v| v.trim() == "1")
 }
 
-async fn train(mut job: TrainJob, stop: Arc<AtomicBool>) -> anyhow::Result<i32> {
-    let wall = Instant::now();
-    let device = engine::init_device().await;
-    // Surfels (mesh goals) train on a pinhole copy of a distorted dataset (video SfM ends RADIAL).
-    let (dataset, _pinhole) = if job.surfel {
-        match engine::surfel_dataset(&job.dataset, &job.out.join("pinhole_dataset")) {
-            Ok(v) => v,
-            Err(e) => {
-                eprintln!("[train] WARNING: can't undistort the dataset for surfels ({e:#})");
-                (job.dataset.clone(), None)
-            }
-        }
-    } else {
-        (job.dataset.clone(), None)
-    };
-    let scene = engine::load_scene(&dataset, job.max_resolution).await?;
-    for w in &scene.warnings {
-        eprintln!("[dataset] {w}");
-    }
-    let pick = |names: &[String]| -> anyhow::Result<Vec<SceneView>> {
-        names
-            .iter()
-            .map(|n| scene.views.iter().find(|v| &engine::view_name(v) == n).cloned().with_context(|| format!("{n} missing from dataset")))
-            .collect()
-    };
-    let mut train_views = pick(&job.train_names)?;
-    let eval_views = pick(&job.heldout_names)?;
-    // Surfels render pinhole cameras only (an unsupported lens would still render, distortion
-    // ignored): anything the undistorter can't handle trains gaussians instead.
-    if job.surfel && train_views.iter().chain(&eval_views).any(|v| !matches!(v.camera.camera_model, brush_render::kernels::camera_model::CameraModel::Pinhole)) {
-        eprintln!("[train] WARNING: surfel (2DGS) training needs pinhole cameras and this dataset's lens can't be undistorted; training gaussians instead");
-        emit(&job.out, &json!({"event": "surfel_fallback", "reason": "non-pinhole cameras"}));
-        job.surfel = false;
-    }
-    device.seed(job.seed + job.start_step as u64);
-    let mut rng = rand::rngs::StdRng::seed_from_u64(job.seed);
-
-    let up_axis = Some(scene.up_axis);
-    let mode = if job.surfel { SplatRenderMode::Surfel } else { SplatRenderMode::Mip };
-    // A forked refine: its PLY appears on fal /data when the full model's job reaches its fork.
-    let fork_local = match (&job.init_ply, job.init_wait_s) {
-        (Some(ply), Some(wait_s)) => Some(wait_fork(&job.out, ply, wait_s, &stop)?),
-        _ => None,
-    };
-    let init_ply = fork_local.clone().or_else(|| job.init_ply.clone());
-    let splats = if let Some(ply) = &init_ply {
-        if job.plain_init_ply {
-            engine::load_plain_init_ply(ply, job.max_splats as usize, mode, &device).await?
-        } else {
-            let cap = if job.cap_max_explicit { job.max_splats as usize } else { 0 };
-            let select = if job.warm_start { crate::warm_cap::Select::Hybrid } else { crate::warm_cap::Select::Strided };
-            let (splats, stats) = crate::warm_cap::load(ply, cap, select, mode, &train_views, job.max_resolution, &device).await?;
-            emit(&job.out, &json!({"event": "warm_start", "stats": stats}));
-            if let Some(local) = &fork_local {
-                let _ = std::fs::remove_file(local);
-            }
-            splats
-        }
-    } else if let Some(init) = scene.init {
-        eprintln!("init: render_mode={mode:?} (source=job)");
-        let data = init.data.subsample(job.max_splats as usize);
-        to_init_splats(data, mode, &device)
-    } else {
-        eprintln!("init: render_mode={mode:?} (source=job)");
-        let cams: Vec<_> = train_views.iter().map(|v| v.camera).collect();
-        create_random_splats(&RandomSplatsConfig::new(), &cams, None, &mut rng, mode, &device)
-    };
-    // A warm start / resume PLY keeps its parameters but trains in this job's mode.
-    let mut splats = splats;
-    splats.surfel = job.surfel;
-    splats.render_mip &= !job.surfel;
-    // SH degree schedule: fresh splats start at degree 0 and the trainer grows them.
-    let mut splats = if job.init_ply.is_none() || job.fresh_init_ply {
-        splats.with_sh_degree(0)
-    } else {
-        splats.with_sh_degree(job.sh_degree)
-    };
-    device.memory_cleanup();
-
+/// Build and strictly validate the real trainer configuration without a GPU.
+/// The worker calls this before taking its GPU lock or allocating a device.
+pub(crate) fn training_config(job: &TrainJob, pose_refine_env: Option<bool>) -> anyhow::Result<TrainConfig> {
     let mut config = TrainConfig::default();
     config.total_train_iters = job.total_steps;
     config.max_splats = job.max_splats;
@@ -826,7 +756,6 @@ async fn train(mut job: TrainJob, stop: Arc<AtomicBool>) -> anyhow::Result<i32> 
     // Unaligned held-out PSNR is expected to drop (house -0.74 dB, others -0.05..-0.26): refined
     // training poses and unrefined test poses sit in slightly different gauges. Compare aligned to
     // aligned, including external references (the Spirula reference is scored aligned as well).
-    let pose_refine_env = std::env::var("SPLAT_POSE_REFINE").ok().map(|v| v.trim() == "1");
     if pose_refine_env == Some(true) && !job.preview {
         config.pose_refine = true;
         config.pose_align_eval_steps = POSE_ALIGN_DEFAULT_STEPS;
@@ -844,11 +773,136 @@ async fn train(mut job: TrainJob, stop: Arc<AtomicBool>) -> anyhow::Result<i32> 
             eprintln!("config override applied: {k} = {}", applied[k]);
         }
     }
+    // Imported camera authority wins over environment and serialized config overrides.
+    let trusted_cameras = crate::capture_sfm::trusted(&job.dataset)?;
+    if trusted_cameras { crate::capture_sfm::lock_cameras(&mut config); }
     // Goal 3 (rooms): sensor depth prior as a training regulariser (plain walls, dim rooms),
     // loaded in the background while training starts. SPLAT_DEPTH_PRIOR sets its weight (0 = off).
     if let Some(w) = crate::depth_prior::weight_override()? {
         config.depth_prior_weight = w;
     }
+    Ok(config)
+}
+
+/// Worker body. Exit 0 = finished; 130 = stopped by signal after writing a checkpoint.
+pub fn run_job(job: TrainJob) -> anyhow::Result<i32> {
+    let pose_refine_env = pose_refine_env();
+    let config = training_config(&job, pose_refine_env)?;
+    // Recheck the actual model before taking a GPU lock, including old/imported SfM artifacts.
+    // Stored reports may predate the geometry gates or belong to a different candidate.
+    let model = splat_eval::read_model(&job.dataset.join("sparse/0"))?;
+    let geometry = splat_eval::geometry::geometry_health(&model, job.video);
+    std::fs::create_dir_all(&job.out)?;
+    write_json(&job.out.join("geometry_health.json"), &geometry)?;
+    if !geometry.pass { return Err(splat_sfm::GeometryFailure.into()); }
+    let calibration = crate::calibration_health::dataset(&model, &job.dataset, job.video)?;
+    write_json(&job.out.join("calibration_health.json"), &calibration)?;
+    crate::calibration_health::enforce(&calibration)?;
+    anyhow::ensure!(!job.fresh_init_ply || (job.init_ply.is_some() && job.start_step == 0),
+        "fresh_init_ply requires a PLY and start_step=0");
+    anyhow::ensure!(!job.plain_init_ply || job.fresh_init_ply, "plain_init_ply requires fresh_init_ply");
+    let stop = Arc::new(AtomicBool::new(false));
+    {
+        let stop = stop.clone();
+        // The job runner sends one SIGINT to the process group and waits; finish the step,
+        // checkpoint, exit.
+        ctrlc::set_handler(move || stop.store(true, Ordering::SeqCst)).context("installing signal handler")?;
+    }
+    let wait = Instant::now();
+    let _gpu = crate::gpu_lock(job.gpu_lock.as_deref())?;
+    emit(&job.out, &json!({"event": "gpu_lock", "gpu_lock_wait_s": wait.elapsed().as_secs_f64()}));
+    let rt = engine::runtime()?;
+    rt.block_on(async {
+        let result = train(job, config, pose_refine_env, stop).await;
+        // Lagged render-count readbacks still in flight at process exit race the
+        // driver's teardown (SIGSEGV after a finished run). Settle on every exit
+        // path, including errors.
+        brush_render::render::settle_lagged_counts().await;
+        result
+    })
+}
+
+async fn train(mut job: TrainJob, mut config: TrainConfig, pose_refine_env: Option<bool>, stop: Arc<AtomicBool>) -> anyhow::Result<i32> {
+    let wall = Instant::now();
+    let device = engine::init_device().await;
+    // Surfels (mesh goals) train on a pinhole copy of a distorted dataset (video SfM ends RADIAL).
+    let (dataset, _pinhole) = if job.surfel {
+        match engine::surfel_dataset(&job.dataset, &job.out.join("pinhole_dataset")) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("[train] WARNING: can't undistort the dataset for surfels ({e:#})");
+                (job.dataset.clone(), None)
+            }
+        }
+    } else {
+        (job.dataset.clone(), None)
+    };
+    let scene = engine::load_scene(&dataset, job.max_resolution).await?;
+    for w in &scene.warnings {
+        eprintln!("[dataset] {w}");
+    }
+    let pick = |names: &[String]| -> anyhow::Result<Vec<SceneView>> {
+        names
+            .iter()
+            .map(|n| scene.views.iter().find(|v| &engine::view_name(v) == n).cloned().with_context(|| format!("{n} missing from dataset")))
+            .collect()
+    };
+    let mut train_views = pick(&job.train_names)?;
+    let eval_views = pick(&job.heldout_names)?;
+    // Surfels render pinhole cameras only (an unsupported lens would still render, distortion
+    // ignored): anything the undistorter can't handle trains gaussians instead.
+    if job.surfel && train_views.iter().chain(&eval_views).any(|v| !matches!(v.camera.camera_model, brush_render::kernels::camera_model::CameraModel::Pinhole)) {
+        eprintln!("[train] WARNING: surfel (2DGS) training needs pinhole cameras and this dataset's lens can't be undistorted; training gaussians instead");
+        emit(&job.out, &json!({"event": "surfel_fallback", "reason": "non-pinhole cameras"}));
+        job.surfel = false;
+        config = training_config(&job, pose_refine_env)?;
+    }
+    device.seed(job.seed + job.start_step as u64);
+    let mut rng = rand::rngs::StdRng::seed_from_u64(job.seed);
+
+    let up_axis = Some(scene.up_axis);
+    let mode = if job.surfel { SplatRenderMode::Surfel } else { SplatRenderMode::Mip };
+    // A forked refine: its PLY appears on fal /data when the full model's job reaches its fork.
+    let fork_local = match (&job.init_ply, job.init_wait_s) {
+        (Some(ply), Some(wait_s)) => Some(wait_fork(&job.out, ply, wait_s, &stop)?),
+        _ => None,
+    };
+    let init_ply = fork_local.clone().or_else(|| job.init_ply.clone());
+    let splats = if let Some(ply) = &init_ply {
+        if job.plain_init_ply {
+            engine::load_plain_init_ply(ply, job.max_splats as usize, mode, &device).await?
+        } else {
+            let cap = if job.cap_max_explicit { job.max_splats as usize } else { 0 };
+            let select = if job.warm_start { crate::warm_cap::Select::Hybrid } else { crate::warm_cap::Select::Strided };
+            let (splats, stats) = crate::warm_cap::load(ply, cap, select, mode, &train_views, job.max_resolution, &device).await?;
+            emit(&job.out, &json!({"event": "warm_start", "stats": stats}));
+            if let Some(local) = &fork_local {
+                let _ = std::fs::remove_file(local);
+            }
+            splats
+        }
+    } else if let Some(init) = scene.init {
+        eprintln!("init: render_mode={mode:?} (source=job)");
+        let data = init.data.subsample(job.max_splats as usize);
+        to_init_splats(data, mode, &device)
+    } else {
+        eprintln!("init: render_mode={mode:?} (source=job)");
+        let cams: Vec<_> = train_views.iter().map(|v| v.camera).collect();
+        create_random_splats(&RandomSplatsConfig::new(), &cams, None, &mut rng, mode, &device)
+    };
+    // A warm start / resume PLY keeps its parameters but trains in this job's mode.
+    let mut splats = splats;
+    splats.surfel = job.surfel;
+    splats.render_mip &= !job.surfel;
+    // SH degree schedule: fresh splats start at degree 0 and the trainer grows them.
+    let mut splats = if job.init_ply.is_none() || job.fresh_init_ply {
+        splats.with_sh_degree(0)
+    } else {
+        splats.with_sh_degree(job.sh_degree)
+    };
+    device.memory_cleanup();
+
+    let trusted_cameras = crate::capture_sfm::trusted(&job.dataset)?;
     // On only for inputs whose dataset carries metric sensor depth (capture imports: depths.json
     // kind "metric"). A monocular prior (Depth-Anything-V2-Small) on plain video lost:
     // LiDAR oracle on arkit-41254538 (same SfM, weight 0.5): sensor +0.29 dB held-out with off-path
@@ -880,7 +934,7 @@ async fn train(mut job: TrainJob, stop: Arc<AtomicBool>) -> anyhow::Result<i32> 
     trainer.set_train_pixels(train_pixels);
     // Pose refine for video and photo sets (see SPLAT_POSE_REFINE above): stills are where camera precision matters most and
     // their budgets tend to be small. A warm start / resume follows its source candidate (its corrections, frozen).
-    if pose_refine_env.is_none() && !config.pose_refine && !job.preview && !job.surfel && !job.neural_max {
+    if !trusted_cameras && pose_refine_env.is_none() && !config.pose_refine && !job.preview && !job.surfel && !job.neural_max {
         let on = if job.video && job.init_ply.is_none() {
             // Goal 3 (rooms, 4 public dev rooms, product path, aligned eval): held-out LPIPS better on 4/4,
             // PSNR +0.25 dB mean, off-path slightly sharper, ~+2% training time (goal3/recipe/RESULTS.md).
@@ -1221,6 +1275,9 @@ async fn train(mut job: TrainJob, stop: Arc<AtomicBool>) -> anyhow::Result<i32> 
         .then(|| json!({"steps": config.pose_align_eval_steps, "extent": trainer.cam_extent(), "ssim_weight": config.ssim_weight,
             "dataset": job.dataset, "max_resolution": job.max_resolution}));
     let (psnr, ssim) = score(&splats, &eval_views, &device, Some(&eval_dir)).await?;
+    let view_scores: Vec<Value> = read_json(&eval_dir.join("view_scores.json"))?;
+    let view_quality = splat_eval::view_quality::view_quality(view_scores.iter().map(|v|
+        (v["image"].as_str().unwrap_or("unknown"), v["psnr"].as_f64())));
     if let Some(p) = trainer.pose_refine() {
         write_json(&job.out.join("pose_refine.json"), &pose_refine_report(p, &train_views, trainer.cam_extent()))?;
     }
@@ -1238,9 +1295,13 @@ async fn train(mut job: TrainJob, stop: Arc<AtomicBool>) -> anyhow::Result<i32> 
     };
     let summary = json!({
         "event": "done", "step": step, "total_steps": job.total_steps, "actual_steps": actual_steps, "early_stopped": early_stopped, "splats": splats.num_splats(),
-        "heldout_psnr_brush": psnr, "heldout_ssim_brush": ssim,
+        "heldout_psnr_brush": (!eval_views.is_empty()).then_some(psnr), "heldout_ssim_brush": (!eval_views.is_empty()).then_some(ssim),
+        "view_quality": view_quality,
         "train_psnr": train_psnr, "train_ssim": train_ssim, "n_train_sampled": sample.len(),
+        "train_count":train_views.len(), "heldout_count":eval_views.len(),
         "training_s": training_s, "wall_s": wall.elapsed().as_secs_f64(),
+        "camera_source": read_json::<Value>(&job.dataset.join("health.json")).ok().map(|h| h["camera_source"].clone()),
+        "sfm_skipped": trusted_cameras,
         "pose_refine": trainer.pose_refine().is_some(), "train_psnr_refined": train_psnr_refined,
         // Held-out alignment for evaluate (see views::evaluate); the scores above are unaligned.
         "heldout_pose_align": align,
@@ -1496,7 +1557,19 @@ pub fn complete(cfg: &BrushConfig, run: &dyn RunCtx, artifact_id: &str, exit_cod
     // the trainer's own held-out PSNR/SSIM and never score on the user's CPU. Local jobs score here.
     let deferred = read_json::<Value>(&dir.join("train_job.json")).is_ok_and(|j| j["defer_lpips"] == true);
     let mut metrics = serde_json::Map::new();
-    if deferred && !dir.join("metrics.json").is_file() {
+    let mut view_warning = None;
+    if let Some(quality) = summary.get("view_quality") {
+        metrics.insert("view_quality".into(), quality.clone());
+        if quality["status"] == "review_required" {
+            view_warning = Some("Per-view quality requires review; inspect view_quality.suspect_views and native/source comparisons. Unevaluated views remain unchecked.".to_string());
+        }
+    }
+    if summary.get("camera_source") == Some(&json!("imported")) && summary.get("heldout_count") == Some(&json!(0)) {
+        metrics.insert("evaluated".into(), json!(false));
+        metrics.insert("n_eval".into(), json!(0));
+        metrics.insert("psnr".into(), Value::Null);
+        metrics.insert("ssim".into(), Value::Null);
+    } else if deferred && !dir.join("metrics.json").is_file() {
         metrics.insert("psnr".into(), summary.get("heldout_psnr_brush").cloned().unwrap_or(Value::Null));
         metrics.insert("ssim".into(), summary.get("heldout_ssim_brush").cloned().unwrap_or(Value::Null));
         metrics.insert("heldout_lpips".into(), json!("evaluate"));
@@ -1511,6 +1584,10 @@ pub fn complete(cfg: &BrushConfig, run: &dyn RunCtx, artifact_id: &str, exit_cod
             }
         };
         metrics.extend(scores.mean.iter().map(|(k, v)| (k.clone(), f64_metric(*v))));
+        let quality = splat_eval::view_quality::view_quality(scores.per_image.iter().map(|row|
+            (row.get("image").and_then(Value::as_str).unwrap_or("unknown"), row.get("psnr").and_then(Value::as_f64))));
+        view_warning = quality.warning();
+        metrics.insert("view_quality".into(), serde_json::to_value(quality)?);
         if let Some(why) = &scores.lpips_unavailable {
             metrics.insert("lpips_unavailable".into(), json!(why));
         }
@@ -1529,7 +1606,7 @@ pub fn complete(cfg: &BrushConfig, run: &dyn RunCtx, artifact_id: &str, exit_cod
         .find(|r| r["event"] == "gpu_lock")
         .map(|r| r["gpu_lock_wait_s"].clone());
     metrics.insert("gpu_lock_wait_s".into(), lock_wait.unwrap_or(Value::Null));
-    for k in ["train_psnr", "train_ssim", "training_s", "wall_s"] {
+    for k in ["train_psnr", "train_ssim", "training_s", "wall_s", "train_count", "heldout_count", "camera_source", "sfm_skipped"] {
         metrics.insert(k.into(), summary.get(k).cloned().unwrap_or(Value::Null));
     }
     let (train, held) = (summary["train_psnr"].as_f64(), metrics.get("psnr").and_then(Value::as_f64));
@@ -1550,6 +1627,7 @@ pub fn complete(cfg: &BrushConfig, run: &dyn RunCtx, artifact_id: &str, exit_cod
     if blur_mode {
         warnings.push(brush_train::train::BLUR_MODE_NOTE.into());
     }
+    warnings.extend(view_warning);
     if let Some(total) = summary.get("total_steps").and_then(Value::as_u64).filter(|&t| summary["step"].as_u64().is_some_and(|s| s < t)) {
         warnings.push(format!(
             "Training stopped at step {} of {total}: the job's time limit was near. The result is the splats at that step.",
@@ -1637,4 +1715,46 @@ fn fit_slope(points: &[(u32, f64)]) -> f64 {
     let cov: f64 = points.iter().map(|p| (p.0 as f64 - mean_x) * (p.1 - mean_y)).sum();
     let var: f64 = points.iter().map(|p| (p.0 as f64 - mean_x).powi(2)).sum();
     if var > 0.0 { cov / var } else { 0.0 }
+}
+
+#[cfg(test)]
+mod input_contract_tests {
+    #[test]
+    fn input_contract_preserve_all_retains_every_eligible_training_view() {
+        let registered: Vec<String> = (0..800).map(|i| format!("frame_{i:06}.jpg")).collect();
+        let heldout: Vec<_> = registered.iter().step_by(8).cloned().collect();
+        let train: Vec<_> = registered.iter().filter(|n| !heldout.contains(n)).cloned().collect();
+        for video in [false, true] {
+            for surfel in [false, true] {
+                assert_eq!(super::contract_train_subset(&train, video, surfel, true), train);
+            }
+        }
+        assert_eq!(train.len() + heldout.len(), 800);
+        assert_eq!(train.len(), 700); // above both the photo and video default caps
+    }
+}
+
+#[cfg(test)]
+mod input_contract_chained_tests {
+    use super::*;
+
+    #[test]
+    fn input_contract_chained_execution_and_adoption_keep_above_600_views() {
+        let cfg = BrushConfig::from_env();
+        let req: PreviewTrain = serde_json::from_value(json!({"total_steps":200})).unwrap();
+        let chain = chained_preview(&cfg, "sfm", Path::new("dataset"), Path::new("candidate"), &req, true, true).unwrap();
+        // This is the nested SfM worker payload, not the normal train_splats job path.
+        let chain: ChainedPreview = serde_json::from_value(serde_json::to_value(chain).unwrap()).unwrap();
+        assert!(chain.preserve_all);
+        let names: Vec<String> = (0..800).map(|i| format!("frame_{i:06}.jpg")).collect();
+        let heldout: Vec<_> = names.iter().step_by(8).cloned().collect();
+        let train: Vec<_> = names.iter().filter(|n| !heldout.contains(n)).cloned().collect();
+        let mut executed = chain.job.clone();
+        executed.train_names = chained_train_names(&chain, &train);
+        executed.heldout_names = heldout.clone();
+        assert_eq!(executed.train_names.len(),700);
+        validate_chained_views(&chain, &executed, &train, &heldout).unwrap();
+        executed.train_names.truncate(600);
+        assert!(validate_chained_views(&chain, &executed, &train, &heldout).is_err());
+    }
 }

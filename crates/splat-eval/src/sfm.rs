@@ -49,7 +49,7 @@ pub struct PoseJump {
 /// cameras while keeping reprojection error low (global mapper on truck: 18/63 flipped ~180 deg).
 #[derive(Clone, Debug, Serialize)]
 pub struct PoseContinuity {
-    /// "flipped", "collapsed", "blown_out" or "ok" (video), "not_trajectory" (photo set with median neighbour rotation >
+    /// "flipped" or "ok" (video), "not_trajectory" (photo set with median neighbour rotation >
     /// 20 deg) or "insufficient" (under half the pairs comparable). Gated for video only.
     pub status: String,
     pub threshold_deg: f64,
@@ -60,7 +60,7 @@ pub struct PoseContinuity {
     pub max_jump_deg: f64,
     pub jumps: Vec<PoseJump>,
     /// Frames outside the largest jump-free stretch, plus frames facing > 90 deg away from the
-    /// average forward of their neighbours, plus `collapsed_frames` and `blown_out_frames`.
+    /// average forward of their neighbours. Position-only candidates below are advisory.
     pub n_flipped: usize,
     pub flipped_frames: Vec<String>,
     /// Video: runs of COLLAPSE_RUN or more consecutive cameras whose centres sit on one point
@@ -113,6 +113,7 @@ pub struct SfmHealth {
     pub reproj_overflowed: usize,
     /// None when the gate is off or fewer than 3 cameras registered.
     pub pose_continuity: Option<PoseContinuity>,
+    pub geometry: crate::geometry::GeometryHealth,
     pub gates: BTreeMap<String, bool>,
     pub pass: bool,
     /// Which gate set produced `pass`, so reports scored under older gates stay traceable.
@@ -120,8 +121,9 @@ pub struct SfmHealth {
 }
 
 /// v1 gated median_track_len>=3; v2 gates points_multiview>=1000 instead; v3 adds pose_continuity
-/// for video input (photo sets: reported only).
-pub const GATE_POLICY: &str = "sfm-gates-v3";
+/// for video input (photo sets: reported only); v4 adds provenance-independent depth/graph
+/// geometry and depth-corroborated video translation impulses. Stillness alone is advisory.
+pub const GATE_POLICY: &str = "sfm-gates-v4";
 
 /// A recomputed error above this is an overflow, not a measurement: a point at the camera plane makes
 /// x/z blow up (4e3 to 2.7e61 px means over a set of room runs, medians 0.2 to 1.1 px). Far above the
@@ -208,6 +210,8 @@ pub fn sfm_health(model: &Model, sparse_dir: &Path, opts: &SfmHealthOptions) -> 
     if let Some(pc) = pose_continuity.as_ref().filter(|pc| opts.video && pc.status != "insufficient") {
         gates.insert("pose_continuity".into(), pc.n_flipped == 0);
     }
+    let geometry = crate::geometry::geometry_health(model, opts.video);
+    gates.insert("geometry_coherent".into(), geometry.pass);
     let pass = gates.values().all(|&ok| ok);
 
     Ok(SfmHealth {
@@ -232,6 +236,7 @@ pub fn sfm_health(model: &Model, sparse_dir: &Path, opts: &SfmHealthOptions) -> 
         reproj_source: reproj_source.into(),
         reproj_overflowed,
         pose_continuity,
+        geometry,
         gates,
         pass,
         gate_policy: GATE_POLICY.into(),
@@ -251,7 +256,7 @@ impl SfmHealth {
 
 /// (sequence, number): the name without its trailing digits, and those digits as a number
 /// ("cam1/frame_000123.png" -> ("cam1/frame_", 123)).
-fn frame_number(name: &str) -> Option<(String, i64)> {
+pub(crate) fn frame_number(name: &str) -> Option<(String, i64)> {
     let p = Path::new(name);
     let stem = p.file_stem()?.to_str()?;
     let prefix = stem.trim_end_matches(|c: char| c.is_ascii_digit());
@@ -461,7 +466,8 @@ pub fn pose_continuity(model: &Model, threshold_deg: f64, video: bool) -> Option
             flipped[i] = true;
         }
     }
-    // A collapsed section's poses are as wrong as a flip's: they are dropped the same way.
+    // Position-only collapse/outlier evidence is advisory: a legitimate hold or turn in place
+    // can produce exactly these centres. Independent depth/graph evidence gates geometry.
     let mut collapsed_frames = Vec::new();
     // So are a blown-out section's.
     let mut blown_out_frames = Vec::new();
@@ -471,11 +477,9 @@ pub fn pose_continuity(model: &Model, threshold_deg: f64, video: bool) -> Option
         }).collect();
         for i in collapsed_runs(&centres) {
             collapsed_frames.push(ims[i].name.clone());
-            flipped[i] = true;
         }
         for i in blown_out(&centres) {
             blown_out_frames.push(ims[i].name.clone());
-            flipped[i] = true;
         }
     }
     let flipped_frames: Vec<String> = ims.iter().zip(&flipped).filter(|(_, f)| **f).map(|(im, _)| im.name.clone()).collect();
@@ -484,10 +488,6 @@ pub fn pose_continuity(model: &Model, threshold_deg: f64, video: bool) -> Option
     let not_trajectory = !video && median_step_deg > TRAJECTORY_MEDIAN_DEG;
     let status = if (n_compared as f64) < MIN_COMPARED_FRAC * n_pairs as f64 {
         "insufficient"
-    } else if !flipped_frames.is_empty() && flipped_frames.len() == collapsed_frames.len() {
-        "collapsed"
-    } else if !flipped_frames.is_empty() && flipped_frames.len() == blown_out_frames.len() {
-        "blown_out"
     } else if !flipped_frames.is_empty() {
         "flipped"
     } else if not_trajectory {
