@@ -613,3 +613,47 @@ fn camera_solve_below_ninety_percent_is_a_defect_and_flagged_in_the_report() {
     assert_eq!(report["sfm"]["coverage_ok"], json!(false), "{report}");
     assert!(report["warnings"].to_string().contains("3 of 37 frames"), "{report}");
 }
+
+#[test]
+fn input_contract_counts_follow_selected_lineage_and_keep_missing_counts_unknown() {
+    let (_tmp, run) = fixture();
+    let add = |kind, meta: Value| {
+        let (id, dir) = run.new_artifact_dir(kind).unwrap();
+        run.register(Artifact { id:id.clone(), kind, path:dir.strip_prefix(run.root()).unwrap().to_string_lossy().into(),
+            meta:serde_json::from_value(meta).unwrap() }).unwrap();
+        (id, dir)
+    };
+    let (frames, fd) = add(ArtifactKind::Frames, json!({"input_kind":"video"}));
+    atomic_json(fd.join("selection.json"), &json!({"request":{"preserve_all":true},"metrics":{
+        "input_count":241,"frame_count":241,"dropped_count":0,"drop_reasons":{"black":0,"duplicate":0,"sampling":0}}})).unwrap();
+    let (sfm, sd) = add(ArtifactKind::Sfm, json!({"frames_id":frames}));
+    atomic_json(sd.join("health.json"), &json!({"n_registered":239})).unwrap();
+    let (candidate, cd) = add(ArtifactKind::Candidate, json!({"sfm_id":sfm}));
+    atomic_json(cd.join("train_summary.json"), &json!({"train_count":209,"heldout_count":30})).unwrap();
+    // A later rejected attempt must not contaminate the selected candidate's counts.
+    let (_, other) = add(ArtifactKind::Sfm, json!({"frames_id":frames}));
+    atomic_json(other.join("health.json"), &json!({"n_registered":17})).unwrap();
+    run.journal("run_finished", json!({"finish":{"candidate_id":candidate}})).unwrap();
+    let report = splat_core::report::write_report(&run).unwrap();
+    assert_eq!(report["frame_counts"]["input"],241);
+    assert_eq!(report["frame_counts"]["selected"],241);
+    assert_eq!(report["frame_counts"]["registered"],239);
+    assert_eq!(report["frame_counts"]["unregistered"],2);
+    assert_eq!(report["frame_counts"]["train"],209);
+    assert_eq!(report["frame_counts"]["heldout"],30);
+    assert_eq!(report["frame_counts"]["training_dropped"],0);
+    std::fs::remove_file(cd.join("train_summary.json")).unwrap();
+    let report = splat_core::report::write_report(&run).unwrap();
+    assert!(report["frame_counts"]["train"].is_null());
+    assert!(report["frame_counts"]["unavailable_reason"].is_string());
+}
+
+#[test]
+fn input_contract_preserve_all_ignores_selection_budget_validation() {
+    let (_tmp, run) = fixture();
+    let result = splat_core::dispatch(&run, "extract_frames", json!({"preserve_all":true,"target_count":0}));
+    // Fake backend has no image data; the request must nevertheless pass the schema's old cap check.
+    assert!(!result.error.as_ref().is_some_and(|e| e.message.contains("target_count must")));
+    let capped = splat_core::dispatch(&run, "extract_frames", json!({"target_count":0}));
+    assert!(capped.error.as_ref().is_some_and(|e| e.message.contains("target_count must")));
+}

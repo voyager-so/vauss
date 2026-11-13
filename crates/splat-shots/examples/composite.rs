@@ -50,7 +50,7 @@ fn main() -> Result<()> {
                     let (_, r0, p0) = c0.c2w.to_scale_rotation_translation();
                     let (_, r1, p1) = c1.c2w.to_scale_rotation_translation();
                     let c2w = glam::DMat4::from_rotation_translation(r0.slerp(r1, w), p0.lerp(p1, w));
-                    splat_shots::scene::CaptureCamera { name: names[i].clone(), c2w, width: c0.width, height: c0.height, fy: c0.fy }
+                    splat_shots::scene::CaptureCamera { name: names[i].clone(), c2w, ..c0.clone() }
                 })
                 .collect();
             let mut inputs = vec![];

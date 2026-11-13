@@ -29,6 +29,10 @@ pub struct SfmJob {
     pub max_image_size: usize,
     pub max_features: usize,
     pub sequential: bool,
+    #[serde(default)]
+    pub pairs: Option<Pairs>,
+    #[serde(default)]
+    pub preserve_all: bool,
     pub mask_dir: Option<PathBuf>,
     #[serde(default)]
     pub mask_prompt: Option<String>,
@@ -156,6 +160,38 @@ fn colmap_has_cuda(colmap: &std::path::Path) -> bool {
         .is_ok_and(|o| String::from_utf8_lossy(&o.stdout).lines().next().is_some_and(|l| l.contains("with CUDA")))
 }
 
+fn calibration_model(model: CameraModel, video: bool) -> anyhow::Result<&'static str> {
+    Ok(match model {
+        CameraModel::Auto if video => "RADIAL",
+        CameraModel::Auto | CameraModel::Pinhole => "PINHOLE",
+        CameraModel::Opencv => "OPENCV",
+        CameraModel::OpencvFisheye => return Err(invalid("fisheye SfM is not supported by the brush backend yet")),
+    })
+}
+
+fn matching_policy(job: &SfmJob) -> splat_sfm::Matching {
+    use splat_sfm::Matching;
+    match job.pairs {
+        Some(Pairs::Exhaustive) => Matching::Exhaustive,
+        Some(Pairs::Sequential) => Matching::Sequential,
+        Some(Pairs::Auto) if job.video && job.vocab_tree.is_some() => Matching::Hybrid,
+        Some(Pairs::Auto) if job.video => Matching::Sequential,
+        Some(Pairs::Auto) => Matching::Exhaustive,
+        // Already staged legacy jobs retain the policy encoded by their old fields.
+        None if job.sequential => Matching::Sequential,
+        None if job.vocab_tree.is_some() => Matching::Hybrid,
+        None => Matching::Exhaustive,
+    }
+}
+
+fn matching_name(job: &SfmJob) -> &'static str {
+    match matching_policy(job) {
+        splat_sfm::Matching::Sequential => "sequential",
+        splat_sfm::Matching::Hybrid => "hybrid",
+        splat_sfm::Matching::Exhaustive => "exhaustive",
+    }
+}
+
 pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm) -> anyhow::Result<ToolResult> {
     let colmap = cfg.colmap.clone().ok_or_else(|| {
         invalid("COLMAP not found: set SPLAT_COLMAP to a COLMAP 4.x binary (or install it on PATH)")
@@ -227,19 +263,13 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
         Quality::Medium => (1600, 8192),
         Quality::High => (3200, 16384),
     };
-    // Auto is exhaustive at every size: it keeps the long-range constraints that stop camera
-    // flips (sequential flipped truck-63). Sequential only on explicit request.
+    // Preserve the explicit request through staging: video auto gets loop-aware sequential matching.
     let sequential = matches!(req.pairs, Pairs::Sequential);
     // Video: one shared camera with fx = fy (phone video has square pixels). OPENCV's free
     // fx/fy self-calibrated anisotropic, mismatched focals between the quick and full SfM of
     // one video (house demo: 383/505 at 960x540 vs 817/581 at 1600x900). RADIAL keeps
     // OPENCV's two radial terms.
-    let camera_model = match req.camera_model {
-        CameraModel::Auto if video => "RADIAL",
-        CameraModel::Auto | CameraModel::Pinhole => "PINHOLE",
-        CameraModel::Opencv => "OPENCV",
-        CameraModel::OpencvFisheye => return Err(invalid("fisheye SfM is not supported by the brush backend yet")),
-    };
+    let camera_model = calibration_model(req.camera_model, video)?;
     let use_gpu = colmap_has_cuda(&colmap);
     // Only cloud jobs chain the preview: they save a second upload, queue and result round trip
     // (locally the separate train job costs nothing extra). Captures may switch to sensor poses
@@ -247,7 +277,7 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
     let preview_train = match req.preview_train.as_ref().filter(|_| req.preview && !capture && splat_core::remote::mode().is_some()) {
         Some(train) => {
             let (_, candidate) = run.new_artifact_dir(ArtifactKind::Candidate)?;
-            Some(crate::train::chained_preview(cfg, &artifact.id, &out, &candidate, train, video)?)
+            Some(crate::train::chained_preview(cfg, &artifact.id, &out, &candidate, train, video, frames.meta.get("preserve_all") == Some(&json!(true)))?)
         }
         None => None,
     };
@@ -261,6 +291,8 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
         max_image_size,
         max_features,
         sequential,
+        pairs: Some(req.pairs),
+        preserve_all: frames.meta.get("preserve_all") == Some(&json!(true)),
         mask_dir,
         sam: req.mask_prompt.as_ref().and(cfg.sam.clone()),
         sam_vocab: req.mask_prompt.as_ref().and(cfg.sam.as_ref())
@@ -273,7 +305,7 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
         gpu_lock: cfg.gpu_lock.clone(),
         use_gpu,
         colmap,
-        vocab_tree: if video { cfg.video_vocab_tree()? } else { None },
+        vocab_tree: if video && !matches!(req.pairs, Pairs::Exhaustive) { cfg.video_vocab_tree()? } else { None },
         // Sensor poses are the coverage fallback; a learned pose/training rescue
         // would add another competing trajectory and an unnecessary paid fit.
         da3_weights: (!capture).then(|| da3_weights(cfg)).flatten(),
@@ -286,7 +318,12 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
     };
     write_json(&out.join("sfm_job.json"), &job)?;
     let mut r = start_worker(cfg, run, "reconstruct_sfm", "sfm", &out.join("sfm_job.json"), &artifact)?;
-    r.metrics.insert("matching".into(), json!(if sequential { "sequential" } else { "exhaustive" }));
+    r.metrics.insert("matching".into(), json!(matching_name(&job)));
+    r.metrics.insert("matching_requested".into(), json!(job.pairs));
+    r.metrics.insert("loop_detection".into(), json!(!matches!(matching_policy(&job), splat_sfm::Matching::Exhaustive) && job.vocab_tree.is_some()));
+    if video && !matches!(req.pairs, Pairs::Exhaustive) && job.vocab_tree.is_none() {
+        r.warnings.push("No vocabulary tree configured: sequential matching uses quadratic long-range pairs without visual loop detection.".into());
+    }
     Ok(r)
 }
 
@@ -570,7 +607,12 @@ fn aliked_fallback(
     a.vocab_tree = None;
     a.reuse_database = None;
     a.max_features = opts.max_features.min(ALIKED_MAX_FEATURES);
-    a.matching = if job.video || n > 150 { splat_sfm::Matching::Sequential } else { splat_sfm::Matching::Exhaustive };
+    a.matching = match job.pairs {
+        Some(Pairs::Sequential) => splat_sfm::Matching::Sequential,
+        Some(Pairs::Exhaustive) => splat_sfm::Matching::Exhaustive,
+        _ if job.video || n > 150 => splat_sfm::Matching::Sequential,
+        _ => splat_sfm::Matching::Exhaustive,
+    };
     a.sequential_overlap = 20;
     a.quadratic_overlap = true;
     // Every frame, no keyframe map: ALIKED keyframe maps (every 3rd frame) connected only 2-4 images
@@ -627,6 +669,9 @@ fn learned_fallback(
     holdout_every: usize,
     rec: anyhow::Result<splat_sfm::Reconstruction>,
 ) -> anyhow::Result<(splat_sfm::Reconstruction, Option<serde_json::Value>)> {
+    // Geometry failures are failed solves even at 100% registration. Never train the failed
+    // geometry as the rescue's baseline or keep it when rescue is disabled/unavailable.
+    let rec = rec.and_then(|r| { splat_sfm::ensure_geometry_health(&r.health)?; Ok(r) });
     let n_input = list_images(images).map(|v| v.len()).unwrap_or(0);
     let colmap_registered = match &rec {
         Ok(r) => r.health.n_registered,
@@ -653,7 +698,8 @@ fn learned_fallback(
     if off || n_input < 3 || !(below_half || band) || preview_ok || !colmap_dir.join("database.db").is_file() {
         return rec.map(|r| (r, None));
     }
-    if below_half && rec.is_ok() && n_input > RESCUE_REPLACE_MAX_FRAMES {
+    let bad_geometry = rec.as_ref().err().is_some_and(|e| e.downcast_ref::<splat_sfm::GeometryFailure>().is_some());
+    if below_half && (rec.is_ok() || bad_geometry) && n_input > RESCUE_REPLACE_MAX_FRAMES {
         println!("[sfm] COLMAP placed {colmap_registered}/{n_input} frames: no learned-pose replacement above {RESCUE_REPLACE_MAX_FRAMES} frames");
         return rec.map(|r| (r, Some(json!({"triggered": false, "reason": format!("over {RESCUE_REPLACE_MAX_FRAMES} frames")}))));
     }
@@ -706,6 +752,7 @@ fn learned_fallback(
             opts.holdout_every = holdout_every;
             match splat_sfm::union_learned(images, &opts, &colmap_model, &model, &out.join("union"), RESCUE_UNION_MIN_OBS) {
                 Ok(Some(found)) => {
+                    splat_sfm::ensure_video_continuity(&found.1, job.video)?;
                     info["candidates"]["union"] = json!({"registered": found.1.n_registered});
                     candidates.push(("union", found));
                 }
@@ -727,6 +774,7 @@ fn learned_fallback(
         std::fs::create_dir_all(&sparse)?;
         std::fs::rename(&model, sparse.join("0"))?;
         let (dir, health) = splat_sfm::finalize_model(&sparse, images, job.video, holdout_every)?;
+        splat_sfm::ensure_video_continuity(&health, job.video)?;
         info["learned_registered"] = json!(health.n_registered);
         info["candidates"]["replace"] = json!({"registered": health.n_registered});
         if health.n_registered * 2 < n_input {
@@ -1132,7 +1180,7 @@ fn solve_job(job: SfmJob, start: std::time::Instant) -> anyhow::Result<i32> {
 /// the incremental mapper even when the first solve was global (the initial pair is an incremental option).
 fn flip_retry(opts: &mut splat_sfm::ReconstructOptions) {
     opts.mapper = splat_sfm::Mapper::Incremental;
-    opts.camera_model = "SIMPLE_RADIAL".into();
+    if opts.camera_model == "RADIAL" { opts.camera_model = "SIMPLE_RADIAL".into(); }
     opts.init_min_tri_angle = 8.0;
 }
 
@@ -1198,17 +1246,15 @@ fn run_sfm_job(mut job: SfmJob) -> anyhow::Result<i32> {
         Ok("incremental") => opts.mapper = splat_sfm::Mapper::Incremental,
         _ => {}
     }
-    opts.matching = if job.sequential { splat_sfm::Matching::Sequential } else { splat_sfm::Matching::Exhaustive };
-    opts.sequential_overlap = 20;
+    opts.matching = matching_policy(&job);
+    opts.sequential_overlap = if job.video { 40 } else { 20 };
     // Video: sequential matching with vocab-tree loop detection, exhaustive fill-in when it
     // registers under 95%. Mapper seeds 1-3 (threads 1): 0/9 collapses on gimbal/night-stroll/rooftop;
     // rooftop +0.53 dB, matching 678 -> ~120 s; the others within seed noise.
     // Explicit sequential pairs on video keep the loop detection (no exhaustive fill-in), which long
     // walks need to close their loops.
-    if let Some(tree) = &job.vocab_tree {
-        opts.matching = if job.sequential { splat_sfm::Matching::Sequential } else { splat_sfm::Matching::Hybrid };
-        opts.sequential_overlap = 40;
-        opts.vocab_tree = Some(tree.clone());
+    if !matches!(opts.matching, splat_sfm::Matching::Exhaustive) {
+        opts.vocab_tree = job.vocab_tree.clone();
     }
     // Global BA at 1.3x model growth instead of COLMAP's 1.1x. Garden (185 photos, one exhaustive
     // db): 38 -> 18 global BAs, mapper 194 -> 161 s, same registration and reprojection. Video
@@ -1256,7 +1302,7 @@ fn run_sfm_job(mut job: SfmJob) -> anyhow::Result<i32> {
     // mapper; every 3rd frame: mapper 62 -> 15 s, 150/150, 7k held-out PSNR +0.17 dB over every 2nd.
     // The quick SfM (24 frames) keeps every 2nd.
     if job.video {
-        opts.keyframe_stride = if job.quick_video { 2 } else { 3 };
+        opts.keyframe_stride = if job.preserve_all { 1 } else if job.quick_video { 2 } else { 3 };
     }
     if job.video {
         // Global BA: 20 solver iterations and 2 refinement passes (COLMAP 50 / 5), as the final
@@ -1317,7 +1363,7 @@ fn run_sfm_job(mut job: SfmJob) -> anyhow::Result<i32> {
             splat_sfm::without_flipped(&feature_images, &opts).map_err(|why| e.context(why))
         }
         Err(e) if job.video && e.downcast_ref::<splat_sfm::ContinuityFailure>().is_some() => {
-            println!("[sfm] {e:#}; retrying with SIMPLE_RADIAL and an 8 deg initial pair");
+            println!("[sfm] {e:#}; retrying with an 8 deg initial pair and guarded calibration");
             std::fs::rename(&colmap_dir, &flipped_dir)?;
             flip_retry(&mut opts);
             // Features and matches don't depend on the camera model: reuse them (half the solve).
@@ -1398,6 +1444,7 @@ fn run_sfm_job(mut job: SfmJob) -> anyhow::Result<i32> {
             ..Default::default()
         })?;
     }
+    splat_sfm::ensure_video_continuity(&rec.health, job.video)?;
     println!("[sfm] model {} ({} registered) in {:.1} s", rec.model_dir.display(), rec.health.n_registered, rec.wall_seconds);
     println!("[sfm] kept rung {}: {}/{} frames placed", rec.rung, rec.health.n_registered, rec.health.n_input);
     // finalize_model has already moved the losing components to colmap/components/; count
@@ -1521,7 +1568,7 @@ fn focal_guard(
     job: &SfmJob, opts: &splat_sfm::ReconstructOptions, feature_images: &std::path::Path, colmap_dir: &std::path::Path,
     rec: splat_sfm::Reconstruction,
 ) -> (splat_sfm::Reconstruction, Option<serde_json::Value>) {
-    if !job.video || std::env::var("SPLAT_SFM_FOCAL_GUARD").as_deref() == Ok("0") {
+    if !job.video || job.camera_model != "RADIAL" || std::env::var("SPLAT_SFM_FOCAL_GUARD").as_deref() == Ok("0") {
         return (rec, None);
     }
     let Some((cam, f, k1, k2)) = camera_intrinsics(&rec.model_dir) else { return (rec, None) };
@@ -1671,6 +1718,11 @@ pub fn complete(run: &dyn RunCtx, artifact_id: &str, exit_code: i32, log: &str) 
         return Ok(r);
     }
     let serde_json::Value::Object(mut metrics) = rec["health"].clone() else { anyhow::bail!("reconstruction.json has no health") };
+    metrics.insert("registered_count".into(), metrics["n_registered"].clone());
+    if let (Some(input), Some(registered)) = (metrics["n_input"].as_u64(), metrics["n_registered"].as_u64()) {
+        metrics.insert("unregistered_count".into(), json!(input.saturating_sub(registered)));
+        metrics.insert("unregistered_reason".into(), json!("not registered in the selected SfM model"));
+    }
     let camera_extent = metrics["camera_extent"].as_f64().unwrap_or(0.0);
     let pts = metrics["points_median_dist_from_cameras"].as_f64().unwrap_or(0.0);
     // Pure rotation (tripod pan) leaves the cameras in a tiny ball relative to the scene.
@@ -1691,7 +1743,9 @@ pub fn complete(run: &dyn RunCtx, artifact_id: &str, exit_code: i32, log: &str) 
     }
     let job = read_json::<SfmJob>(&dir.join("sfm_job.json")).ok();
     if let Some(job) = &job {
-        metrics.insert("matching".into(), json!(if job.sequential { "sequential" } else if job.vocab_tree.is_some() { "hybrid" } else { "exhaustive" }));
+        metrics.insert("matching".into(), json!(matching_name(job)));
+        metrics.insert("matching_requested".into(), json!(job.pairs));
+        metrics.insert("loop_detection".into(), json!(!matches!(matching_policy(job), splat_sfm::Matching::Exhaustive) && job.vocab_tree.is_some()));
         metrics.insert("camera_model".into(), json!(job.camera_model));
     }
     // The flip retry changed the camera model: report the one reconstructed.
@@ -1877,6 +1931,32 @@ mod tests {
     use super::*;
 
     #[test]
+    fn high_coverage_bad_geometry_routes_rescue_even_in_preview_and_never_returns_bad_model() {
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path();
+        let images = dir.join("images");
+        std::fs::create_dir(&images).unwrap();
+        for i in 0..179 { std::fs::write(images.join(format!("frame_{i:06}.jpg")), []).unwrap(); }
+        std::fs::write(dir.join("database.db"), []).unwrap();
+        let job: SfmJob = serde_json::from_value(json!({"colmap":"unused", "dir":dir, "camera_model":"PINHOLE",
+            "video":false, "preview":true, "max_image_size":1180, "max_features":8192, "sequential":true})).unwrap();
+        let mut health = splat_eval::sfm_health(&splat_eval::Model::default(), dir, &Default::default()).unwrap();
+        let evidence = serde_json::from_str(include_str!("../../splat-eval/tests/fixtures/failed179.json")).unwrap();
+        health.geometry = splat_eval::geometry::assess_geometry(&evidence, false);
+        health.n_registered = 179;
+        health.n_input = 179;
+        let rec = splat_sfm::Reconstruction { model_dir: dir.into(), health,
+            components: splat_sfm::ComponentInventory { models: vec![], n_registered_union:179, largest_component_fraction:1.0 },
+            wall_seconds:0.0, lock_wait_seconds:0.0, stages:vec![], colmap_version:String::new(), environment:Default::default(), rung:"test".into() };
+        let err = learned_fallback(&job, &images, dir, 8, Ok(rec)).unwrap_err();
+        assert!(err.downcast_ref::<splat_sfm::GeometryFailure>().is_some());
+        // Reaching the missing-weights error proves the high-coverage preview did not bypass rescue.
+        if std::env::var("SPLAT_SFM_RESCUE").as_deref() != Ok("0") {
+            assert!(format!("{err:#}").contains("DA3 weights"));
+        }
+    }
+
+    #[test]
     fn focal_guard_ignores_phone_model_priors() {
         let cam = |w, h| splat_eval::colmap::Camera { id: 1, model: "RADIAL".into(), width: w, height: h, params: vec![] };
         // Room 4: Pixel 10 Pro 1x, portrait 900 x 1600 from 2160 x 3840, free solve f 1435 px. The model
@@ -1945,5 +2025,48 @@ mod tests {
         // Half registered passes either way; the preview is never stricter than the full rule.
         assert!(!too_few_registered(12, 12, 24, false));
         assert!(!too_few_registered(12, 7, 24, true));
+    }
+}
+
+#[cfg(test)]
+mod input_contract_tests {
+    use super::*;
+
+    #[test]
+    fn input_contract_matching_override_survives_worker_serialization() {
+        let mut job: SfmJob = serde_json::from_value(json!({"colmap":"colmap","dir":"sfm",
+            "camera_model":"RADIAL","video":true,"max_image_size":1600,"max_features":8192,
+            "sequential":false,"vocab_tree":"tree.bin","pairs":"exhaustive"})).unwrap();
+        assert_eq!(matching_name(&job), "exhaustive");
+        job.pairs = Some(Pairs::Auto);
+        assert_eq!(matching_name(&job), "hybrid"); // sequential + visual loop closure, then coverage recovery
+        job.pairs = Some(Pairs::Sequential);
+        assert_eq!(matching_name(&job), "sequential");
+        job.pairs = Some(Pairs::Auto);
+        job.video = false;
+        assert_eq!(matching_name(&job), "exhaustive");
+        job.video = true;
+        job.vocab_tree = None;
+        assert_eq!(matching_name(&job), "sequential");
+        let restored: SfmJob = serde_json::from_value(serde_json::to_value(&job).unwrap()).unwrap();
+        assert_eq!(matching_name(&restored), "sequential");
+        job.pairs = None;
+        assert_eq!(matching_name(&job), "exhaustive");
+        job.sequential = true;
+        assert_eq!(matching_name(&job), "sequential");
+    }
+
+    #[test]
+    fn input_contract_video_defaults_preserve_explicit_anisotropic_calibration() {
+        assert_eq!(calibration_model(CameraModel::Auto, true).unwrap(), "RADIAL");
+        assert_eq!(calibration_model(CameraModel::Auto, false).unwrap(), "PINHOLE");
+        assert_eq!(calibration_model(CameraModel::Pinhole, true).unwrap(), "PINHOLE");
+        assert_eq!(calibration_model(CameraModel::Opencv, true).unwrap(), "OPENCV");
+        for model in ["PINHOLE", "OPENCV"] {
+            let mut opts = splat_sfm::ReconstructOptions::new(std::path::Path::new("unused"));
+            opts.camera_model = model.into();
+            flip_retry(&mut opts);
+            assert_eq!(opts.camera_model, model);
+        }
     }
 }

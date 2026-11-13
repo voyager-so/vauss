@@ -831,16 +831,16 @@ pub(crate) fn extract(
         "capture cameras are calibrated to their stored pixels: rotate_deg/time_range_s are unavailable"
     );
     ensure!(
-        req.target_count >= 2 && req.max_edge > 0,
+        (req.preserve_all || req.target_count >= 2) && req.max_edge > 0,
         "captures require target_count >= 2 and positive max_edge"
     );
     let (artifact, out) = new_artifact(
         run,
         ArtifactKind::Frames,
-        json!({"input_kind":"capture", "capture_format":capture.format}),
+        json!({"input_kind":"capture", "capture_format":capture.format, "preserve_all":req.preserve_all}),
     )?;
     fs::create_dir_all(out.join("images"))?;
-    let n = capture.frames.len().min(req.target_count as usize);
+    let n = if req.preserve_all { capture.frames.len() } else { capture.frames.len().min(req.target_count as usize) };
     let indices: Vec<usize> = (0..n)
         .map(|i| i * (capture.frames.len() - 1) / (n - 1).max(1))
         .collect();
@@ -928,7 +928,7 @@ pub(crate) fn extract(
             heldout_names,
         },
     )?;
-    let metrics = json!({"input_kind":"capture","capture_format":capture.format,"frame_count":kept.len(),"frames_decoded":capture.frames.len(),"sensor_depth_frames":kept.iter().filter(|k| out.join("depths").join(Path::new(k["name"].as_str().unwrap()).with_extension("png")).is_file()).count(),"max_edge":req.max_edge,"dropped_black":0,"dropped_duplicates":0});
+    let metrics = json!({"input_kind":"capture","capture_format":capture.format,"frame_count":kept.len(),"frames_decoded":capture.frames.len(),"input_count":capture.frames.len(),"selected_count":kept.len(),"dropped_count":capture.frames.len()-kept.len(),"drop_reasons":{"sampling":capture.frames.len()-kept.len()},"preserve_all":req.preserve_all,"sensor_depth_frames":kept.iter().filter(|k| out.join("depths").join(Path::new(k["name"].as_str().unwrap()).with_extension("png")).is_file()).count(),"max_edge":req.max_edge,"dropped_black":0,"dropped_duplicates":0});
     write_json(
         &out.join("selection.json"),
         &json!({"request":req,"metrics":metrics,"frames":kept}),

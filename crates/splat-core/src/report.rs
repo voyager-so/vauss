@@ -3,6 +3,52 @@ use anyhow::Result;
 use serde_json::{Value, json};
 use splat_contracts::{Artifact, ArtifactKind};
 
+/// Counts are evidence from one candidate lineage. Missing stages stay null, never invented zeroes.
+fn frame_counts(run: &Run, candidate: Option<&str>) -> Value {
+    let mut counts = json!({"input":null,"selected":null,"dropped":null,"registered":null,
+        "train":null,"heldout":null,"unregistered":null,"training_dropped":null,
+        "unavailable_reason":"no selected candidate with frame provenance"});
+    let Some(candidate) = candidate.and_then(|id| run.artifact(id).ok()) else { return counts };
+    let Some(sfm) = candidate.meta.get("sfm_id").and_then(Value::as_str).and_then(|id| run.artifact(id).ok()) else { return counts };
+    let Some(frames) = sfm.meta.get("frames_id").and_then(Value::as_str).and_then(|id| run.artifact(id).ok()) else { return counts };
+    let read = |id: &str, name: &str| -> Value {
+        run.path(id).ok().and_then(|p| std::fs::read(p.join(name)).ok())
+            .and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(Value::Null)
+    };
+    let selection = read(&frames.id, "selection.json");
+    let health = read(&sfm.id, "health.json");
+    let job = read(&candidate.id, "train_job.json");
+    let summary = read(&candidate.id, "train_summary.json");
+    counts["frames_id"] = json!(frames.id);
+    counts["sfm_id"] = json!(sfm.id);
+    counts["candidate_id"] = json!(candidate.id);
+    counts["input"] = selection["metrics"]["input_count"].clone();
+    counts["selected"] = selection["metrics"]["frame_count"].clone();
+    counts["dropped"] = selection["metrics"]["dropped_count"].clone();
+    counts["drop_reasons"] = selection["metrics"]["drop_reasons"].clone();
+    counts["input_count_basis"] = selection["metrics"]["input_count_basis"].clone();
+    counts["preserve_all"] = selection["request"]["preserve_all"].clone();
+    counts["input_kind"] = frames.meta.get("input_kind").cloned().unwrap_or(Value::Null);
+    counts["registered"] = health["n_registered"].clone();
+    // Only completed training is claimed. A planned train_job is not evidence that views trained.
+    counts["train"] = summary["train_count"].clone();
+    counts["heldout"] = summary["heldout_count"].clone();
+    counts["planned_train"] = json!(job["train_names"].as_array().map(Vec::len));
+    counts["planned_heldout"] = json!(job["heldout_names"].as_array().map(Vec::len));
+    if let (Some(selected), Some(registered)) = (counts["selected"].as_u64(), counts["registered"].as_u64()) {
+        counts["unregistered"] = json!(selected.saturating_sub(registered));
+        counts["unregistered_reason"] = json!("not registered in the selected SfM model");
+    }
+    if let (Some(registered), Some(train), Some(heldout)) = (counts["registered"].as_u64(), counts["train"].as_u64(), counts["heldout"].as_u64()) {
+        counts["training_dropped"] = json!(registered.saturating_sub(train + heldout));
+        counts["training_drop_reason"] = json!(if registered > train + heldout { "training_view_cap" } else { "none" });
+    }
+    counts["unavailable_reason"] = if ["input","selected","dropped","registered","train","heldout"].iter().any(|k| counts[k].is_null()) {
+        json!("some stages have no recorded counts (unfinished stage or legacy artifact)")
+    } else { Value::Null };
+    counts
+}
+
 fn existing_file(run: &Run, path: &std::path::Path) -> Option<String> {
     let path = run.root().join(path).canonicalize().ok()?;
     if !path.is_file() {
@@ -262,7 +308,7 @@ pub fn write_report(run: &Run) -> Result<Value> {
         "images":best.map(|e|e["images"].clone()).unwrap_or(json!([])),"evaluations":evaluations,
         "artifacts":state.artifacts.values().collect::<Vec<_>>(),"warnings":warnings,"errors":errors,"jobs":state.jobs,
         "training_preset":preset,"cloud":crate::remote::cost(run.root()),"capture_check":capture_check,
-        "mesh_skipped":mesh_skipped
+        "mesh_skipped":mesh_skipped,"frame_counts":frame_counts(run, scored_via.or(selected))
     });
     let mut markdown = format!(
         "# Reconstruction {}\n\nStatus: **{}**{}\n\n{}\n\n{}\n\nBest candidate: {}\n\n## Deliverables\n\n",
@@ -278,6 +324,13 @@ pub fn write_report(run: &Run) -> Result<Value> {
         summary,
         report["best_candidate"].as_str().unwrap_or("none")
     );
+    let counts = &report["frame_counts"];
+    markdown.push_str("## Input and view counts\n\n");
+    for key in ["input", "selected", "dropped", "registered", "train", "heldout", "unregistered", "training_dropped"] {
+        markdown.push_str(&format!("- {key}: {}\n", counts[key].as_u64().map(|n| n.to_string()).unwrap_or_else(|| "unavailable".into())));
+    }
+    markdown.push_str(&format!("\nDrop reasons: {}.\n\n", counts["drop_reasons"]));
+    if let Some(reason) = counts["unavailable_reason"].as_str() { markdown.push_str(&format!("{reason}.\n\n")); }
     if let Some(p) = report["training_preset"].as_object() {
         markdown = markdown.replacen(
             "\n\n## Deliverables\n\n",

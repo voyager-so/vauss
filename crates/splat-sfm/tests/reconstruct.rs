@@ -3,6 +3,20 @@ use std::path::Path;
 
 use splat_sfm::{ReconstructOptions, best_model, reconstruct};
 
+#[test]
+fn incoherent_geometry_is_a_hard_failure_for_photos_and_video() {
+    let mut health = splat_eval::sfm_health(&Default::default(), Path::new("fixture"), &Default::default()).unwrap();
+    let evidence = serde_json::from_str(include_str!("../../splat-eval/tests/fixtures/failed179.json")).unwrap();
+    health.geometry = splat_eval::geometry::assess_geometry(&evidence, false);
+    for video in [false, true] {
+        let error = splat_sfm::ensure_video_continuity(&health, video).unwrap_err();
+        assert!(error.downcast_ref::<splat_sfm::GeometryFailure>().is_some());
+    }
+    let evidence = serde_json::from_str(include_str!("../../splat-eval/tests/fixtures/good241.json")).unwrap();
+    health.geometry = splat_eval::geometry::assess_geometry(&evidence, true);
+    assert!(splat_sfm::ensure_video_continuity(&health, true).is_ok());
+}
+
 fn model(dir: &Path, images: usize, error: f64) {
     fs::create_dir_all(dir).unwrap();
     fs::write(dir.join("cameras.txt"), "1 PINHOLE 100 80 100 100 50 40\n").unwrap();
