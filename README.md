@@ -2,7 +2,7 @@
 
 ### Better splats. 5.4× faster.
 
-[![Rust CI](https://github.com/voyager-so/vauss/actions/workflows/ci.yml/badge.svg)](https://github.com/voyager-so/vauss/actions/workflows/ci.yml) [![Preview License](https://img.shields.io/badge/license-Preview-blue)](LICENSE) [![Blender 5.3](https://img.shields.io/badge/Blender-5.3-orange)](#bring-it-into-blender-53) [![Voyager Cloud](https://img.shields.io/badge/Voyager_Cloud-preinstalled-5b5bd6)](#one-command-on-voyager-cloud)
+[![Rust CI](https://github.com/voyager-so/vauss/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/voyager-so/vauss/actions/workflows/ci.yml) [![Preview License](https://img.shields.io/badge/license-Preview-blue)](LICENSE) [![Blender 5.3](https://img.shields.io/badge/Blender-5.3-orange)](#bring-it-into-blender-53) [![Voyager Cloud](https://img.shields.io/badge/Voyager_Cloud-preinstalled-5b5bd6)](#one-command-on-voyager-cloud)
 
 **The fastest Gaussian splat trainer. 5.4× faster training than gsplat-MCMC, with better perceptual quality on all seven comparison scenes. About half the GPU memory.** Built for you and your agent.
 
