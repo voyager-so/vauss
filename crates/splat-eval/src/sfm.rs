@@ -511,7 +511,9 @@ pub fn pose_continuity(model: &Model, threshold_deg: f64, video: bool) -> Option
 }
 
 /// Per-observation reprojection errors recomputed from poses and intrinsics; None if any camera
-/// model is unsupported (supported: SIMPLE_PINHOLE, PINHOLE, SIMPLE_RADIAL, RADIAL, OPENCV).
+/// model is unsupported (supported: SIMPLE_PINHOLE, PINHOLE, SIMPLE_RADIAL, RADIAL, OPENCV and the
+/// Kannala-Brandt fisheyes OPENCV_FISHEYE, RADIAL_FISHEYE, SIMPLE_RADIAL_FISHEYE).
+/// A point a fisheye can't see (past its polynomial's fold) counts as an infinite error.
 /// Also None when no image has an observation; observations of unknown points are skipped.
 pub fn reprojection_errors(model: &Model) -> Option<Vec<f64>> {
     let lut: HashMap<u64, [f64; 3]> = model.points.iter().map(|p| (p.id, p.xyz)).collect();
@@ -524,15 +526,21 @@ pub fn reprojection_errors(model: &Model) -> Option<Vec<f64>> {
         for (pid, xy) in im.obs_point_id.iter().zip(&im.obs_xy) {
             let Some(x) = lut.get(pid) else { continue };
             let pc: [f64; 3] = std::array::from_fn(|i| r[i][0] * x[0] + r[i][1] * x[1] + r[i][2] * x[2] + im.tvec[i]);
-            let [u, v] = project(cam, pc)?;
-            out.push((u - xy[0]).hypot(v - xy[1]));
+            match project(cam, pc)? {
+                Some([u, v]) => out.push((u - xy[0]).hypot(v - xy[1])),
+                None => out.push(f64::INFINITY),
+            }
         }
     }
     any.then_some(out)
 }
 
-/// Project a camera-frame point to pixels; None for unsupported models.
-fn project(cam: &Camera, pc: [f64; 3]) -> Option<[f64; 2]> {
+/// Project a camera-frame point to pixels; None for unsupported models, Some(None) for a point the
+/// fisheye can't image.
+fn project(cam: &Camera, pc: [f64; 3]) -> Option<Option<[f64; 2]>> {
+    if let Some(kb4) = crate::fisheye::Kb4::of(cam) {
+        return Some(kb4.project(pc));
+    }
     let p = &cam.params;
     let at = |i: usize| p.get(i).copied().unwrap_or(0.0);
     let (x, y) = (pc[0] / pc[2], pc[1] / pc[2]);
@@ -551,7 +559,7 @@ fn project(cam: &Camera, pc: [f64; 3]) -> Option<[f64; 2]> {
         }
         _ => return None,
     };
-    Some([fx * xd + cx, fy * yd + cy])
+    Some(Some([fx * xd + cx, fy * yd + cy]))
 }
 
 /// `f` is the physical [fx, fy]: single-focal models (SIMPLE_*, RADIAL, RADIAL_FISHEYE) store one
@@ -671,8 +679,31 @@ mod tests {
     #[test]
     fn reprojection_unsupported_model() {
         let mut m = two_camera_model();
-        m.cameras.get_mut(&2).unwrap().model = "OPENCV_FISHEYE".into();
+        m.cameras.get_mut(&2).unwrap().model = "FOV".into();
         assert!(reprojection_errors(&m).is_none());
+    }
+
+    #[test]
+    fn reprojection_kb4_fisheye() {
+        // Observations placed by the KB4 model reproject exactly; a 2 px shift reads as 2 px, and
+        // a point beyond 90 degrees (behind the image plane) still projects for a wide lens.
+        let mut m = two_camera_model();
+        let cam = camera(2, "OPENCV_FISHEYE", &[200.0, 210.0, 10.0, 20.0, 0.05, -0.01, 0.002, 0.0]);
+        let kb4 = crate::fisheye::Kb4::of(&cam).unwrap();
+        m.cameras.insert(2, cam);
+        let im = m.images.get_mut(&2).unwrap();
+        let r = Model::rotation(im.qvec);
+        for (pid, xy) in im.obs_point_id.clone().iter().zip(im.obs_xy.iter_mut()) {
+            let Some(x) = m.points.iter().find(|p| p.id == *pid).map(|p| p.xyz) else { continue };
+            let pc: [f64; 3] = std::array::from_fn(|i| r[i][0] * x[0] + r[i][1] * x[1] + r[i][2] * x[2] + im.tvec[i]);
+            let [u, v] = kb4.project(pc).unwrap();
+            *xy = [u + 2.0, v];
+        }
+        let e = reprojection_errors(&m).unwrap();
+        let fish: Vec<f64> = e.iter().copied().filter(|v| (v - 2.0).abs() < 1e-9).collect();
+        assert!(!fish.is_empty(), "{e:?}");
+        let behind = kb4.project([1.0, 0.0, -0.2]).unwrap();
+        assert!(behind[0] > 10.0 + 200.0 * std::f64::consts::FRAC_PI_2);
     }
 
     #[test]

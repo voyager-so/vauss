@@ -106,6 +106,12 @@ impl Model {
     }
 }
 
+/// The points of a binary `points3D.bin` alone.
+pub fn read_points_bin(path: &Path) -> Result<Vec<Point3D>> {
+    let bytes = std::fs::read(path).with_context(|| format!("reading {}", path.display()))?;
+    points_bin(&mut Bytes(&bytes)).with_context(|| format!("parsing {}", path.display()))
+}
+
 fn parse_file<T>(dir: &Path, file: &str, parse: impl FnOnce(&[u8]) -> Result<T>) -> Result<T> {
     let path = dir.join(file);
     let bytes = std::fs::read(&path).with_context(|| format!("reading {}", path.display()))?;

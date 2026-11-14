@@ -4,6 +4,8 @@
 //! Ports of eval/metrics.py, eval/sfm_health.py and eval/video_stats.py; numbers match them.
 
 pub mod colmap;
+pub mod fisheye;
+pub mod lens_circle;
 pub mod frame_arms;
 pub mod frameplan;
 pub mod geometry;

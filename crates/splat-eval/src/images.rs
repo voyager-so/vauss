@@ -189,6 +189,24 @@ mod tests {
     }
 
     #[test]
+    fn compact_jpeg_round_trips_through_the_image_crate() {
+        // The trainer (splat-train-dataset load_image) and eval decode frames with the image crate.
+        let d = tmpdir("compact");
+        for (w, h) in [(640u32, 480u32), (333, 222)] {
+            let img = RgbImage::from_fn(w, h, |x, y| {
+                let d = (x as f64 - w as f64 / 2.0).hypot(y as f64 - h as f64 / 2.0);
+                if d > h as f64 * 0.45 { image::Rgb([0, 0, 0]) } else { image::Rgb([(x % 256) as u8, (y % 256) as u8, ((x + y) % 200) as u8]) }
+            });
+            let path = d.join(format!("f{w}.jpg"));
+            write_jpeg_compact(&path, &img, 90, None).unwrap();
+            let back = image::open(&path).unwrap().to_rgb8();
+            let err = img.iter().zip(back.iter()).map(|(a, b)| (*a as f64 - *b as f64).abs()).sum::<f64>() / img.len() as f64;
+            assert!(err < 4.0, "{w}x{h}: mean abs error {err:.2}");
+            assert!(back.get_pixel(0, 0).0.iter().all(|&v| v < 8), "black corner read as {:?}", back.get_pixel(0, 0));
+        }
+    }
+
+    #[test]
     fn pairs_by_stem_and_reports_missing() {
         let (g, r) = (tmpdir("pg"), tmpdir("pr"));
         for s in ["a", "b", "c"] {
@@ -267,13 +285,14 @@ pub fn write_jpeg(path: &Path, img: &RgbImage, quality: u8, exif: Option<Vec<u8>
     Ok(())
 }
 
-/// Like `write_jpeg`, but with 4:2:0 chroma and optimized Huffman tables, for frames that get uploaded:
-/// at quality 90 a room frame is 334 KB instead of 586 KB (q95 4:4:4), 41.8 dB from the source.
+/// Like `write_jpeg`, but with 4:2:0 chroma, for frames that get uploaded (smaller than q95 4:4:4).
+/// No optimized Huffman tables: with 4:2:0 jpeg-encoder then writes one scan per component, and
+/// the image crate's decoder (zune-jpeg, which the trainer reads frames with) decodes such files
+/// with zeroed chroma (black read back as RGB 0,135,0). See `compact_jpeg_round_trips_through_the_image_crate`.
 pub fn write_jpeg_compact(path: &Path, img: &RgbImage, quality: u8, exif: Option<Vec<u8>>) -> Result<()> {
     use jpeg_encoder::{ColorType, Encoder, SamplingFactor};
     let mut encoder = Encoder::new_file(path, quality).with_context(|| format!("creating {}", path.display()))?;
     encoder.set_sampling_factor(SamplingFactor::R_4_2_0);
-    encoder.set_optimized_huffman_tables(true);
     if let Some(exif) = exif {
         let mut app1 = b"Exif\0\0".to_vec();
         app1.extend_from_slice(&exif);

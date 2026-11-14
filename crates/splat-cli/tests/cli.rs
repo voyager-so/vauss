@@ -330,13 +330,13 @@ fn mcp_uses_same_dispatch_and_keeps_stdout_as_protocol() {
     )
     .unwrap();
     input.flush().unwrap();
-    // Every contract tool, in contract order: 17 plus run_default_pipeline (15abf2b7) and the
+    // Every contract tool, in contract order: 17 plus run_default_pipeline (15abf2b7), split_panoramas and the
     // three edit tools (02f5348b).
     let listed: Vec<String> = read()["result"]["tools"].as_array().unwrap().iter()
         .map(|t| t["name"].as_str().unwrap().to_string()).collect();
     let contract: Vec<&str> = splat_contracts::tool_schemas().into_iter().map(|(name, _, _)| name).collect();
     assert_eq!(listed, contract);
-    assert_eq!(listed.len(), 21);
+    assert_eq!(listed.len(), 22);
     writeln!(input,"{}",serde_json::json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"extract_frames","arguments":{"target_count":1}}})).unwrap();
     input.flush().unwrap();
     let invalid = read();

@@ -202,6 +202,29 @@ pub struct ExtractFrames {
     /// placement retry asks for 2, the pre-326e03c sampling (that room clip: 2 fps 98% placed, 5 fps 43-51%).
     #[serde(default)]
     pub base_fps: Option<f64>,
+    /// The source is stitched 360 equirect footage (2:1) that split_panoramas cuts into views:
+    /// frames are rejected unless 2:1, black bars are not cropped and no SfM copies are written.
+    /// Omitted when false, so ordinary extractions keep their operation ids.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub panorama: bool,
+}
+
+/// Cut each 360 equirect frame of a frames artifact (extracted with `panorama: true`) into 14
+/// 90-degree pinhole views that share one rig pose, with SfM feature masks, nadir training masks,
+/// `panorama.json` and COLMAP's `rig_config.json`.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SplitPanoramas {
+    pub frames_id: String,
+    /// Side of each square view in pixels (the pipeline uses min(1024, pano width / 4)).
+    #[serde(default = "d_1024")]
+    #[schemars(range(min = 256, max = 2048))]
+    pub view_size: u32,
+    /// Half-angle of the cone below the camera (operator, tripod) that SfM features and the
+    /// training loss ignore. 0 turns it off.
+    #[serde(default = "d_30f")]
+    #[schemars(range(min = 0, max = 60))]
+    pub nadir_mask_deg: f32,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
@@ -630,6 +653,7 @@ pub fn tool_schemas() -> Vec<(&'static str, &'static str, RootSchema)> {
         ("run_default_pipeline", "Call FIRST for normal reconstruction goals. Runs the same optimized pipeline as the fixed driver: quick preview, full training, web export, held-out evaluation and interactive refinement. Inherits CLI/cloud settings; pass only explicitly requested overrides. Blocks until complete, returns candidates and comparison images. Does not finish or perform mesh/object edits: add only goal-requested extras, then finish.", schema_for!(RunDefaultPipeline)),
         ("inspect_input", "Probe the source video/images: codec, rotation, sharpness, exposure, static/black frames, sample frames as images. For manual recovery after run_default_pipeline.", schema_for!(InspectInput)),
         ("extract_frames", "Select frames from the source into a frames artifact (sharpest per window by default). Returns frames_id and a contact sheet.", schema_for!(ExtractFrames)),
+        ("split_panoramas", "360 input: cut each equirect frame of a frames artifact (extract_frames with panorama=true) into 14 pinhole views sharing one rig pose, with feature and nadir masks. Returns the new frames_id for reconstruct_sfm.", schema_for!(SplitPanoramas)),
         ("mask_distractors", "Segment moving distractors (people, cars...) from a short noun prompt into masks that SfM features and/or the training loss ignore. Returns overlay images; check the subject is not masked.", schema_for!(MaskDistractors)),
         ("reconstruct_sfm", "Structure-from-motion on a frames artifact. Long job: returns job_id; poll job_status. Result has SfM health metrics and gate verdicts. Settle masks and any SfM retry before define_split.", schema_for!(ReconstructSfm)),
         ("define_split", "Freeze the held-out evaluation split (every Nth registered frame) on an SfM artifact. Do this once, before any training; never change it to hide failures.", schema_for!(DefineSplit)),
@@ -652,7 +676,7 @@ pub fn tool_schemas() -> Vec<(&'static str, &'static str, RootSchema)> {
 }
 
 pub const BACKEND_TOOLS: &[&str] = &[
-    "inspect_input", "extract_frames", "mask_distractors", "reconstruct_sfm", "define_split",
+    "inspect_input", "extract_frames", "split_panoramas", "mask_distractors", "reconstruct_sfm", "define_split",
     "train_splats", "evaluate", "render_views", "extract_mesh",
 ];
 pub const SHOT_TOOLS: &[&str] = &["plan_shot", "render_shot", "generate_shot", "export_blender"];
@@ -666,6 +690,8 @@ fn d_half() -> f64 { 0.5 }
 fn d_all() -> Instances { Instances::All }
 fn d_600() -> u32 { 600 }
 fn d_1600() -> u32 { 1600 }
+fn d_1024() -> u32 { 1024 }
+fn d_30f() -> f32 { 30.0 }
 fn d_8() -> u32 { 8 }
 fn d_7000() -> u32 { 7000 }
 fn d_1m() -> u32 { 1_000_000 }
@@ -690,7 +716,7 @@ fn d_models() -> Vec<String> { vec!["luma_ray32_v2v".into()] }
 mod tests {
     #[test]
     fn schemas_build() {
-        assert_eq!(super::tool_schemas().len(), 21);
+        assert_eq!(super::tool_schemas().len(), 22);
     }
 }
 

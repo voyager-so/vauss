@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 
+use anyhow::Context as _;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use splat_contracts::*;
@@ -57,6 +58,13 @@ pub struct SfmJob {
     /// here so remote staging ships the file (sha256 cache) to the SfM job.
     #[serde(default)]
     pub da3_weights: Option<PathBuf>,
+    /// Fisheye solves: COLMAP's starting focal (factor x longest side) when the photos carry no EXIF
+    /// focal; the default 1.2 is a narrow perspective lens, far from any fisheye.
+    #[serde(default)]
+    pub fisheye_focal_factor: Option<f64>,
+    /// The request's `camera_model` (auto may resolve to RADIAL/PINHOLE/OPENCV_FISHEYE).
+    #[serde(default)]
+    pub camera_model_requested: Option<CameraModel>,
     /// ALIKED + LightGlue ONNX models for [`aliked_fallback`] (detector, matcher); None disables it.
     /// Named here so remote staging ships them to the SfM job.
     #[serde(default)]
@@ -71,7 +79,26 @@ pub struct SfmJob {
     /// The video's lens field of view from the capture pre-check, for [`focal_guard`].
     #[serde(default)]
     pub focal_prior: Option<FocalPrior>,
+    /// 360 input: the folder holding `rig_config.json` and `panorama.json` (the SfM dataset dir,
+    /// which remote staging ships). The solve then runs [`run_rig_job`]'s short ladder.
+    #[serde(default)]
+    pub rig: Option<PathBuf>,
+    /// SPLAT_PANO_RIG=0 when the job was planned: solve the views without the rig (same fixed
+    /// intrinsics), the acceptance test's baseline arm.
+    #[serde(default)]
+    pub rig_off: bool,
 }
+
+/// The frames artifact is a 360 split (splat-brush panorama.rs).
+fn is_panorama(frames: &Artifact) -> bool {
+    frames.meta.get("panorama") == Some(&json!(true))
+}
+
+/// SPLAT_PANO_RIG=0 skips the rig stage and flags (hidden, for the acceptance baseline).
+fn pano_rig_enabled() -> bool {
+    std::env::var("SPLAT_PANO_RIG").map_or(true, |v| v.trim() != "0")
+}
+
 
 /// A video's field of view across its long edge before any SfM: the file's lens tag, the phone
 /// model's measured value, self-calibrated from the camera's turns (precheck), or an assumed 1x
@@ -160,13 +187,41 @@ fn colmap_has_cuda(colmap: &std::path::Path) -> bool {
         .is_ok_and(|o| String::from_utf8_lossy(&o.stdout).lines().next().is_some_and(|l| l.contains("with CUDA")))
 }
 
-fn calibration_model(model: CameraModel, video: bool) -> anyhow::Result<&'static str> {
-    Ok(match model {
+/// The COLMAP camera model to solve with. `fisheye_evidence`: auto found a circular fisheye's image
+/// circle, or the capture's own cameras are fisheyes.
+fn calibration_model(model: CameraModel, video: bool, fisheye_evidence: bool) -> &'static str {
+    match model {
+        CameraModel::OpencvFisheye => "OPENCV_FISHEYE",
+        CameraModel::Auto if fisheye_evidence => "OPENCV_FISHEYE",
         CameraModel::Auto if video => "RADIAL",
         CameraModel::Auto | CameraModel::Pinhole => "PINHOLE",
         CameraModel::Opencv => "OPENCV",
-        CameraModel::OpencvFisheye => return Err(invalid("fisheye SfM is not supported by the brush backend yet")),
+    }
+}
+
+/// A capture whose own calibration is a fisheye (Nerfstudio OPENCV_FISHEYE, a fisheye COLMAP model).
+fn capture_is_fisheye(frames_dir: &std::path::Path) -> bool {
+    read_json::<serde_json::Value>(&frames_dir.join("capture.json")).ok().is_some_and(|m| {
+        m["frames"].as_array().into_iter().flatten().any(|f| f["model"].as_str().is_some_and(splat_eval::fisheye::is_fisheye_model))
     })
+}
+
+/// A radial perspective solve whose first coefficient (normalised image coordinates) is this
+/// strongly barrel most likely saw a fisheye: RADIAL can't fit the rim and the edges misalign.
+/// A heuristic, set well beyond the small k1 of ordinary perspective lenses; it only warns.
+const FISHEYE_HINT_K1: f64 = -0.25;
+
+/// The warning `--camera-model auto` gives when a perspective solve looks like a fisheye.
+fn fisheye_hint(model: &splat_eval::Model, requested_auto: bool) -> Option<String> {
+    if !requested_auto {
+        return None;
+    }
+    let k1 = model.cameras.values().filter(|c| matches!(c.model.as_str(), "SIMPLE_RADIAL" | "RADIAL" | "OPENCV")).filter_map(|c| {
+        let idx = if c.model == "OPENCV" { 4 } else { 3 };
+        c.params.get(idx).copied()
+    }).fold(f64::INFINITY, f64::min);
+    (k1 <= FISHEYE_HINT_K1).then(|| format!(
+        "The solved lens is strongly barrel-distorted (k1 = {k1:.2}): this looks like fisheye footage, which a perspective camera model can't fit at the edges. Re-run with `--camera-model opencv-fisheye` to solve and train it as a fisheye (Kannala-Brandt) lens."))
 }
 
 fn matching_policy(job: &SfmJob) -> splat_sfm::Matching {
@@ -204,7 +259,14 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
     let colmap = cfg.colmap.clone().ok_or_else(|| {
         invalid("COLMAP not found: set SPLAT_COLMAP to a COLMAP 4.x binary (or install it on PATH)")
     })?;
-    let video = frames.meta.get("input_kind").and_then(|v| v.as_str()) == Some("video");
+    let panorama = is_panorama(&frames);
+    if panorama {
+        anyhow::ensure!(req.mask_id.is_none() && req.mask_prompt.is_none(), "360 input does not support distractor masks yet");
+        anyhow::ensure!(!matches!(req.pairs, Pairs::Exhaustive), "360 input matches sequentially; exhaustive pairs are not supported");
+        anyhow::ensure!(!req.preview && req.preview_train.is_none(), "360 input has no quick preview solve");
+    }
+    // 360 views solve as photos of a rig: the video ladder's order-based gates assume one camera.
+    let video = !panorama && frames.meta.get("input_kind").and_then(|v| v.as_str()) == Some("video");
     let capture = crate::capture_sfm::is_capture(&frames_dir);
     let (artifact, out) = new_artifact(
         run,
@@ -253,6 +315,26 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
             write_json(&out.join(crate::train::DETECTOR_MASKS_MARKER), &json!({"source": "mask_distractors", "mask_id": mask_id}))?;
         }
     }
+    let manifest = if panorama {
+        // Feature ownership + nadir masks (COLMAP names) for SfM; nadir masks for training, which are
+        // the user's geometry, not a detector's (no detector marker). The manifest and rig config
+        // travel with the dataset.
+        mask_dir = Some(frames_dir.join("feature_masks"));
+        let train_masks = frames_dir.join("train_masks");
+        for src in list_images(&train_masks)? {
+            let dst = out.join("masks").join(src.strip_prefix(&train_masks)?);
+            if let Some(p) = dst.parent() {
+                std::fs::create_dir_all(p)?;
+            }
+            link_or_copy(&src, &dst)?;
+        }
+        for name in [splat_core::panorama::MANIFEST, splat_core::panorama::RIG_CONFIG] {
+            std::fs::copy(frames_dir.join(name), out.join(name)).with_context(|| format!("copying {name}"))?;
+        }
+        Some(splat_core::panorama::Manifest::read(&out)?.ok_or_else(|| invalid("360 frames have no panorama.json"))?)
+    } else {
+        None
+    };
     // Photo alpha from extract_frames (frames/masks/, COLMAP names, 0 = ignore) masks features
     // when no distractor masks were requested.
     if mask_dir.is_none() && frames_dir.join("masks").is_dir() {
@@ -267,10 +349,12 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
         };
         names(d).is_some_and(|n| Some(n) == names(&frames_dir.join("images")))
     });
-    let (max_image_size, max_features) = match req.quality {
-        Quality::Low => (1000, 4096),
-        Quality::Medium => (1600, 8192),
-        Quality::High => (3200, 16384),
+    let (max_image_size, max_features) = match (&manifest, req.quality) {
+        // 360 views: 4096 SIFT features at the view size keep CPU matching of ~1,400 views in minutes.
+        (Some(m), _) => (m.view_size as usize, 4096),
+        (None, Quality::Low) => (1000, 4096),
+        (None, Quality::Medium) => (1600, 8192),
+        (None, Quality::High) => (3200, 16384),
     };
     // Preserve the explicit request through staging: video auto gets loop-aware sequential matching.
     let sequential = matches!(req.pairs, Pairs::Sequential);
@@ -278,7 +362,26 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
     // fx/fy self-calibrated anisotropic, mismatched focals between the quick and full SfM of
     // one video (house demo: 383/505 at 960x540 vs 817/581 at 1600x900). RADIAL keeps
     // OPENCV's two radial terms.
-    let camera_model = calibration_model(req.camera_model, video)?;
+    // Fisheye: an explicit request, a capture calibrated as one, or (auto) a circular fisheye's
+    // image circle. A detected circle is masked out of SfM features and the training loss.
+    // 360 views are exact pinholes cut from the split: no lens check.
+    let wants_lens_check = !panorama && matches!(req.camera_model, CameraModel::Auto | CameraModel::OpencvFisheye);
+    let circles = wants_lens_check.then(|| crate::lens::detect(&images)).flatten();
+    let circle = circles.as_ref().map(|c| c.representative);
+    let capture_fisheye = capture && capture_is_fisheye(&frames_dir);
+    // A calibrated capture's own lens model decides; the circle is evidence only for uncalibrated input.
+    let camera_model = if panorama { "PINHOLE" } else { calibration_model(req.camera_model, video, if capture { capture_fisheye } else { circle.is_some() }) };
+    let fisheye = camera_model == "OPENCV_FISHEYE";
+    let mut lens_warnings = vec![];
+    if let (true, Some(cs), Some(c)) = (fisheye, &circles, &circle) {
+        mask_dir = crate::lens::write_masks(&out, cs, true, mask_dir.as_deref())?.or(mask_dir);
+        lens_warnings.push(format!(
+            "Circular fisheye detected (image circle r={:.0}px, {:.0}% of the frame outside it): {}masking the black area outside the lens from SfM and training.",
+            c.radius, c.outside_fraction * 100.0,
+            if matches!(req.camera_model, CameraModel::Auto) { "solving with the OPENCV_FISHEYE (Kannala-Brandt) camera model and " } else { "" }));
+    } else if fisheye && capture_fisheye && matches!(req.camera_model, CameraModel::Auto) {
+        lens_warnings.push("The capture's cameras are fisheye: SfM solves with the OPENCV_FISHEYE (Kannala-Brandt) camera model.".into());
+    }
     let use_gpu = colmap_has_cuda(&colmap);
     // Only cloud jobs chain the preview: they save a second upload, queue and result round trip
     // (locally the separate train job costs nothing extra). Captures may switch to sensor poses
@@ -314,21 +417,37 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
         gpu_lock: cfg.gpu_lock.clone(),
         use_gpu,
         colmap,
-        vocab_tree: if video && !matches!(req.pairs, Pairs::Exhaustive) { cfg.video_vocab_tree()? } else { None },
+        vocab_tree: if (video || panorama) && !matches!(req.pairs, Pairs::Exhaustive) { cfg.video_vocab_tree()? } else { None },
         // Sensor poses are the coverage fallback; a learned pose/training rescue
         // would add another competing trajectory and an unnecessary paid fit.
-        da3_weights: (!capture).then(|| da3_weights(cfg)).flatten(),
+        // The learned rescue solves a perspective (SIMPLE_RADIAL) camera: never for a fisheye.
+        da3_weights: (!capture && !fisheye).then(|| da3_weights(cfg)).flatten(),
         aliked: cfg.aliked_dir.as_ref()
             .map(|d| (d.join("aliked-n16rot.onnx"), d.join("aliked-lightglue.onnx")))
             .filter(|(a, b)| a.is_file() && b.is_file()),
         preview_train,
         mapper_seed: req.mapper_seed,
         focal_prior: video.then(|| FocalPrior::from_capture_check(run)).flatten(),
+        fisheye_focal_factor: fisheye.then(|| crate::lens::focal_factor(circle.as_ref())),
+        camera_model_requested: Some(req.camera_model),
+        rig: panorama.then(|| out.clone()),
+        rig_off: panorama && !pano_rig_enabled(),
     };
     write_json(&out.join("sfm_job.json"), &job)?;
     let mut r = start_worker(cfg, run, "reconstruct_sfm", "sfm", &out.join("sfm_job.json"), &artifact)?;
+    if panorama {
+        r.metrics.insert("panorama_rig".into(), json!(!job.rig_off));
+        r.metrics.insert("matching".into(), json!("sequential"));
+        r.metrics.insert("loop_detection".into(), json!(job.vocab_tree.is_some()));
+        return Ok(r);
+    }
     r.metrics.insert("matching".into(), json!(matching_name(&job)));
     r.metrics.insert("matching_requested".into(), json!(job.pairs));
+    r.metrics.insert("camera_model".into(), json!(job.camera_model));
+    if let Some(c) = &circle {
+        r.metrics.insert("lens_circle".into(), json!(c));
+    }
+    r.warnings.extend(lens_warnings);
     r.metrics.insert("loop_detection".into(), json!(!matches!(matching_policy(&job), splat_sfm::Matching::Exhaustive) && job.vocab_tree.is_some()));
     if video && !matches!(req.pairs, Pairs::Exhaustive) && job.vocab_tree.is_none() {
         r.warnings.push("No vocabulary tree configured: sequential matching uses quadratic long-range pairs without visual loop detection.".into());
@@ -886,7 +1005,7 @@ fn learned_fallback(
 /// Link under COLMAP's names into `dst`,
 /// which lives outside the dataset's images/ and masks/ dirs. Masks are drawn on the training
 /// images; for larger feature images (sfm_images) they are resized to match (nearest neighbour).
-fn colmap_masks(src: &std::path::Path, images: &std::path::Path, feature_images: &std::path::Path, dst: &std::path::Path) -> anyhow::Result<PathBuf> {
+pub(crate) fn colmap_masks(src: &std::path::Path, images: &std::path::Path, feature_images: &std::path::Path, dst: &std::path::Path) -> anyhow::Result<PathBuf> {
     std::fs::create_dir_all(dst)?;
     let mut linked = 0;
     for image in list_images(images)? {
@@ -1194,6 +1313,9 @@ fn flip_retry(opts: &mut splat_sfm::ReconstructOptions) {
 }
 
 fn run_sfm_job(mut job: SfmJob) -> anyhow::Result<i32> {
+    if job.rig.is_some() {
+        return crate::sfm_rig::run_rig_job(&job);
+    }
     // Video: segment while COLMAP extracts unmasked features and matches them; splat-sfm waits
     // for the masks before mapping and drops the verified matches on masked keypoints. Driveway clip: the
     // segmenter's 31-38 s (per-frame SAM, not detection) overlap matching and verification. It
@@ -1325,6 +1447,10 @@ fn run_sfm_job(mut job: SfmJob) -> anyhow::Result<i32> {
     }
     opts.video = job.video;
     opts.camera_model = job.camera_model.clone();
+    if let Some(factor) = job.fisheye_focal_factor {
+        // Replaces the quick video's 70 degree perspective prior too; the focal is still refined.
+        opts.default_focal_length_factor = Some(factor);
+    }
     opts.late_masks = masking.is_some().then(|| late_masks.clone());
     opts.max_image_size = job.max_image_size;
     opts.max_features = job.max_features;
@@ -1747,14 +1873,18 @@ pub fn complete(run: &dyn RunCtx, artifact_id: &str, exit_code: i32, log: &str) 
     metrics.insert("component_union".into(), json!(union));
     metrics.insert("largest_component_fraction".into(), json!(if union > 0 { largest as f64 / union as f64 } else { 0.0 }));
     metrics.insert("sfm_wall_s".into(), rec["wall_seconds"].clone());
+    if !rec["panorama"].is_null() {
+        metrics.insert("panorama".into(), rec["panorama"].clone());
+    }
     if !rec["sfm_images_scale"].is_null() {
         metrics.insert("sfm_images_scale".into(), rec["sfm_images_scale"].clone());
     }
     let job = read_json::<SfmJob>(&dir.join("sfm_job.json")).ok();
     if let Some(job) = &job {
-        metrics.insert("matching".into(), json!(matching_name(job)));
+        // 360 rig solves always match sequentially (sfm_rig), whatever the photo policy says.
+        metrics.insert("matching".into(), json!(if job.rig.is_some() { "sequential" } else { matching_name(job) }));
         metrics.insert("matching_requested".into(), json!(job.pairs));
-        metrics.insert("loop_detection".into(), json!(!matches!(matching_policy(job), splat_sfm::Matching::Exhaustive) && job.vocab_tree.is_some()));
+        metrics.insert("loop_detection".into(), json!((job.rig.is_some() || !matches!(matching_policy(job), splat_sfm::Matching::Exhaustive)) && job.vocab_tree.is_some()));
         metrics.insert("camera_model".into(), json!(job.camera_model));
     }
     // The flip retry changed the camera model: report the one reconstructed.
@@ -1868,6 +1998,11 @@ pub fn complete(run: &dyn RunCtx, artifact_id: &str, exit_code: i32, log: &str) 
     }
     if metrics["baseline_ratio"].as_f64().is_some_and(|b| b < 0.1) {
         warnings.push("Camera baseline is tiny relative to the scene (likely pure rotation); 3D may not be recoverable.".into());
+    }
+    let requested_auto = job.as_ref().is_some_and(|j| matches!(j.camera_model_requested, Some(CameraModel::Auto)));
+    if let Some(hint) = splat_eval::read_model(&dir.join("sparse/0")).ok().and_then(|m| fisheye_hint(&m, requested_auto)) {
+        metrics.insert("fisheye_hint".into(), json!(true));
+        warnings.push(hint);
     }
     if let Some(chain) = job.as_ref().and_then(|j| j.preview_train.as_ref()) {
         match crate::train::adopt_chained(run, &artifact.id, chain) {
@@ -2078,10 +2213,31 @@ mod input_contract_tests {
 
     #[test]
     fn input_contract_video_defaults_preserve_explicit_anisotropic_calibration() {
-        assert_eq!(calibration_model(CameraModel::Auto, true).unwrap(), "RADIAL");
-        assert_eq!(calibration_model(CameraModel::Auto, false).unwrap(), "PINHOLE");
-        assert_eq!(calibration_model(CameraModel::Pinhole, true).unwrap(), "PINHOLE");
-        assert_eq!(calibration_model(CameraModel::Opencv, true).unwrap(), "OPENCV");
+        assert_eq!(calibration_model(CameraModel::Auto, true, false), "RADIAL");
+        assert_eq!(calibration_model(CameraModel::Auto, false, false), "PINHOLE");
+        assert_eq!(calibration_model(CameraModel::Pinhole, true, false), "PINHOLE");
+        assert_eq!(calibration_model(CameraModel::Opencv, true, false), "OPENCV");
+        // Fisheye: explicit, or auto with evidence (an image circle or fisheye capture cameras).
+        assert_eq!(calibration_model(CameraModel::OpencvFisheye, true, false), "OPENCV_FISHEYE");
+        assert_eq!(calibration_model(CameraModel::OpencvFisheye, false, false), "OPENCV_FISHEYE");
+        assert_eq!(calibration_model(CameraModel::Auto, true, true), "OPENCV_FISHEYE");
+        assert_eq!(calibration_model(CameraModel::Auto, false, true), "OPENCV_FISHEYE");
+        // An explicit perspective model wins over the evidence.
+        assert_eq!(calibration_model(CameraModel::Pinhole, false, true), "PINHOLE");
+    }
+
+    #[test]
+    fn auto_warns_when_a_perspective_solve_looks_like_a_fisheye() {
+        let cam = |model: &str, params: Vec<f64>| splat_eval::colmap::Camera { id: 1, model: model.into(), width: 1920, height: 1080, params };
+        let model = |c| splat_eval::Model { cameras: std::collections::BTreeMap::from([(1, c)]), ..Default::default() };
+        let fish = model(cam("RADIAL", vec![900.0, 960.0, 540.0, -0.31, 0.06]));
+        let hint = fisheye_hint(&fish, true).unwrap();
+        assert!(hint.contains("--camera-model opencv-fisheye"), "{hint}");
+        // Explicit models never get the hint; ordinary lenses don't either.
+        assert!(fisheye_hint(&fish, false).is_none());
+        assert!(fisheye_hint(&model(cam("RADIAL", vec![900.0, 960.0, 540.0, -0.08, 0.01])), true).is_none());
+        assert!(fisheye_hint(&model(cam("OPENCV", vec![900.0, 905.0, 960.0, 540.0, -0.4, 0.1, 0.0, 0.0])), true).is_some());
+        assert!(fisheye_hint(&model(cam("OPENCV_FISHEYE", vec![500.0, 500.0, 960.0, 540.0, -0.4, 0.0, 0.0, 0.0])), true).is_none());
         for model in ["PINHOLE", "OPENCV"] {
             let mut opts = splat_sfm::ReconstructOptions::new(std::path::Path::new("unused"));
             opts.camera_model = model.into();

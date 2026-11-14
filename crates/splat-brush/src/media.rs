@@ -53,6 +53,8 @@ pub struct VideoInfo {
     pub codec: String,
     pub rotation: i32,
     pub video_streams: usize,
+    /// The stream carries spherical (360) side data with an equirectangular projection.
+    pub spherical: bool,
 }
 
 fn parse_rate(r: Option<&str>) -> f64 {
@@ -78,11 +80,13 @@ pub fn probe(cfg: &BrushConfig, video: &Path) -> anyhow::Result<VideoInfo> {
     let num = |v: &Value| v.as_str().and_then(|x| x.parse::<f64>().ok()).or_else(|| v.as_f64());
     let duration = num(&s["duration"]).or_else(|| num(&data["format"]["duration"])).unwrap_or(0.0);
     let mut rotation = num(&s["tags"]["rotate"]).unwrap_or(0.0) as i32;
+    let mut spherical = false;
     if let Some(sides) = s["side_data_list"].as_array() {
         for side in sides {
             if let Some(r) = side["rotation"].as_f64() {
                 rotation = r as i32;
             }
+            spherical |= is_equirect_side_data(side);
         }
     }
     let (mut w, mut h) = (s["width"].as_u64().unwrap_or(0) as u32, s["height"].as_u64().unwrap_or(0) as u32);
@@ -99,7 +103,89 @@ pub fn probe(cfg: &BrushConfig, video: &Path) -> anyhow::Result<VideoInfo> {
         codec: s["codec_name"].as_str().unwrap_or("?").into(),
         rotation,
         video_streams: streams.len(),
+        spherical,
     })
+}
+
+/// ffprobe's "Spherical Mapping" side data (Google spherical metadata / mp4 sv3d) with an
+/// equirectangular projection (cubemap and fisheye projections are not equirect).
+fn is_equirect_side_data(side: &Value) -> bool {
+    side["side_data_type"].as_str().is_some_and(|t| t.to_ascii_lowercase().contains("spherical"))
+        && side["projection"].as_str().is_none_or(|p| p.eq_ignore_ascii_case("equirectangular"))
+}
+
+/// Seam ratio above which a 2:1 frame is ordinary video, not a 360 frame whose edges join.
+const EQUIRECT_EDGE_RATIO: f64 = 2.5;
+/// 360 frames narrower than this are not detected (still accepted when declared).
+const EQUIRECT_MIN_WIDTH: u32 = 1920;
+
+/// How well a frame's left and right edges join: mean |first column - last column| over the
+/// mean difference between neighbouring interior columns (grey levels). A 360 frame wraps, so
+/// its seam looks like any other column step (about 1); an ordinary photo's edges differ.
+/// Flat edges (pillarbox bars, heavy vignetting, a plain backdrop) would join trivially, so a
+/// frame whose outer columns carry under a fifth of the interior's texture never passes
+/// (returns infinity).
+fn edge_join_ratio(img: &RgbImage) -> f64 {
+    let (w, h) = img.dimensions();
+    if w < 8 || h == 0 {
+        return f64::INFINITY;
+    }
+    let g = |x: u32, y: u32| {
+        let p = img.get_pixel(x, y).0;
+        0.299 * p[0] as f64 + 0.587 * p[1] as f64 + 0.114 * p[2] as f64
+    };
+    let (mut seam, mut interior) = (0.0, 0.0);
+    for y in 0..h {
+        seam += (g(0, y) - g(w - 1, y)).abs();
+        for x in 2..w - 1 {
+            interior += (g(x, y) - g(x - 1, y)).abs();
+        }
+    }
+    let seam = seam / h as f64;
+    let interior = interior / (h as f64 * (w - 3) as f64);
+    // Texture next to each edge: steps inside the outer 2% of columns.
+    let band = (w / 50).max(2);
+    let mut edge = 0.0;
+    for y in 0..h {
+        for x in 1..band {
+            edge += (g(x, y) - g(x - 1, y)).abs() + (g(w - x, y) - g(w - 1 - x, y)).abs();
+        }
+    }
+    let edge = edge / (2.0 * h as f64 * (band - 1) as f64);
+    if interior < 0.5 || edge < 0.2 * interior {
+        return f64::INFINITY;
+    }
+    seam / interior
+}
+
+/// Whether the input is stitched 360 footage: every source frame exactly 2:1 (+-1 px) and at
+/// least 1920 px wide, and either spherical metadata or left and right edges that join (median
+/// [`edge_join_ratio`] of the inspection samples below 2.5; 18:9 phone video is also 2:1).
+/// Returns the verdict and the reason.
+fn detect_equirect(sizes: &[(u32, u32)], samples: &[RgbImage], spherical: bool) -> (bool, String) {
+    if sizes.is_empty() {
+        return (false, "no frames".into());
+    }
+    if let Some(&(w, h)) = sizes.iter().find(|&&(w, h)| !crate::panorama::is_two_to_one(w, h)) {
+        return (false, format!("not 2:1 ({w}x{h})"));
+    }
+    if let Some(&(w, _)) = sizes.iter().find(|&&(w, _)| w < EQUIRECT_MIN_WIDTH) {
+        return (false, format!("2:1 but narrower than {EQUIRECT_MIN_WIDTH} px ({w} px)"));
+    }
+    if spherical {
+        return (true, "spherical (equirectangular) video metadata".into());
+    }
+    let mut ratios: Vec<f64> = samples.iter().map(edge_join_ratio).collect();
+    if ratios.is_empty() {
+        return (false, "2:1 but no samples for the edge test".into());
+    }
+    ratios.sort_by(f64::total_cmp);
+    let median = ratios[ratios.len() / 2];
+    if median < EQUIRECT_EDGE_RATIO {
+        (true, format!("2:1 and the left and right edges join (seam ratio {median:.2})"))
+    } else {
+        (false, format!("2:1 but the left and right edges do not join (seam ratio {median:.2})"))
+    }
 }
 
 pub fn is_video(source: &Path) -> bool {
@@ -547,14 +633,19 @@ pub fn inspect_input(cfg: &BrushConfig, run: &dyn RunCtx, req: InspectInput) -> 
         }
         let mut orientations = std::collections::BTreeSet::new();
         let mut frames = Vec::new();
+        let mut sizes = Vec::new();
         // Stats over up to 96 evenly spaced images; thumbnails for the driver from those.
         let stat_n = inputs.len().min(96);
         for k in 0..stat_n {
             let path = &inputs[k * (inputs.len() - 1) / (stat_n - 1).max(1)];
             let (img, o) = if capture.is_some() { (image::open(path)?, 1) } else { load_oriented(path)? };
             orientations.insert(o);
+            sizes.push((img.width(), img.height()));
             frames.push(img.resize(640, 640, FilterType::Triangle).to_rgb8());
         }
+        let (equirect, reason) = detect_equirect(&sizes, &frames, false);
+        metrics.insert("equirect".into(), json!(equirect));
+        metrics.insert("equirect_reason".into(), json!(reason));
         metrics.insert("input_kind".into(), json!("images"));
         if let Some(c) = &capture {
             metrics.insert("input_kind".into(), json!("capture"));
@@ -634,6 +725,9 @@ pub fn inspect_input(cfg: &BrushConfig, run: &dyn RunCtx, req: InspectInput) -> 
         if info.rotation != 0 {
             warnings.push("Rotation metadata detected; ffmpeg extraction applies autorotation.".into());
         }
+        let (equirect, reason) = detect_equirect(&[(info.width, info.height)], &frames, info.spherical);
+        metrics.insert("equirect".into(), json!(equirect));
+        metrics.insert("equirect_reason".into(), json!(reason));
         samples = frames;
     }
     metrics.extend(summarize(&samples));
@@ -1042,6 +1136,9 @@ fn pick_candidates(
 
 pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrames) -> anyhow::Result<ToolResult> {
     if req.trust_poses { req.preserve_all = true; }
+    // 360 frames are split into 90-degree views later: keep them at the contract's maximum width
+    // (a 1600 px pano would leave 400 px per view).
+    if req.panorama { req.max_edge = 4096; }
     if let Some(capture) = crate::capture::load(run)? {
         anyhow::ensure!(req.input_kind == InputKind::Auto, "calibrated captures retain sensor provenance; input_kind must be auto");
         anyhow::ensure!(!req.preserve_all || (req.time_range_s.is_none() && req.max_motion_widths.is_none() && !req.preview), "preserve_all requires the full capture");
@@ -1058,9 +1155,15 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrame
     anyhow::ensure!(!req.preserve_all || (req.time_range_s.is_none() && req.max_motion_widths.is_none() && !req.preview),
         "preserve_all requires the full capture (no time_range_s, max_motion_widths or preview)");
     let ordered_video = video || req.input_kind == InputKind::Video;
-    let (artifact, out) = new_artifact(run, ArtifactKind::Frames, json!({"input_kind": if ordered_video { "video" } else { "images" },
+    let mut meta = json!({"input_kind": if ordered_video { "video" } else { "images" },
         "source_kind": if video { "video_file" } else { "image_files" }, "preserve_all": req.preserve_all,
-        "chronology": if ordered_video { "source_order" } else { "unspecified" }}))?;
+        "chronology": if ordered_video { "source_order" } else { "unspecified" }});
+    // 360 equirect frames for split_panoramas: no bar crop (the poles are not bars), no SfM copies.
+    if req.panorama {
+        meta["panorama_source"] = json!(true);
+    }
+    let crop_bars = crop_bars_enabled() && !req.panorama;
+    let (artifact, out) = new_artifact(run, ArtifactKind::Frames, meta)?;
     let dest = out.join("images");
     std::fs::create_dir_all(&dest)?;
     let mut sel = Selector {
@@ -1087,6 +1190,9 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrame
     let decoded;
     if video {
         let info = probe(cfg, source)?;
+        if req.panorama && !crate::panorama::is_two_to_one(info.width, info.height) {
+            return Err(invalid(format!("360 input must be 2:1 equirectangular; this video is {}x{}", info.width, info.height)));
+        }
         let mut estimate = info.frame_count;
         if let Some((a, b)) = req.time_range_s {
             if !(0.0 <= a && a < b && b <= info.duration_s + 1e-3) {
@@ -1164,7 +1270,7 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrame
         }
         // Constant black bars (letterbox, encoder padding) are cropped before scaling, so SfM,
         // training and held-out GT all see the same content-only frames.
-        let crop = if crop_bars_enabled() {
+        let crop = if crop_bars {
             // The whole capture's crop is measured once (VideoBars): by inspect_input, else by the
             // first extraction, for the next one.
             let dir = VideoAnalysis::dir(run);
@@ -1280,12 +1386,12 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrame
         }
         sel.window = if req.preserve_all { 1.0 } else { (inputs.len() as f64 / req.target_count as f64).max(1.0) };
         // Photos larger than the training frames also get an SfM copy (see SFM_EDGE).
-        let sfm_copies = req.sfm_copies && sel.sfm_edge > req.max_edge;
+        let sfm_copies = req.sfm_copies && !req.panorama && sel.sfm_edge > req.max_edge;
         if sfm_copies {
             std::fs::create_dir_all(&sel.sfm_dest)?;
         }
         // Black bars common to a sample of the photos (all of one size) are cropped from each.
-        let photo_crop = if crop_bars_enabled() { detect_photo_bars(&inputs) } else { None };
+        let photo_crop = if crop_bars { detect_photo_bars(&inputs) } else { None };
         if let Some((size, c)) = photo_crop {
             metrics.insert("black_bar_crop".into(), json!({"source": [size.0, size.1], "crop": c}));
         }
@@ -1296,6 +1402,9 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrame
             }
             let native = load_oriented(path)?.0;
             decoded_images += 1;
+            if req.panorama && !crate::panorama::is_two_to_one(native.width(), native.height()) {
+                return Err(invalid(format!("360 input must be 2:1 equirectangular; {} is {}x{}", path.display(), native.width(), native.height())));
+            }
             let native = match photo_crop {
                 Some((size, c)) if (native.width(), native.height()) == size => native.crop_imm(c.x, c.y, c.w, c.h),
                 _ => native,
@@ -1371,6 +1480,9 @@ pub fn extract_frames(cfg: &BrushConfig, run: &dyn RunCtx, mut req: ExtractFrame
     metrics.insert("rotate_deg".into(), json!(req.rotate_deg));
     metrics.insert("strategy".into(), serde_json::to_value(req.strategy)?);
     metrics.insert("max_edge".into(), json!(req.max_edge));
+    if req.panorama {
+        metrics.insert("panorama_source".into(), json!(true));
+    }
     let mut sharp: Vec<f32> = sel.kept.iter().filter_map(|k| k["sharpness"].as_f64()).map(|v| v as f32).collect();
     sharp.sort_by(f32::total_cmp);
     metrics.insert("sharpness_median_kept".into(), json!(percentile(&sharp, 50.0)));
@@ -1557,5 +1669,142 @@ mod input_contract_tests {
             assert_eq!(frame["source_index"], i);
         }
         assert!(extract_frames(&cfg, &run, req(json!({"preserve_all":true,"time_range_s":[0,1]}))).is_err());
+    }
+}
+
+#[cfg(test)]
+mod panorama_tests {
+    use super::*;
+    use splat_core::Run;
+    use splat_core::panorama::equirect_dir;
+
+    /// A textured 360 frame: a smooth function of the direction, so its edges join.
+    fn pano(w: u32, h: u32, phase: f64) -> RgbImage {
+        RgbImage::from_fn(w, h, |x, y| {
+            let d = equirect_dir(x as f64 + 0.5, y as f64 + 0.5, w, h);
+            let t = |a: f64| (127.5 + 120.0 * a.sin()) as u8;
+            image::Rgb([t(9.0 * d[0] + phase), t(7.0 * d[1] + 2.0 * d[2]), t(11.0 * d[2] - 3.0 * d[0] + phase)])
+        })
+    }
+
+    /// An ordinary 2:1 frame: content that does not wrap (a left-to-right ramp with texture).
+    fn flat_2to1(w: u32, h: u32) -> RgbImage {
+        RgbImage::from_fn(w, h, |x, y| {
+            let ramp = (x * 200 / w) as u8;
+            image::Rgb([ramp, ramp.wrapping_add(((y / 8) % 2 * 20) as u8), 255 - ramp])
+        })
+    }
+
+    fn inspect(images: &[RgbImage]) -> (tempfile::TempDir, Value) {
+        let tmp = tempfile::tempdir().unwrap();
+        let source = tmp.path().join("source");
+        std::fs::create_dir(&source).unwrap();
+        for (i, img) in images.iter().enumerate() {
+            img.save(source.join(format!("frame_{i:03}.jpg"))).unwrap();
+        }
+        let run = Run::create(tmp.path().join("run"), &source, "pano", "brush").unwrap();
+        let r = inspect_input(&BrushConfig::from_env(), &run, InspectInput { sample_count: 2 }).unwrap();
+        (tmp, serde_json::to_value(r.metrics).unwrap())
+    }
+
+    #[test]
+    fn a_synthetic_equirect_folder_is_detected() {
+        let (_tmp, m) = inspect(&[pano(2048, 1024, 0.0), pano(2048, 1024, 1.0), pano(2048, 1024, 2.0)]);
+        assert_eq!(m["equirect"], true, "{}", m["equirect_reason"]);
+    }
+
+    #[test]
+    fn ordinary_two_to_one_and_wide_frames_are_not_equirect() {
+        let (_tmp, m) = inspect(&[flat_2to1(2048, 1024), flat_2to1(2048, 1024)]);
+        assert_eq!(m["equirect"], false);
+        assert!(m["equirect_reason"].as_str().unwrap().contains("do not join"), "{}", m["equirect_reason"]);
+        let (_tmp, m) = inspect(&[image::imageops::resize(&pano(2048, 1024, 0.0), 1920, 1080, FilterType::Triangle)]);
+        assert_eq!(m["equirect"], false);
+        assert!(m["equirect_reason"].as_str().unwrap().contains("not 2:1"));
+        // Too small to detect.
+        let (_tmp, m) = inspect(&[pano(1024, 512, 0.0)]);
+        assert_eq!(m["equirect"], false);
+    }
+
+    #[test]
+    fn flat_edges_do_not_pass_the_edge_test() {
+        // A 360 frame with black pillarbox bars: its outer columns match but carry no texture.
+        let mut img = pano(2048, 1024, 0.0);
+        for y in 0..1024 {
+            for x in (0..200).chain(1848..2048) {
+                img.put_pixel(x, y, image::Rgb([0, 0, 0]));
+            }
+        }
+        let small = image::imageops::resize(&img, 640, 320, FilterType::Triangle);
+        assert_eq!(edge_join_ratio(&small), f64::INFINITY);
+        assert!(!detect_equirect(&[(2048, 1024)], &[small], false).0);
+        let real = image::imageops::resize(&pano(2048, 1024, 0.0), 640, 320, FilterType::Triangle);
+        assert!(edge_join_ratio(&real) < 2.5);
+    }
+
+    #[test]
+    fn spherical_side_data_counts_without_the_edge_test() {
+        assert!(is_equirect_side_data(&json!({"side_data_type": "Spherical Mapping", "projection": "equirectangular"})));
+        assert!(!is_equirect_side_data(&json!({"side_data_type": "Spherical Mapping", "projection": "cubemap"})));
+        assert!(!is_equirect_side_data(&json!({"side_data_type": "Display Matrix", "rotation": 90})));
+        let flat = [flat_2to1(640, 320)];
+        assert!(detect_equirect(&[(3840, 1920)], &flat, true).0);
+        assert!(!detect_equirect(&[(3840, 1920)], &flat, false).0);
+        assert!(!detect_equirect(&[(3840, 2160)], &flat, true).0);
+    }
+
+    #[test]
+    fn panorama_extraction_and_split_write_rigged_views() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source = tmp.path().join("source");
+        std::fs::create_dir(&source).unwrap();
+        for i in 0..3 {
+            pano(1024, 512, i as f64).save(source.join(format!("frame_{i:03}.png"))).unwrap();
+        }
+        let run = Run::create(tmp.path().join("run"), &source, "pano", "brush").unwrap();
+        let cfg = BrushConfig::from_env();
+        let req = |v| serde_json::from_value::<ExtractFrames>(v).unwrap();
+        let frames = extract_frames(&cfg, &run, req(json!({"panorama": true, "max_edge": 4096, "input_kind": "video", "drop_duplicates": false}))).unwrap();
+        assert_eq!(frames.status, Status::Succeeded);
+        let frames_id = frames.artifacts[0].id.clone();
+        assert_eq!(frames.artifacts[0].meta["panorama_source"], true);
+        let frames_dir = run.path(&frames_id).unwrap();
+        assert!(!frames_dir.join("sfm_images").exists());
+        assert_eq!(image::image_dimensions(frames_dir.join("images/frame_000000.jpg")).unwrap(), (1024, 512));
+        let split = crate::panorama::split_panoramas(&run, SplitPanoramas { frames_id: frames_id.clone(), view_size: 256, nadir_mask_deg: 30.0 }).unwrap();
+        assert_eq!(split.status, Status::Succeeded);
+        assert_eq!(split.metrics["panoramas"], 3);
+        assert_eq!(split.metrics["views"], 42);
+        let out = run.path(&split.artifacts[0].id).unwrap();
+        assert_eq!(split.artifacts[0].meta["panorama"], true);
+        assert_eq!(split.artifacts[0].meta["source_frames_id"], json!(frames_id));
+        assert_eq!(list_images(&out.join("images")).unwrap().len(), 42);
+        assert_eq!(image::image_dimensions(out.join("images/v04_frame_000001.jpg")).unwrap(), (256, 256));
+        // COLMAP names feature masks <image name>.png; Brush pairs <stem>.png under masks/.
+        assert!(out.join("feature_masks/v13_frame_000002.jpg.png").is_file());
+        assert!(out.join("train_masks/v13_frame_000002.png").is_file());
+        assert_eq!(std::fs::read_dir(out.join("train_masks")).unwrap().count(), 42);
+        let manifest = splat_core::panorama::Manifest::read(&out).unwrap().unwrap();
+        assert_eq!(manifest.frames, ["frame_000000.jpg", "frame_000001.jpg", "frame_000002.jpg"]);
+        assert_eq!((manifest.view_size, manifest.views), (256, 14));
+        let rig: Value = read_json(&out.join("rig_config.json")).unwrap();
+        assert_eq!(rig[0]["cameras"].as_array().unwrap().len(), 14);
+        // Not a panorama extraction: refused.
+        let plain = extract_frames(&cfg, &run, req(json!({"max_edge": 1024, "drop_duplicates": false}))).unwrap();
+        assert!(crate::panorama::split_panoramas(&run, SplitPanoramas { frames_id: plain.artifacts[0].id.clone(), view_size: 256, nadir_mask_deg: 30.0 }).is_err());
+    }
+
+    #[test]
+    fn panorama_extraction_rejects_frames_that_are_not_two_to_one() {
+        let tmp = tempfile::tempdir().unwrap();
+        let source = tmp.path().join("source");
+        std::fs::create_dir(&source).unwrap();
+        for i in 0..2 {
+            RgbImage::from_pixel(1600, 900, image::Rgb([90, 100, 110])).save(source.join(format!("frame_{i}.png"))).unwrap();
+        }
+        let run = Run::create(tmp.path().join("run"), &source, "pano", "brush").unwrap();
+        let req = serde_json::from_value::<ExtractFrames>(json!({"panorama": true})).unwrap();
+        let error = extract_frames(&BrushConfig::from_env(), &run, req).unwrap_err();
+        assert!(format!("{error:#}").contains("2:1"), "{error:#}");
     }
 }

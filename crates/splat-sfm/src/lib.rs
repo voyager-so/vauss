@@ -140,6 +140,22 @@ pub struct ReconstructOptions {
     /// The rung this attempt runs, for logs ("hybrid", "exhaustive", ...).
     #[serde(skip)]
     pub rung: &'static str,
+    /// 360 input: every image is an exact pinhole view of a rig (splat-core's panorama split).
+    /// Intrinsics are fixed at `camera_params`; with `enforce` the views of one 360 frame share a
+    /// rig pose (COLMAP rig_configurator) and are matched and verified as a rig.
+    pub rig: Option<RigOptions>,
+}
+
+/// See [`ReconstructOptions::rig`].
+#[derive(Clone, Debug, Serialize)]
+pub struct RigOptions {
+    /// COLMAP rig_configurator input (rig_config.json).
+    pub config: PathBuf,
+    /// ImageReader.camera_params for the shared PINHOLE camera ("f,f,c,c").
+    pub camera_params: String,
+    /// Configure the rig; false solves the views as independent photos with the same fixed
+    /// intrinsics (SPLAT_PANO_RIG=0, the acceptance baseline).
+    pub enforce: bool,
 }
 
 impl ReconstructOptions {
@@ -189,6 +205,7 @@ impl ReconstructOptions {
             ba_max_iterations: 200,
             holdout_every: 8,
             rung: "sfm",
+            rig: None,
         }
     }
 
@@ -219,7 +236,8 @@ impl ReconstructOptions {
                 "PINHOLE",
                 "SIMPLE_RADIAL",
                 "RADIAL",
-                "OPENCV"
+                "OPENCV",
+                "OPENCV_FISHEYE"
             ]
             .contains(&self.camera_model.as_str()),
             "camera model must support splat-eval reprojection"
@@ -247,6 +265,14 @@ impl ReconstructOptions {
                 detector.is_file() && matcher.is_file(),
                 "ALIKED and LightGlue require local ONNX artifacts"
             );
+        }
+        if let Some(rig) = &self.rig {
+            ensure!(self.camera_model == "PINHOLE" && self.single_camera, "rig solves use one fixed PINHOLE camera per view");
+            ensure!(matches!(self.mapper, Mapper::Incremental) && matches!(self.features, Features::Sift),
+                "rig solves use the incremental mapper and SIFT");
+            ensure!(!self.lens_last && !self.focal_last && self.fixed_focal_factor.is_none() && self.default_focal_length_factor.is_none()
+                && self.keyframe_stride == 1 && !self.video, "rig solves keep fixed intrinsics and no video ladder");
+            ensure!(!rig.enforce || rig.config.is_file(), "rig config missing: {}", rig.config.display());
         }
         Ok(())
     }
@@ -279,6 +305,20 @@ impl StageCommand {
     }
 }
 
+/// The stages that still run on a copy of `opts.reuse_database`: no extraction or rig configuration
+/// (the database has both), and no matching unless an exhaustive fill-in adds missing pairs.
+pub fn reused_stages(stages: Vec<StageCommand>, opts: &ReconstructOptions) -> Vec<StageCommand> {
+    if opts.reuse_database.is_none() {
+        return stages;
+    }
+    // Exhaustive matching on a reused database only adds the pairs it lacks (Hybrid fallback).
+    let rematch = matches!(opts.matching, Matching::Exhaustive) && opts.reuse_matches;
+    stages.into_iter().filter(|s| {
+        s.name != "feature_extractor" && s.name != "rig_configurator"
+            && (rematch || !(s.name.ends_with("_matcher") || s.name == "geometric_verifier"))
+    }).collect()
+}
+
 /// Builds commands without creating files. Paths can contain spaces; no shell is involved.
 pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<StageCommand>> {
     opts.validate()?;
@@ -287,6 +327,9 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
     extract.option("database_path", &database);
     extract.option("image_path", frames_dir);
     extract.option("ImageReader.camera_model", &opts.camera_model);
+    if let Some(rig) = &opts.rig {
+        extract.option("ImageReader.camera_params", &rig.camera_params);
+    }
     if let Some(path) = &opts.mask_dir {
         extract.option("ImageReader.mask_path", path);
     }
@@ -325,6 +368,12 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
     );
     matching.number("TwoViewGeometry.random_seed", 0);
     matching.number("TwoViewGeometry.max_num_trials", opts.ransac_max_trials);
+    let rig = opts.rig.as_ref().filter(|r| r.enforce);
+    if rig.is_some() {
+        // Pairs inside one 360 frame share its centre (no baseline); verification checks the rig.
+        matching.number("FeatureMatching.rig_verification", 1);
+        matching.number("FeatureMatching.skip_image_pairs_in_same_frame", 1);
+    }
     if matches!(opts.matching, Matching::Sequential | Matching::Hybrid) {
         matching.number("SequentialMatching.overlap", opts.sequential_overlap);
         matching.number(
@@ -342,11 +391,15 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
             // 1508 verified pairs.
             matching.number("SequentialMatching.loop_detection_max_num_features", 2048);
         }
+        if rig.is_some() {
+            matching.number("SequentialMatching.expand_rig_images", 1);
+        }
     }
     // Sequential matching verifies each image's pairs as one small batch and waits for its slowest
     // pair (2.5 of 6 cores busy, GPU 3%). Match only, then verify every pair in large batches across
     // all cores: driveway (1508 pairs) 62 -> 16 + 22 s, the same verified pairs and inliers.
-    let verify = matches!(opts.matching, Matching::Sequential | Matching::Hybrid)
+    // Rig solves verify inside the matcher: the separate verifier would skip rig verification.
+    let verify = (matches!(opts.matching, Matching::Sequential | Matching::Hybrid) && opts.rig.is_none())
         .then(|| {
             matching.number("FeatureMatching.skip_geometric_verification", 1);
             let mut verify = StageCommand::new(opts, "geometric_verifier");
@@ -356,7 +409,14 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
             verify.number("TwoViewGeometry.max_num_trials", opts.ransac_max_trials);
             verify
         });
-    let mut stages = vec![extract, matching];
+    let mut stages = vec![extract];
+    if let Some(rig) = rig {
+        let mut configure = StageCommand::new(opts, "rig_configurator");
+        configure.option("database_path", &database);
+        configure.option("rig_config_path", &rig.config);
+        stages.push(configure);
+    }
+    stages.push(matching);
     stages.extend(verify);
     // A fixed focal skips the view-graph calibration, which would re-estimate it.
     if opts.calibrate && matches!(opts.mapper, Mapper::Global) && opts.fixed_focal_factor.is_none() {
@@ -432,6 +492,16 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
             }
             if opts.ba_global_skip_redundant {
                 mapper.number("Mapper.ba_global_ignore_redundant_points3D", 1);
+            }
+            // Exact pinhole views: intrinsics and the view layout never move (validate() rules out
+            // the other options that set these flags).
+            if opts.rig.is_some() {
+                mapper.number("Mapper.ba_refine_focal_length", 0);
+                mapper.number("Mapper.ba_refine_principal_point", 0);
+                mapper.number("Mapper.ba_refine_extra_params", 0);
+                if rig.is_some() {
+                    mapper.number("Mapper.ba_refine_sensor_from_rig", 0);
+                }
             }
         }
     }
@@ -709,7 +779,10 @@ fn past_deadline(opts: &ReconstructOptions, what: &str) -> bool {
 pub fn reconstruct(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Reconstruction> {
     let (rec, rung) = reconstruct_attempts(frames_dir, opts);
     let rec = rec?;
-    if rec.health.pass || !matches!(opts.mapper, Mapper::Incremental) || past_deadline(opts, "the serial mapper retry") {
+    // 360 rig solves have their own short ladder (one low-angle retry, splat-brush sfm_rig): their
+    // masked nadir views always trip images_under_100_points, and a serial remap of ~1,400 views
+    // would re-map the whole capture on one thread.
+    if rec.health.pass || !matches!(opts.mapper, Mapper::Incremental) || opts.rig.is_some() || past_deadline(opts, "the serial mapper retry") {
         return Ok(rec);
     }
     // A video chain that ended on its hybrid attempt maps once more only to re-roll the seed (its
@@ -834,6 +907,7 @@ fn model_rank(h: &SfmHealth) -> (bool, std::cmp::Reverse<usize>, usize, usize, s
 
 /// Whether a COLMAP stage takes the shared exclusive GPU lock when `use_gpu` is set: CUDA feature
 /// extraction and matching do; both mappers run predominantly (global: entirely) on CPU.
+/// `rig_configurator` only edits the database (no GPU).
 pub fn stage_needs_gpu_lock(stage: &str) -> bool {
     matches!(stage, "feature_extractor" | "exhaustive_matcher" | "sequential_matcher")
 }
@@ -1006,19 +1080,26 @@ fn reconstruct_once(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Reco
             ensure!(sha == frozen, "the copy of {} does not match its frozen SHA-256 ({sha} vs {frozen})", database.display());
             eprintln!("[sfm] {}: mapping a copy of the frozen DB (sha {}, matches)", opts.rung, &sha[..16]);
         }
-        reset_camera(&opts.output_dir.join("database.db"), &opts.camera_model)?;
+        // A rig database keeps its fixed per-sensor cameras.
+        if opts.rig.is_none() {
+            reset_camera(&opts.output_dir.join("database.db"), &opts.camera_model)?;
+        }
         if let Some(factor) = opts.fixed_focal_factor {
             set_focal(&opts.output_dir.join("database.db"), factor)?;
         }
-        // Exhaustive matching on a reused database only adds the pairs it lacks (Hybrid fallback).
-        let rematch = matches!(opts.matching, Matching::Exhaustive) && opts.reuse_matches;
-        stages.retain(|s| {
-            s.name != "feature_extractor"
-                && (rematch || !(s.name.ends_with("_matcher") || s.name == "geometric_verifier"))
-        });
+        stages = reused_stages(stages, opts);
     }
     let mut mapper_stage = None;
     for mut stage in stages {
+        // Flat `vNN_` names share the one extraction camera; rig_configurator makes a camera per
+        // sensor but leaves the images on that one, collapsing every view onto the reference sensor
+        // (COLMAP 4.2.1; its panorama example uses one folder and camera per view instead).
+        if stage.name == "rig_configurator" {
+            if let Some(rig) = &opts.rig {
+                let cameras = split_cameras_by_prefix(&opts.output_dir.join("database.db"), &rig_prefixes(&rig.config)?)?;
+                eprintln!("[sfm] rig: one camera per view prefix ({cameras} cameras)");
+            }
+        }
         if matches!(stage.name.as_str(), "mapper" | "global_mapper") {
             if let Some(masks) = &opts.late_masks {
                 apply_late_masks(masks, &opts.output_dir, &mut timings)?;
@@ -1067,7 +1148,11 @@ fn reconstruct_once(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Reco
             .as_ref()
             .filter(|masks| !masks.with_extension("done").is_file())
             .map_or(0, |_| PREMASK_NICE);
+        let extracted = stage.name == "feature_extractor" && opts.camera_model.ends_with("_FISHEYE");
         timings.push(run_stage_at(stage, &opts.output_dir, gpu_lock.as_ref(), nice)?);
+        if extracted {
+            fisheye_focal_prior(&opts.output_dir.join("database.db"))?;
+        }
         // Release after this child exits; the next stage acquires only if it needs it.
     }
     // A keyframe map sparser than every 2nd frame that split: map every 2nd frame instead (the same
@@ -1207,7 +1292,10 @@ fn reconstruct_once(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Reco
         stage.name = "leftover_bundle_adjuster".into();
         stage.option("input_path", &init_dir);
         stage.option("output_path", &refined);
-        stage.number("BundleAdjustment.refine_focal_length", u8::from(opts.fixed_focal_factor.is_none()));
+        stage.number("BundleAdjustment.refine_focal_length", u8::from(opts.fixed_focal_factor.is_none() && opts.rig.is_none()));
+        if opts.rig.is_some() {
+            stage.number("BundleAdjustment.refine_sensor_from_rig", 0);
+        }
         stage.number("BundleAdjustment.refine_principal_point", 0);
         stage.number("BundleAdjustment.refine_extra_params", 0);
         stage.number("BundleAdjustmentCeres.use_gpu", u8::from(opts.use_gpu));
@@ -1360,6 +1448,7 @@ pub fn reset_camera(database: &Path, model: &str) -> Result<()> {
         "SIMPLE_RADIAL" => Some((2, 4)),
         "RADIAL" => Some((3, 5)),
         "OPENCV" => Some((4, 8)),
+        "OPENCV_FISHEYE" => Some((5, 8)),
         _ => None,
     };
     let (target, n) = id(model).with_context(|| format!("cannot reset a camera to {model}"))?;
@@ -1371,12 +1460,12 @@ pub fn reset_camera(database: &Path, model: &str) -> Result<()> {
     for (camera, source, blob) in cameras {
         let p: Vec<f64> = blob.chunks_exact(8).map(|b| f64::from_le_bytes(b.try_into().expect("8 bytes"))).collect();
         let (f, cx, cy) = match source {
-            0 | 2 | 3 => (p[0], p[1], p[2]),
-            1 | 4 => (p[0], p[2], p[3]),
+            0 | 2 | 3 | 8 | 9 => (p[0], p[1], p[2]),
+            1 | 4 | 5 => (p[0], p[2], p[3]),
             other => anyhow::bail!("cannot reset camera model id {other}"),
         };
         let mut params = match target {
-            1 | 4 => vec![f, f, cx, cy],
+            1 | 4 | 5 => vec![f, f, cx, cy],
             _ => vec![f, cx, cy],
         };
         params.resize(n, 0.0);
@@ -1384,6 +1473,20 @@ pub fn reset_camera(database: &Path, model: &str) -> Result<()> {
         db.execute("UPDATE cameras SET model = ?1, params = ?2 WHERE camera_id = ?3", rusqlite::params![target, blob, camera])?;
     }
     Ok(())
+}
+
+/// COLMAP model ids of the fisheye models (OPENCV_FISHEYE, SIMPLE_RADIAL_FISHEYE, RADIAL_FISHEYE,
+/// THIN_PRISM_FISHEYE, RAD_TAN_THIN_PRISM_FISHEYE).
+const FISHEYE_MODEL_IDS: &str = "5, 8, 9, 10, 11";
+
+/// Marks fisheye cameras' focal lengths as priors. COLMAP 4.2 treats every fisheye image pair whose
+/// camera has no focal prior as degenerate ("their focal length cannot be recovered from a
+/// fundamental matrix"), so photos and frames without an EXIF focal verified no pairs at all
+/// (playroom: 0 of 126 placed). The focal is the extractor's (EXIF, else
+/// `default_focal_length_factor`, which fisheye solves set from the lens) and is still refined.
+pub fn fisheye_focal_prior(database: &Path) -> Result<usize> {
+    let db = rusqlite::Connection::open(database)?;
+    Ok(db.execute(&format!("UPDATE cameras SET prior_focal_length = 1 WHERE prior_focal_length = 0 AND model IN ({FISHEYE_MODEL_IDS})"), [])?)
 }
 
 /// Sets every camera's focal length in a COLMAP database to `factor` times its longer side (both
@@ -1398,8 +1501,8 @@ pub fn set_focal(database: &Path, factor: f64) -> Result<()> {
         let mut p: Vec<f64> = blob.chunks_exact(8).map(|b| f64::from_le_bytes(b.try_into().expect("8 bytes"))).collect();
         let f = factor * w.max(h) as f64;
         match model {
-            0 | 2 | 3 => p[0] = f,
-            1 | 4 => (p[0], p[1]) = (f, f),
+            0 | 2 | 3 | 8 | 9 => p[0] = f,
+            1 | 4 | 5 => (p[0], p[1]) = (f, f),
             other => anyhow::bail!("cannot set the focal length of camera model id {other}"),
         }
         let blob: Vec<u8> = p.iter().flat_map(|v| v.to_le_bytes()).collect();
@@ -1815,6 +1918,10 @@ pub fn triangulation_command(
     stage.number("clear_points", 0);
     stage.number("refine_intrinsics", 0);
     stage.number("Mapper.fix_existing_frames", 1);
+    // Fixed frames still move their views if the rig is refined.
+    if opts.rig.is_some() {
+        stage.number("Mapper.ba_refine_sensor_from_rig", 0);
+    }
     // Poses are fixed here, so the mapper's one-thread determinism isn't needed (room: 1.9 s at
     // num_threads vs 2.8 s at one thread).
     stage.number("Mapper.num_threads", opts.num_threads);
@@ -1958,6 +2065,11 @@ fn colmap_model_id(model: &str) -> Result<i64> {
         "SIMPLE_RADIAL" => 2,
         "RADIAL" => 3,
         "OPENCV" => 4,
+        "OPENCV_FISHEYE" => 5,
+        "FULL_OPENCV" => 6,
+        "SIMPLE_RADIAL_FISHEYE" => 8,
+        "RADIAL_FISHEYE" => 9,
+        "THIN_PRISM_FISHEYE" => 10,
         other => bail!("unsupported imported camera model {other}"),
     })
 }
@@ -1969,6 +2081,11 @@ fn colmap_model_params(model: &str) -> Result<usize> {
         "SIMPLE_RADIAL" => 4,
         "RADIAL" => 5,
         "OPENCV" => 8,
+        "OPENCV_FISHEYE" => 8,
+        "FULL_OPENCV" => 12,
+        "SIMPLE_RADIAL_FISHEYE" => 4,
+        "RADIAL_FISHEYE" => 5,
+        "THIN_PRISM_FISHEYE" => 12,
         other => bail!("unsupported imported camera model {other}"),
     })
 }
@@ -2052,6 +2169,105 @@ fn same_cameras(a: &splat_eval::Model, b: &splat_eval::Model) -> bool {
                 cam.model == c.model && cam.width == c.width && cam.height == c.height && cam.params == c.params
             })
         })
+}
+
+/// The `image_prefix` of every sensor in a rig_configurator config, in order.
+pub fn rig_prefixes(config: &Path) -> Result<Vec<String>> {
+    let rigs: serde_json::Value = serde_json::from_slice(&fs::read(config).with_context(|| format!("reading {}", config.display()))?)?;
+    let prefixes: Vec<String> = rigs.as_array().into_iter().flatten()
+        .flat_map(|rig| rig["cameras"].as_array().into_iter().flatten())
+        .filter_map(|c| c["image_prefix"].as_str().map(str::to_owned))
+        .collect();
+    ensure!(!prefixes.is_empty(), "{} names no image prefixes", config.display());
+    Ok(prefixes)
+}
+
+/// Gives the images of each name prefix their own camera (a copy of the camera they share), so
+/// rig_configurator binds each prefix to its own sensor. The first prefix keeps the original
+/// camera. Returns the number of cameras the prefixed images use afterwards.
+pub fn split_cameras_by_prefix(database: &Path, prefixes: &[String]) -> Result<usize> {
+    let mut db = rusqlite::Connection::open(database)?;
+    let tx = db.transaction()?;
+    let mut used = BTreeSet::new();
+    for prefix in prefixes {
+        let len = prefix.chars().count() as i64;
+        let cameras: Vec<i64> = tx
+            .prepare("SELECT DISTINCT camera_id FROM images WHERE substr(name, 1, ?1) = ?2")?
+            .query_map(rusqlite::params![len, prefix], |r| r.get(0))?
+            .collect::<rusqlite::Result<_>>()?;
+        let [camera] = cameras[..] else {
+            ensure!(cameras.is_empty(), "images with prefix {prefix} use {} cameras", cameras.len());
+            continue;
+        };
+        if !used.insert(camera) {
+            tx.execute("INSERT INTO cameras (model, width, height, params, prior_focal_length) \
+                SELECT model, width, height, params, prior_focal_length FROM cameras WHERE camera_id = ?1", [camera])?;
+            let copy = tx.last_insert_rowid();
+            tx.execute("UPDATE images SET camera_id = ?1 WHERE substr(name, 1, ?2) = ?3", rusqlite::params![copy, len, prefix])?;
+            used.insert(copy);
+        }
+    }
+    tx.commit()?;
+    Ok(used.len())
+}
+
+/// Post-solve check of a 360 rig model: for every registered frame (images grouped by the name after
+/// their `vNN_` prefix), each view's rotation relative to the reference view matches `cam_from_ref`
+/// (row-major, one per prefix) within `max_angle_deg`, and every view's camera centre lies within
+/// `max_centre_rel` of the reference view's, relative to the median distance between consecutive
+/// frame centres (`frames` gives capture order). splat-core's panorama manifest supplies the layout.
+pub fn check_rig(model_dir: &Path, prefixes: &[String], cam_from_ref: &[[f64; 9]], frames: &[String], max_angle_deg: f64, max_centre_rel: f64) -> Result<RigCheck> {
+    ensure!(!prefixes.is_empty() && prefixes.len() == cam_from_ref.len(), "rig layout has no views");
+    let model = read_model(model_dir)?;
+    let rot = |q: [f64; 4]| -> glam::DMat3 {
+        let q = glam::DQuat::from_xyzw(q[1], q[2], q[3], q[0]).normalize();
+        glam::DMat3::from_quat(q)
+    };
+    let mut groups: BTreeMap<&str, Vec<(usize, glam::DMat3, glam::DVec3)>> = BTreeMap::new();
+    for im in model.images.values() {
+        let Some(view) = prefixes.iter().position(|p| im.name.starts_with(p.as_str())) else { continue };
+        let r = rot(im.qvec);
+        let centre = -(r.transpose() * glam::DVec3::from_array(im.tvec));
+        groups.entry(&im.name[prefixes[view].len()..]).or_default().push((view, r, centre));
+    }
+    let order: std::collections::HashMap<&str, usize> = frames.iter().enumerate().map(|(i, f)| (f.as_str(), i)).collect();
+    let mut centres: Vec<(usize, glam::DVec3)> = groups.iter()
+        .filter_map(|(frame, views)| views.iter().find(|v| v.0 == 0).map(|v| (order.get(frame).copied().unwrap_or(usize::MAX), v.2)))
+        .collect();
+    centres.sort_by_key(|c| c.0);
+    let mut steps: Vec<f64> = centres.windows(2).map(|w| (w[1].1 - w[0].1).length()).collect();
+    steps.sort_by(f64::total_cmp);
+    let scale = steps.get(steps.len() / 2).copied().filter(|d| *d > 0.0).unwrap_or(1.0);
+    let (mut worst_angle, mut worst_centre) = (0.0f64, 0.0f64);
+    for (frame, views) in &groups {
+        let Some(&(_, r0, c0)) = views.iter().find(|v| v.0 == 0) else {
+            bail!("rig check: frame {frame} is registered without its reference view {}", prefixes[0]);
+        };
+        for &(view, r, c) in views {
+            let m = cam_from_ref[view];
+            let expected = glam::DMat3::from_cols_array(&m).transpose();
+            let relative = r * r0.transpose();
+            let delta = relative * expected.transpose();
+            let angle = ((delta.x_axis.x + delta.y_axis.y + delta.z_axis.z - 1.0) / 2.0).clamp(-1.0, 1.0).acos().to_degrees();
+            let offset = (c - c0).length() / scale;
+            worst_angle = worst_angle.max(angle);
+            worst_centre = worst_centre.max(offset);
+            ensure!(angle <= max_angle_deg, "rig check: {}{frame} is {angle:.4} deg off the rig layout (max {max_angle_deg})", prefixes[view]);
+            ensure!(offset <= max_centre_rel, "rig check: {}{frame}'s centre is {offset:.2e} of a frame step from the rig centre (max {max_centre_rel:e})", prefixes[view]);
+        }
+    }
+    Ok(RigCheck { frames: groups.len(), views: groups.values().map(Vec::len).sum(), worst_angle_deg: worst_angle, worst_centre_rel: worst_centre, frame_step: scale })
+}
+
+/// What [`check_rig`] measured.
+#[derive(Clone, Debug, Serialize)]
+pub struct RigCheck {
+    pub frames: usize,
+    pub views: usize,
+    pub worst_angle_deg: f64,
+    pub worst_centre_rel: f64,
+    /// Median distance between consecutive frame centres (model units).
+    pub frame_step: f64,
 }
 
 /// Reject an initialization pass that moved cameras. Quaternion sign/normalization
@@ -2182,6 +2398,16 @@ fn run_stage_at(
                     unsafe {
                         libc::kill(-(child.id() as libc::pid_t), libc::SIGKILL);
                     }
+                    // Windows has no process groups here: taskkill /T takes the descendants
+                    // (best effort, while the child is still unreaped and its pid valid).
+                    #[cfg(windows)]
+                    {
+                        let _ = Command::new("taskkill")
+                            .args(["/PID", &child.id().to_string(), "/T", "/F"])
+                            .stdout(Stdio::null())
+                            .stderr(Stdio::null())
+                            .status();
+                    }
                     let _ = child.kill();
                     break child.wait()?;
                 }
@@ -2220,4 +2446,47 @@ thread_local! {
 /// An environment override; an unset or unparsable variable keeps the product default.
 fn env_parse<T: std::str::FromStr>(key: &str) -> Option<T> {
     std::env::var(key).ok()?.parse().ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fisheye_cameras_get_a_focal_prior_and_survive_resets() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("database.db");
+        let db = rusqlite::Connection::open(&path).unwrap();
+        db.execute_batch("CREATE TABLE cameras (camera_id INTEGER PRIMARY KEY, model INTEGER, width INTEGER, height INTEGER, params BLOB, prior_focal_length INTEGER);").unwrap();
+        let blob = |p: &[f64]| p.iter().flat_map(|v| v.to_le_bytes()).collect::<Vec<u8>>();
+        db.execute("INSERT INTO cameras VALUES (1, 5, 1000, 600, ?1, 0), (2, 1, 1000, 600, ?2, 0), (3, 9, 1000, 600, ?3, 0)",
+            rusqlite::params![blob(&[380.0, 380.0, 500.0, 300.0, 0.0, 0.0, 0.0, 0.0]), blob(&[900.0, 900.0, 500.0, 300.0]), blob(&[380.0, 500.0, 300.0, 0.0, 0.0])]).unwrap();
+        drop(db);
+        assert_eq!(fisheye_focal_prior(&path).unwrap(), 2);
+        let db = rusqlite::Connection::open(&path).unwrap();
+        let priors: Vec<i64> = db.prepare("SELECT prior_focal_length FROM cameras ORDER BY camera_id").unwrap()
+            .query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
+        assert_eq!(priors, [1, 0, 1]);
+        drop(db);
+        // Retries on a reused database reset to the requested model and may pin the focal.
+        reset_camera(&path, "OPENCV_FISHEYE").unwrap();
+        set_focal(&path, 0.4).unwrap();
+        let db = rusqlite::Connection::open(&path).unwrap();
+        let rows: Vec<(i64, Vec<u8>)> = db.prepare("SELECT model, params FROM cameras ORDER BY camera_id").unwrap()
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?))).unwrap().map(Result::unwrap).collect();
+        for (model, params) in rows {
+            let p: Vec<f64> = params.chunks_exact(8).map(|b| f64::from_le_bytes(b.try_into().unwrap())).collect();
+            assert_eq!((model, p.len(), p[0], p[1], p[2]), (5, 8, 400.0, 400.0, 500.0));
+        }
+    }
+
+    #[test]
+    fn imported_model_ids_and_param_counts_match_colmap() {
+        for model in ["SIMPLE_PINHOLE", "PINHOLE", "SIMPLE_RADIAL", "RADIAL", "OPENCV", "OPENCV_FISHEYE", "FULL_OPENCV",
+            "SIMPLE_RADIAL_FISHEYE", "RADIAL_FISHEYE", "THIN_PRISM_FISHEYE"] {
+            let (id, &(name, params)) = splat_eval::colmap::CAMERA_MODELS.iter().enumerate().find(|(_, (n, _))| *n == model).unwrap();
+            assert_eq!((colmap_model_id(model).unwrap(), colmap_model_params(model).unwrap()), (id as i64, params), "{name}");
+        }
+        assert!(colmap_model_id("FOV").is_err());
+    }
 }

@@ -9,7 +9,8 @@ New here? Start with the [README](../README.md) quickstart, then a worked [examp
 | [commands.md](commands.md) | Every command you will use: check, run (drivers, presets), status/logs/stop/resume, refine, view, exports, shots, tools |
 | [outputs.md](outputs.md) | What a run writes: run directory, metrics and report, splat files, viewers, web scene, collision, Blender and game exports |
 | [filming-guide.md](filming-guide.md) | How to film a room or an object, and what each line of `vauss check` means (also `vauss check --guide`) |
-| [phone-capture-import.md](phone-capture-import.md) | Using Record3D, Polycam, Nerfstudio and ARKitScenes captures instead of a plain video |
+| [phone-capture-import.md](phone-capture-import.md) | Using Record3D, Polycam, Nerfstudio, ARKitScenes and COLMAP-folder captures instead of a plain video |
+| [fisheye.md](fisheye.md) | Fisheye and action-camera footage: the `--camera-model opencv-fisheye` flag, image-circle masks, calibrated fisheye captures |
 | [agents.md](agents.md) | The typed tools, the MCP server (`vauss serve`) and the Claude Code / Codex drivers |
 | [fill.md](fill.md) | `vauss fill`: generative fill-in so a room holds up away from the filmed path (NVIDIA Fixer by default) |
 

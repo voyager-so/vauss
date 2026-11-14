@@ -22,14 +22,17 @@ mod engine;
 pub mod fixture;
 mod glyphs;
 mod inpaint;
+mod lens;
 mod media;
 mod mesh;
 mod model;
+pub mod panorama;
 pub mod offpath;
 pub mod render;
 pub mod select;
 mod select_worker;
 mod sfm;
+mod sfm_rig;
 mod split;
 mod train;
 pub use train::{PseudoView, PseudoViews, TrainJob, WEB_PACKAGE};
@@ -189,7 +192,7 @@ impl Backend for BrushBackend {
 
     fn capabilities(&self) -> Value {
         json!({
-            "backend": "brush", "inspect_input": true, "extract_frames": true,
+            "backend": "brush", "inspect_input": true, "extract_frames": true, "split_panoramas": true,
             "mask_distractors": self.masker.as_ref().is_some_and(|m| m.capabilities()["mask_distractors"] == true),
             "sfm_inline_masks": self.cfg.sam.is_some(),
             "mask_uses": ["sfm_features", "training_ignore", "both"], "reconstruct_sfm": self.cfg.colmap.is_some(), "sfm_engine": "colmap",
@@ -206,6 +209,10 @@ impl Backend for BrushBackend {
 
     fn extract_frames(&self, run: &dyn RunCtx, req: ExtractFrames) -> anyhow::Result<ToolResult> {
         guard("extract_frames", || media::extract_frames(&self.cfg, run, req))
+    }
+
+    fn split_panoramas(&self, run: &dyn RunCtx, req: SplitPanoramas) -> anyhow::Result<ToolResult> {
+        guard("split_panoramas", || panorama::split_panoramas(run, req))
     }
 
     fn mask_distractors(&self, run: &dyn RunCtx, req: MaskDistractors) -> anyhow::Result<ToolResult> {

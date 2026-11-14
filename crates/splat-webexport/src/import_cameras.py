@@ -13,6 +13,9 @@ import sys
 
 def camera_settings(c):
     """Blender horizontal sensor fit; preserve unequal focal axes and principal point."""
+    if c["model"].endswith("_FISHEYE"):
+        raise ValueError("This capture used a fisheye lens (" + c["model"] + "); a Blender camera cannot reproduce its framing exactly. "
+                         "The splat, mesh and voxels are unaffected.")
     if c["model"] not in ("PINHOLE", "SIMPLE_PINHOLE"):
         raise ValueError("Exact Blender camera requires undistorted PINHOLE/SIMPLE_PINHOLE input; got " + c["model"])
     w, h, fx, fy = (c[k] for k in ("width", "height", "fx", "fy"))

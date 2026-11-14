@@ -2,6 +2,9 @@
 //! Surfel (2DGS) rendering takes pinhole cameras only, while video SfM ends with RADIAL (COLMAP)
 //! or SIMPLE_RADIAL (the learned-pose rescue): surfel training and evaluation load a pinhole copy
 //! of the dataset ([`pinhole_dataset`]) and leave the source frames untouched.
+//! Kannala-Brandt fisheyes (OPENCV_FISHEYE, RADIAL_FISHEYE, SIMPLE_RADIAL_FISHEYE) undistort to a
+//! pinhole crop of their central field of view ([`MAX_FISHEYE_HALF_FOV_DEG`]); rays at or past 90
+//! degrees have no pinhole image.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -11,6 +14,13 @@ use rayon::prelude::*;
 use serde::Serialize;
 
 use crate::colmap::{self, Camera};
+use crate::fisheye::Kb4;
+
+/// Widest half field of view (along the longer image axis) a fisheye's pinhole copy keeps. Wider
+/// pinholes stretch the rim and shrink the centre (a 150 degree pinhole renders its centre at a
+/// quarter of a 90 degree one's resolution); 120 degrees across keeps most of a typical action-cam
+/// view at a usable centre resolution.
+pub const MAX_FISHEYE_HALF_FOV_DEG: f64 = 60.0;
 
 /// Lens distortion in COLMAP's OPENCV / FULL_OPENCV form (the radial-only models are special cases).
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -21,14 +31,19 @@ pub struct Lens {
     pub cy: f64,
     k: [f64; 6],
     p: [f64; 2],
+    /// A Kannala-Brandt fisheye: `k`/`p` are unused and these coefficients map rays instead.
+    kb4: Option<Kb4>,
 }
 
 impl Lens {
     /// The camera's intrinsics and distortion; `None` for a pinhole camera, an error for models
-    /// this undistorter can't invert (fisheye, FOV).
+    /// this undistorter can't invert (thin-prism fisheye, FOV).
     pub fn of(cam: &Camera) -> Result<Option<Lens>> {
         let p = &cam.params;
         let mut lens = Lens::default();
+        if let Some(kb4) = Kb4::of(cam) {
+            return Ok(Some(Lens { fx: kb4.fx, fy: kb4.fy, cx: kb4.cx, cy: kb4.cy, kb4: Some(kb4), ..lens }));
+        }
         match cam.model.as_str() {
             "SIMPLE_PINHOLE" | "PINHOLE" => return Ok(None),
             "SIMPLE_RADIAL" => (lens.fx, lens.fy, lens.cx, lens.cy, lens.k[0]) = (p[0], p[0], p[1], p[2], p[3]),
@@ -53,8 +68,15 @@ impl Lens {
         (1.0 + r2 * (k1 + r2 * (k2 + r2 * k3))) / (1.0 + r2 * (k4 + r2 * (k5 + r2 * k6)))
     }
 
+    pub fn is_fisheye(&self) -> bool {
+        self.kb4.is_some()
+    }
+
     /// Normalised undistorted -> distorted coordinates.
     pub fn distort(&self, x: f64, y: f64) -> (f64, f64) {
+        if let Some(kb4) = &self.kb4 {
+            return kb4.distort(x, y);
+        }
         let r2 = x * x + y * y;
         let f = self.radial(r2);
         let [p1, p2] = self.p;
@@ -62,7 +84,11 @@ impl Lens {
     }
 
     /// Normalised distorted -> undistorted coordinates (fixed-point iteration, as COLMAP does).
+    /// Non-finite for fisheye rays at or past 90 degrees (no pinhole image).
     pub fn undistort(&self, xd: f64, yd: f64) -> (f64, f64) {
+        if let Some(kb4) = &self.kb4 {
+            return kb4.undistort(xd, yd).unwrap_or((f64::NAN, f64::NAN));
+        }
         let (mut x, mut y) = (xd, yd);
         for _ in 0..100 {
             let (dx, dy) = self.distort(x, y);
@@ -79,6 +105,10 @@ impl Lens {
     /// The radial map r -> r * radial(r^2) still increases at `r` (past that point the polynomial
     /// folds back and two output pixels would read the same source pixel).
     fn monotonic_at(&self, r: f64) -> bool {
+        if let Some(kb4) = &self.kb4 {
+            // A pinhole radius r is the ray atan(r) (< 90 degrees); within the fold it is one-to-one.
+            return r.atan() < kb4.max_theta();
+        }
         let h = 1e-4 * r.max(1e-3);
         (r + h) * self.radial((r + h) * (r + h)) > r * self.radial(r * r)
     }
@@ -87,7 +117,8 @@ impl Lens {
 /// The pinhole camera an undistorted `w` x `h` image is rendered with: the same principal point and
 /// the focal lengths scaled by the smallest factor in [0.5, 4] at which every border pixel of the
 /// output reads inside the source image (no blank pixels; a pincushion lens zooms in, a barrel
-/// lens zooms out up to where its polynomial would fold).
+/// lens zooms out up to where its polynomial would fold). A fisheye's copy is further limited to
+/// [`MAX_FISHEYE_HALF_FOV_DEG`] along either axis.
 pub fn pinhole_for(lens: &Lens, w: u32, h: u32) -> (f64, f64) {
     let valid = |s: f64| {
         let (fx, fy) = (lens.fx * s, lens.fy * s);
@@ -99,7 +130,13 @@ pub fn pinhole_for(lens: &Lens, w: u32, h: u32) -> (f64, f64) {
             lens.monotonic_at((x * x + y * y).sqrt()) && (-0.5..=w as f64 - 0.5).contains(&su) && (-0.5..=h as f64 - 0.5).contains(&sv)
         })
     };
-    let (mut lo, mut hi) = (0.5, 4.0);
+    let mut lo: f64 = 0.5;
+    if lens.is_fisheye() {
+        // Half FOV of the scaled pinhole along each axis: atan((w/2) / (s fx)).
+        let tan = MAX_FISHEYE_HALF_FOV_DEG.to_radians().tan();
+        lo = lo.max((0.5 * w as f64 / (lens.fx * tan)).max(0.5 * h as f64 / (lens.fy * tan))).min(4.0);
+    }
+    let mut hi: f64 = 4.0;
     if valid(lo) {
         return (lens.fx * lo, lens.fy * lo);
     }
@@ -245,7 +282,8 @@ pub fn pinhole_dataset(src: &Path, dst: &Path) -> Result<Option<Undistorted>> {
         let (Some(lens), Some(&(fx, fy))) = (lenses.get(&im.camera_id), pinholes.get(&im.camera_id)) else { continue };
         for (xy, _) in &mut im.points2d {
             let (x, y) = lens.undistort((xy[0] - lens.cx) / lens.fx, (xy[1] - lens.cy) / lens.fy);
-            *xy = [x * fx + lens.cx, y * fy + lens.cy];
+            // A fisheye keypoint at or past 90 degrees has no pinhole image: park it far outside.
+            *xy = if x.is_finite() && y.is_finite() { [x * fx + lens.cx, y * fy + lens.cy] } else { [-1e6, -1e6] };
         }
     }
     colmap::write_images_bin(&images_path, &records)?;
@@ -271,7 +309,8 @@ mod tests {
     fn pinhole_cameras_are_left_alone() {
         assert!(Lens::of(&cam("PINHOLE", vec![100.0, 100.0, 80.0, 45.0])).unwrap().is_none());
         assert!(Lens::of(&cam("SIMPLE_PINHOLE", vec![100.0, 80.0, 45.0])).unwrap().is_none());
-        assert!(Lens::of(&cam("OPENCV_FISHEYE", vec![100.0, 100.0, 80.0, 45.0, 0.1, 0.0, 0.0, 0.0])).is_err());
+        assert!(Lens::of(&cam("OPENCV_FISHEYE", vec![100.0, 100.0, 80.0, 45.0, 0.1, 0.0, 0.0, 0.0])).unwrap().unwrap().is_fisheye());
+        assert!(Lens::of(&cam("THIN_PRISM_FISHEYE", vec![100.0; 12])).is_err());
     }
 
     #[test]
@@ -282,6 +321,54 @@ mod tests {
             let (xu, yu) = lens.undistort(xd, yd);
             assert!((xu - x).abs() < 1e-9 && (yu - y).abs() < 1e-9, "({x}, {y}) -> ({xu}, {yu})");
         }
+    }
+
+    #[test]
+    fn fisheye_pinhole_copy_is_capped_and_reads_inside_the_frame() {
+        // Equidistant-ish fisheye, ~170 degrees across a 160 px frame.
+        let lens = Lens::of(&cam("OPENCV_FISHEYE", vec![54.0, 54.0, 80.0, 45.0, 0.02, -0.003, 0.0, 0.0])).unwrap().unwrap();
+        let (fx, fy) = pinhole_for(&lens, 160, 90);
+        let half_fov = (80.0 / fx).atan().to_degrees();
+        assert!(half_fov <= MAX_FISHEYE_HALF_FOV_DEG + 1e-6 && half_fov > 50.0, "half fov {half_fov}");
+        assert!((fx / fy - 1.0).abs() < 1e-9);
+        for (u, v) in [(0.5, 0.5), (159.5, 89.5), (0.5, 45.0)] {
+            let (x, y) = ((u - 80.0) / fx, (v - 45.0) / fy);
+            let (xd, yd) = lens.distort(x, y);
+            let (su, sv) = (xd * lens.fx + 80.0, yd * lens.fy + 45.0);
+            assert!((0.0..=160.0).contains(&su) && (0.0..=90.0).contains(&sv), "({u},{v}) reads ({su},{sv})");
+            let (ux, uy) = lens.undistort(xd, yd);
+            assert!((ux - x).abs() < 1e-9 && (uy - y).abs() < 1e-9);
+        }
+        // A ray at 100 degrees has no pinhole image.
+        assert!(lens.undistort(lens.kb4.unwrap().theta_d(100f64.to_radians()), 0.0).0.is_nan());
+    }
+
+    #[test]
+    fn fisheye_dataset_becomes_pinhole() {
+        let tmp = tempfile::tempdir().unwrap();
+        let (src, dst) = (tmp.path().join("src"), tmp.path().join("dst"));
+        let sparse = src.join("sparse/0");
+        std::fs::create_dir_all(&sparse).unwrap();
+        std::fs::create_dir_all(src.join("images")).unwrap();
+        std::fs::create_dir_all(src.join("masks")).unwrap();
+        let fisheye = Camera { id: 1, model: "OPENCV_FISHEYE".into(), width: 64, height: 48, params: vec![22.0, 22.0, 32.0, 24.0, 0.0, 0.0, 0.0, 0.0] };
+        colmap::write_cameras_bin(&sparse.join("cameras.bin"), &BTreeMap::from([(1, fisheye)])).unwrap();
+        colmap::write_images_bin(&sparse.join("images.bin"), &[colmap::ImageRecord {
+            id: 1, name: "a.jpg".into(), camera_id: 1, qvec: [1.0, 0.0, 0.0, 0.0], tvec: [0.0; 3],
+            points2d: vec![([32.0, 24.0], -1), ([0.5, 24.0], -1)],
+        }]).unwrap();
+        std::fs::write(sparse.join("points3D.bin"), 0u64.to_le_bytes()).unwrap();
+        image::RgbImage::from_pixel(64, 48, image::Rgb([90, 120, 150])).save(src.join("images/a.jpg")).unwrap();
+        image::GrayImage::from_pixel(64, 48, image::Luma([255])).save(src.join("masks/a.png")).unwrap();
+        let report = pinhole_dataset(&src, &dst).unwrap().unwrap();
+        assert_eq!((report.images, report.masks), (1, 1));
+        let model = colmap::read_model(&dst.join("sparse/0")).unwrap();
+        assert_eq!(model.cameras[&1].model, "PINHOLE");
+        assert!(dst.join("masks/a.png").is_file() && dst.join("images/a.jpg").is_file());
+        // The centre keypoint stays; the one ~86 degrees out lands outside the pinhole frame.
+        let recs = colmap::read_images_bin(&dst.join("sparse/0/images.bin")).unwrap();
+        assert_eq!(recs[0].points2d[0].0, [32.0, 24.0]);
+        assert!(recs[0].points2d[1].0[0] < 0.0);
     }
 
     #[test]

@@ -67,6 +67,12 @@ fn root(parents: &mut [usize], mut i: usize) -> usize {
     i
 }
 
+/// Views of one 360 frame whose camera centres agree within this share of their scene depth form
+/// one camera group (see [`geometry_evidence`]). A rig solve puts them at one point; solving the
+/// views without the rig (the acceptance baseline) leaves solve noise, but they still share a
+/// centre physically, so a centre that far off is a real disagreement.
+const RIG_CENTRE_TOLERANCE: f64 = 0.02;
+
 pub fn geometry_evidence(model: &Model) -> GeometryEvidence {
     let points: HashMap<_, _> = model.points.iter().map(|p| (p.id, p.xyz)).collect();
     let mut images: Vec<_> = model.images.values().collect();
@@ -105,6 +111,27 @@ pub fn geometry_evidence(model: &Model) -> GeometryEvidence {
             }
         })
         .collect();
+    // 360 rig frames (splat-core's panorama split: `vNN_<frame>`): the views of one frame share its
+    // pose through the rig, not through 3D points (each direction gives features to one view), so
+    // they are one camera group when their centres coincide.
+    let mut frames: HashMap<&str, Vec<usize>> = HashMap::new();
+    for (i, im) in images.iter().enumerate() {
+        let b = im.name.as_bytes();
+        if b.len() > 4 && b[0] == b'v' && b[1].is_ascii_digit() && b[2].is_ascii_digit() && b[3] == b'_' {
+            frames.entry(&im.name[4..]).or_default().push(i);
+        }
+    }
+    for members in frames.values().filter(|m| m.len() > 1) {
+        let first = members[0];
+        let scale = members.iter().filter_map(|&i| views[i].median_depth).fold(0.0f64, f64::max).max(1e-9);
+        for &i in &members[1..] {
+            if distance(&views[first].center, &views[i].center) <= RIG_CENTRE_TOLERANCE * scale {
+                let a = root(&mut parents, i);
+                let b = root(&mut parents, first);
+                parents[a] = b;
+            }
+        }
+    }
     let mut sizes = BTreeMap::new();
     for (i, _) in views
         .iter()
@@ -226,4 +253,46 @@ pub fn assess_geometry(e: &GeometryEvidence, video: bool) -> GeometryHealth {
 
 pub fn geometry_health(model: &Model, video: bool) -> GeometryHealth {
     assess_geometry(&geometry_evidence(model), video)
+}
+
+#[cfg(test)]
+mod rig_tests {
+    use super::*;
+    use crate::colmap::{Camera, Image, Point3D};
+
+    /// 4 frames along x, each with a forward and a backward view at the same centre; every point is
+    /// seen by one view direction only (as with 360 feature ownership masks).
+    fn rig_model(prefixed: bool, offset: f64) -> Model {
+        let mut model = Model { cameras: Default::default(), images: Default::default(), points: vec![] };
+        model.cameras.insert(1, Camera { id: 1, model: "PINHOLE".into(), width: 64, height: 64, params: vec![32.0, 32.0, 32.0, 32.0] });
+        for (side, z) in [(0u64, 5.0), (1, -5.0)] {
+            for i in 0..20u64 {
+                model.points.push(Point3D { id: side * 100 + i, xyz: [i as f64 * 0.2 - 2.0, 0.1 * i as f64, z], rgb: [0; 3], error: 0.0, track_len: 4 });
+            }
+        }
+        let mut id = 1;
+        for k in 0..4 {
+            for (side, q) in [(0u64, [1.0, 0.0, 0.0, 0.0]), (1, [0.0, 0.0, 1.0, 0.0])] {
+                let c = [k as f64 + if side == 1 { offset } else { 0.0 }, 0.0, 0.0];
+                let t = if side == 0 { [-c[0], 0.0, 0.0] } else { [c[0], 0.0, 0.0] };
+                let name = if prefixed { format!("v{side:02}_frame_{k}.jpg") } else { format!("cam{side}_frame_{k}.jpg") };
+                let ids: Vec<u64> = (0..20).map(|i| side * 100 + i).collect();
+                model.images.insert(id, Image { id, name, qvec: q, tvec: t, camera_id: 1, num_points2d: 20, obs_xy: vec![[0.0; 2]; 20], obs_point_id: ids });
+                id += 1;
+            }
+        }
+        model
+    }
+
+    #[test]
+    fn views_of_one_rig_frame_are_one_camera_group() {
+        let rig = geometry_evidence(&rig_model(true, 0.0));
+        assert_eq!(rig.component_sizes, [8]);
+        assert!(!assess_geometry(&rig, false).disconnected);
+        // Without the view prefix, or with distinct centres, the two directions stay disconnected.
+        assert_eq!(geometry_evidence(&rig_model(false, 0.0)).component_sizes, [4, 4]);
+        assert_eq!(geometry_evidence(&rig_model(true, 0.5)).component_sizes, [4, 4]);
+        // Solve noise in an unrigged baseline (centres 1 cm apart at 5 m) still groups.
+        assert_eq!(geometry_evidence(&rig_model(true, 0.01)).component_sizes, [8]);
+    }
 }

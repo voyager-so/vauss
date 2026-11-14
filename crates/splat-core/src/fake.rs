@@ -98,6 +98,10 @@ impl Backend for FakeBackend {
     fn extract_frames(&self, run: &dyn RunCtx, req: ExtractFrames) -> Result<ToolResult> {
         self.artifact(run, "extract_frames", ArtifactKind::Frames, &req)
     }
+    fn split_panoramas(&self, run: &dyn RunCtx, req: SplitPanoramas) -> Result<ToolResult> {
+        run.path(&req.frames_id)?;
+        self.artifact(run, "split_panoramas", ArtifactKind::Frames, &req)
+    }
     fn mask_distractors(&self, run: &dyn RunCtx, req: MaskDistractors) -> Result<ToolResult> {
         run.path(&req.frames_id)?;
         self.artifact(run, "mask_distractors", ArtifactKind::Masks, &req)

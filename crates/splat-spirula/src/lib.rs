@@ -95,6 +95,9 @@ impl Backend for SpirulaBackend {
         guarded(run, "inspect_input", || media::inspect(self, run, req))
     }
     fn extract_frames(&self, run: &dyn RunCtx, req: ExtractFrames) -> Result<ToolResult> {
+        if req.panorama {
+            return Ok(unsupported("extract_frames", "unsupported_input", "360 input needs the default backend"));
+        }
         guarded(run, "extract_frames", || media::extract(self, run, req))
     }
     fn mask_distractors(&self, run: &dyn RunCtx, req: MaskDistractors) -> Result<ToolResult> {

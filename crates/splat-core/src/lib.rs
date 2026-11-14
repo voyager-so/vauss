@@ -18,6 +18,7 @@ mod hashcache;
 pub mod remote;
 pub mod report;
 pub mod orientation;
+pub mod panorama;
 pub mod resolution;
 pub mod split;
 pub mod supervise;
@@ -52,6 +53,10 @@ pub trait Backend: Send + Sync {
     fn capabilities(&self) -> serde_json::Value;
     fn inspect_input(&self, run: &dyn RunCtx, req: InspectInput) -> anyhow::Result<ToolResult>;
     fn extract_frames(&self, run: &dyn RunCtx, req: ExtractFrames) -> anyhow::Result<ToolResult>;
+    /// 360 input: cut equirect frames into rigged pinhole views. Backends without it report unsupported.
+    fn split_panoramas(&self, _run: &dyn RunCtx, _req: SplitPanoramas) -> anyhow::Result<ToolResult> {
+        Ok(jobs::unsupported("split_panoramas", "this backend cannot split 360 frames; 360 input needs the default backend"))
+    }
     fn mask_distractors(
         &self,
         run: &dyn RunCtx,

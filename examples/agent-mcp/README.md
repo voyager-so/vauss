@@ -51,7 +51,7 @@ More in [docs/agents.md](../../docs/agents.md).
 `out/agent-car/stdout.txt` from this run:
 
 ```
-21 tools: run_default_pipeline, inspect_input, extract_frames, mask_distractors, reconstruct_sfm, define_split, train_splats, evaluate, render_views, extract_mesh, plan_shot, render_shot, generate_shot, export_blender, select_objects, remove_objects, inpaint_removed, job_status, stop_job, record_decision, finish
+22 tools: run_default_pipeline, inspect_input, extract_frames, split_panoramas, mask_distractors, reconstruct_sfm, define_split, train_splats, evaluate, render_views, extract_mesh, plan_shot, render_shot, generate_shot, export_blender, select_objects, remove_objects, inpaint_removed, job_status, stop_job, record_decision, finish
 [  538.8s] run_default_pipeline({}) -> succeeded in 539s
 candidate: candidate_2eba4991620c
 [  541.1s] render_views({"candidate_id": "candidate_2eba4991620c", "max_views": 4}) -> succeeded in 2s

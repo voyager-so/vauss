@@ -119,6 +119,9 @@ pub fn run(a: &ExportBlenderArgs) -> Result<Value> {
             fs::write(out.join("cameras.json"), serde_json::to_vec_pretty(&cameras)?)?;
             fs::write(out.join("import_cameras.py"), splat_webexport::cameras::BLENDER_IMPORT_SCRIPT)?;
             files.extend(["cameras.json".into(), "import_cameras.py".into()]);
+            if let Some(model) = fisheye_model(w) {
+                warnings.push(format!("{model} capture cameras: {FISHEYE_NOTE}"));
+            }
         } else {
             warnings.push("Exact capture calibration is absent; rerun export-web then export-blender to include cameras.json. Approximate look-at poses are not exact cameras.".into());
         }
@@ -186,6 +189,14 @@ fn voxel_name(edge: f32, scale: Option<f64>) -> String {
     }
 }
 
+/// What a fisheye capture means for this pack (README and run warning).
+const FISHEYE_NOTE: &str = "a fisheye lens, which a Blender camera can't reproduce exactly, so import_cameras.py refuses these cameras instead of framing them wrongly. The splat, mesh and voxels are unaffected: the lens only matters for matching the capture's exact framing.";
+
+/// The first fisheye lens model among the web export's capture cameras.
+fn fisheye_model(web: &Value) -> Option<String> {
+    web["capture_cameras"].as_array()?.iter().filter_map(|c| c["model"].as_str()).find(|m| m.ends_with("_FISHEYE")).map(str::to_owned)
+}
+
 fn readme(gaussians: Option<u64>, web: Option<&Value>, files: &[String], voxels: &Value, scale: Option<f64>) -> String {
     let has = |f: &str| files.iter().any(|x| x == f);
     let vox = files.iter().find(|f| f.starts_with("voxels"));
@@ -221,6 +232,9 @@ fn readme(gaussians: Option<u64>, web: Option<&Value>, files: &[String], voxels:
     }
     if has("cameras.json") {
         s += "\n## Exact capture camera\n\n`cameras.json` preserves every capture image, native width/height, unequal fx/fy, principal point, lens model and column-major OpenCV camera-to-world matrices. `source_c2w` matches the raw `splat.ply`; `c2w` matches the transformed web scene. No look-at reconstruction is needed.\n\nRun `blender scene.blend --python import_cameras.py -- --image <capture-image-name> --frame source` after importing `splat.ply` with numeric XYZ unchanged (do not apply the orientation-only rotation below). Use `--frame scene` for `scene.ply`, also with numeric XYZ unchanged, or `--frame spz` for Blender's SPZ importer (+90 degrees about X). The script selects one camera and sets its native resolution, pixel aspect and principal-point shifts. Rotate/scale the object and camera together if you want another world convention. Distorted lenses are rejected: undistort and re-export first. This guarantees calibrated framing, not equality between Blender and the native Gaussian rasterizer.\n";
+    }
+    if let Some(model) = web.filter(|_| has("cameras.json")).and_then(fisheye_model) {
+        s += &format!("\nThis capture used {FISHEYE_NOTE} (lens model {model})\n");
     }
     if !has("cameras.json") {
         s += "\nExact capture cameras are unavailable in this pack. Regenerate export-web then export-blender with the current version; a position/look-at/FOV record cannot recover unequal focal lengths, principal point or roll.\n";
@@ -262,6 +276,17 @@ Files here may be hardlinks to the run's own results: save edited scenes and exp
 mod tests {
     use super::*;
     use splat_webexport::{overflow, ply, spz};
+
+    #[test]
+    fn fisheye_capture_cameras_are_explained_in_the_readme() {
+        let web = json!({"capture_cameras": [{"model": "PINHOLE"}, {"model": "OPENCV_FISHEYE"}]});
+        assert_eq!(fisheye_model(&web).as_deref(), Some("OPENCV_FISHEYE"));
+        let text = readme(None, Some(&web), &["cameras.json".into()], &json!({}), None);
+        assert!(text.contains("fisheye lens") && text.contains("OPENCV_FISHEYE"), "{text}");
+        let pinhole = json!({"capture_cameras": [{"model": "PINHOLE"}]});
+        assert!(fisheye_model(&pinhole).is_none());
+        assert!(!readme(None, Some(&pinhole), &["cameras.json".into()], &json!({}), None).contains("fisheye"));
+    }
 
     #[test]
     fn blender_pack_never_recommends_an_incomplete_spz_and_recovers_old_sidecars() {
