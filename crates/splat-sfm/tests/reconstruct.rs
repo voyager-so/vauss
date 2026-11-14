@@ -55,6 +55,29 @@ fn selects_largest_component_and_recomputes_stored_errors() {
     );
 }
 
+/// Every test that writes an executable script or spawns a process holds this. A write fd opened by
+/// one thread is inherited (until the child execs) by a fork() from another, and exec of the script
+/// then fails with ETXTBSY; O_CLOEXEC cannot close that window, so scripted tests run one at a time.
+#[cfg(unix)]
+static SPAWN_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+#[cfg(unix)]
+fn serial() -> std::sync::MutexGuard<'static, ()> {
+    SPAWN_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// First exec of a freshly staged fake (`-h` prints a version and exits 0), with a bounded retry
+/// on ETXTBSY (os error 26) as a second line of defence.
+#[cfg(unix)]
+fn exec_ready(script: &Path) {
+    for attempt in 0..20u64 {
+        match std::process::Command::new(script).arg("-h").output() {
+            Err(e) if e.raw_os_error() == Some(26) => std::thread::sleep(std::time::Duration::from_millis(10 + attempt * 2)),
+            _ => return,
+        }
+    }
+}
+
 #[cfg(unix)]
 fn fake_colmap(dir: &Path, fail: bool) -> std::path::PathBuf {
     use std::io::Write;
@@ -90,12 +113,14 @@ fi
     drop(file);
     fs::set_permissions(&staged, fs::Permissions::from_mode(0o755)).unwrap();
     fs::rename(&staged, &script).unwrap();
+    exec_ready(&script);
     script
 }
 
 #[cfg(unix)]
 #[test]
 fn fresh_pipeline_handles_spaces_and_preserves_evidence() {
+    let _serial = serial();
     let tmp = tempfile::tempdir().unwrap();
     let frames = tmp.path().join("input photos");
     fs::create_dir(&frames).unwrap();
@@ -123,6 +148,7 @@ fn fresh_pipeline_handles_spaces_and_preserves_evidence() {
 #[cfg(unix)]
 #[test]
 fn failed_stage_retains_log_and_does_not_report_success() {
+    let _serial = serial();
     let tmp = tempfile::tempdir().unwrap();
     let mut opts = ReconstructOptions::new(tmp.path().join("failed"));
     opts.colmap = fake_colmap(tmp.path(), true);
@@ -139,6 +165,7 @@ fn failed_stage_retains_log_and_does_not_report_success() {
 #[cfg(unix)]
 #[test]
 fn native_child_keeps_gpu_lock_after_worker_is_killed() {
+    let _serial = serial();
     use fs2::FileExt;
     use std::os::unix::fs::PermissionsExt;
     use std::process::{Command, Stdio};
@@ -202,6 +229,20 @@ exit 7
 }
 
 #[test]
+fn fisheye_solves_pass_the_fisheye_model_to_colmap() {
+    let tmp = tempfile::tempdir().unwrap();
+    let mut opts = ReconstructOptions::new(tmp.path().join("out"));
+    opts.camera_model = "OPENCV_FISHEYE".into();
+    let stages = splat_sfm::commands(tmp.path(), &opts).unwrap();
+    let extract = stages.iter().find(|s| s.name == "feature_extractor").unwrap();
+    let argv = extract.args.iter().map(|a| a.to_string_lossy()).collect::<Vec<_>>().join(" ");
+    assert!(argv.contains("--ImageReader.camera_model OPENCV_FISHEYE"), "{argv}");
+    // Models splat-eval can't reproject stay refused.
+    opts.camera_model = "FOV".into();
+    assert!(splat_sfm::commands(tmp.path(), &opts).is_err());
+}
+
+#[test]
 fn global_mapper_takes_the_mapper_seed_and_runs_on_cpu() {
     let tmp = tempfile::tempdir().unwrap();
     let mut opts = ReconstructOptions::new(tmp.path().join("out"));
@@ -250,6 +291,7 @@ fn only_cuda_feature_stages_take_the_gpu_lock() {
 #[cfg(unix)]
 #[test]
 fn failed_global_solve_retries_low_angle_incrementally() {
+    let _serial = serial();
     use std::os::unix::fs::PermissionsExt;
     let tmp = tempfile::tempdir().unwrap();
     let frames = tmp.path().join("images");
@@ -361,6 +403,7 @@ if [ "$cmd" = 'point_triangulator' ]; then cp "$input/cameras.txt" "$input/image
     drop(file);
     fs::set_permissions(&staged, fs::Permissions::from_mode(0o755)).unwrap();
     fs::rename(&staged, &script).unwrap();
+    exec_ready(&script);
     let frames = tmp.path().join("frames");
     fs::create_dir(&frames).unwrap();
     let cam = |name: &str| splat_sfm::FixedCamera {
@@ -380,6 +423,7 @@ if [ "$cmd" = 'point_triangulator' ]; then cp "$input/cameras.txt" "$input/image
 #[cfg(unix)]
 #[test]
 fn fixed_pose_triangulation_runs_the_verifier_for_sequential_matching() {
+    let _serial = serial();
     let (ran, _) = fixed_pose_run("PINHOLE", vec![100., 100., 50., 40.], splat_sfm::Matching::Sequential);
     assert_eq!(ran, ["feature_extractor", "sequential_matcher", "geometric_verifier", "point_triangulator"]);
 }
@@ -387,12 +431,18 @@ fn fixed_pose_triangulation_runs_the_verifier_for_sequential_matching() {
 #[cfg(unix)]
 #[test]
 fn fixed_pose_triangulation_keeps_every_supported_camera_model_and_database_ids() {
+    let _serial = serial();
     for (model, params) in [
         ("SIMPLE_PINHOLE", vec![100., 50., 40.]),
         ("PINHOLE", vec![100., 101., 50., 40.]),
         ("SIMPLE_RADIAL", vec![100., 50., 40., 0.01]),
         ("RADIAL", vec![100., 50., 40., 0.01, 0.001]),
         ("OPENCV", vec![100., 101., 50., 40., 0.01, 0.001, 0.0001, 0.0002]),
+        ("FULL_OPENCV", vec![100., 101., 50., 40., 0.01, 0.001, 0.0001, 0.0002, 0.003, 0.0, 0.0, 0.0]),
+        ("OPENCV_FISHEYE", vec![40., 41., 50., 40., 0.03, -0.01, 0.002, -0.0003]),
+        ("SIMPLE_RADIAL_FISHEYE", vec![40., 50., 40., 0.03]),
+        ("RADIAL_FISHEYE", vec![40., 50., 40., 0.03, -0.01]),
+        ("THIN_PRISM_FISHEYE", vec![40., 41., 50., 40., 0.03, -0.01, 0.0, 0.0, 0.002, -0.0003, 0.0, 0.0]),
     ] {
         let (_, m) = fixed_pose_run(model, params.clone(), splat_sfm::Matching::Exhaustive);
         // Camera ids are the database's (1 and 3), not renumbered 1..n; models/params are the authored ones.

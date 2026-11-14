@@ -166,8 +166,21 @@ pub(crate) fn write(out: &Path, name: &str, source: &Source, w: u32, h: u32) -> 
     Ok(())
 }
 
+/// Camera-frame point of pixel (x, y) at optical-axis depth `z`; None for lenses this can't
+/// unproject (only PINHOLE and the Kannala-Brandt fisheyes) or a fisheye ray at or past 90 degrees
+/// (no positive optical-axis depth).
+fn unproject(f: &Frame, x: f64, y: f64, z: f64) -> Option<glam::DVec3> {
+    if f.model == "PINHOLE" {
+        return Some(glam::DVec3::new((x - f.params[2]) * z / f.params[0], (y - f.params[3]) * z / f.params[1], z));
+    }
+    let kb4 = splat_eval::fisheye::Kb4::from_params(&f.model, &f.params)?;
+    let ray = kb4.unproject([x, y])?;
+    (ray[2] > 1e-3).then(|| glam::DVec3::from_array(ray) * (z / ray[2]))
+}
+
 /// A bounded, coloured surface seed from training frames' sensor depth. Held-out
 /// frame indices (default every eighth) do not contribute their RGB or depth.
+/// Pinhole and fisheye (KB4) frames contribute; other distorted lenses are skipped.
 pub(crate) fn initial_points(
     out: &Path,
     frames: &[Frame],
@@ -180,7 +193,7 @@ pub(crate) fn initial_points(
     for (i, f) in frames.iter().enumerate() {
         if !f.has_depth
             || heldout.map_or(i % 8 == 0, |names| names.contains(&f.name))
-            || f.model != "PINHOLE"
+            || unproject(f, f.params[2], f.params[3], 1.0).is_none()
         {
             continue;
         }
@@ -203,11 +216,7 @@ pub(crate) fn initial_points(
                 {
                     continue;
                 }
-                let p = glam::DVec3::new(
-                    (x as f64 - f.params[2]) * z / f.params[0],
-                    (y as f64 - f.params[3]) * z / f.params[1],
-                    z,
-                );
+                let Some(p) = unproject(f, x as f64, y as f64, z) else { continue };
                 let p = f.c2w.transform_point3(p);
                 let voxel = p.to_array().map(|x| (x / 0.02).round() as i64);
                 if voxels.insert(voxel) {
@@ -220,4 +229,46 @@ pub(crate) fn initial_points(
         }
     }
     Ok(points)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn frame(model: &str, params: Vec<f64>) -> Frame {
+        Frame { name: "f.jpg".into(), source_index: 0, source_name: "f.jpg".into(), width: 64, height: 48,
+            model: model.into(), params, c2w: glam::DMat4::IDENTITY, has_depth: true }
+    }
+
+    #[test]
+    fn fisheye_depth_unprojects_along_the_lens_ray_at_optical_axis_depth() {
+        let f = frame("OPENCV_FISHEYE", vec![20.0, 20.0, 32.0, 24.0, 0.0, 0.0, 0.0, 0.0]);
+        // Equidistant: 20 px off centre is 1 rad off the axis.
+        let p = unproject(&f, 52.0, 24.0, 2.0).unwrap();
+        assert!((p.z - 2.0).abs() < 1e-12 && (p.x - 2.0 * 1f64.tan()).abs() < 1e-9 && p.y.abs() < 1e-12, "{p:?}");
+        let kb4 = splat_eval::fisheye::Kb4::from_params(&f.model, &f.params).unwrap();
+        let back = kb4.project(p.to_array()).unwrap();
+        assert!((back[0] - 52.0).abs() < 1e-9 && (back[1] - 24.0).abs() < 1e-9);
+        // 95 degrees off axis has no positive optical-axis depth.
+        assert!(unproject(&f, 32.0 + 20.0 * 95f64.to_radians(), 24.0, 2.0).is_none());
+        // Pinhole unchanged; other distorted lenses are skipped.
+        let pin = unproject(&frame("PINHOLE", vec![40.0, 40.0, 32.0, 24.0]), 72.0, 24.0, 3.0).unwrap();
+        assert_eq!(pin, glam::DVec3::new(3.0, 0.0, 3.0));
+        assert!(unproject(&frame("OPENCV", vec![40.0, 40.0, 32.0, 24.0, 0.1, 0.0, 0.0, 0.0]), 32.0, 24.0, 1.0).is_none());
+    }
+
+    #[test]
+    fn fisheye_frames_seed_points() {
+        let tmp = tempfile::tempdir().unwrap();
+        let out = tmp.path();
+        for d in ["depths", "images"] {
+            fs::create_dir_all(out.join(d)).unwrap();
+        }
+        image::ImageBuffer::<Luma<u16>, Vec<u16>>::from_pixel(64, 48, Luma([1500])).save(out.join("depths/f.png")).unwrap();
+        image::RgbImage::from_pixel(64, 48, image::Rgb([10, 20, 30])).save(out.join("images/f.jpg")).unwrap();
+        let f = frame("OPENCV_FISHEYE", vec![20.0, 20.0, 32.0, 24.0, 0.0, 0.0, 0.0, 0.0]);
+        let points = initial_points(out, &[f.clone(), f], Some(&[][..])).unwrap();
+        assert!(!points.is_empty());
+        assert!(points.iter().all(|(p, _)| (p[2] - 1.5).abs() < 1e-9));
+    }
 }

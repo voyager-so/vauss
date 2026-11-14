@@ -153,7 +153,9 @@ pub struct FixedOverrides {
     /// SfM matcher override. Auto uses sequential with loop closure for video; exhaustive for photos.
     #[arg(long, value_parser = ["auto", "sequential", "exhaustive"])]
     pub pairs: Option<String>,
-    /// Camera calibration model. Auto uses shared square-pixel RADIAL for video, PINHOLE for photos.
+    /// Camera calibration model. Auto uses shared square-pixel RADIAL for video, PINHOLE for photos,
+    /// OPENCV_FISHEYE when it sees a circular fisheye's image circle or fisheye capture cameras.
+    /// Use opencv-fisheye for fisheye and action-camera lenses (solved and trained natively).
     #[arg(long, value_parser = ["auto", "pinhole", "opencv", "opencv-fisheye"])]
     pub camera_model: Option<String>,
     /// Training steps; overrides --fast/--max. Default run: 7000 (cloud may raise it).

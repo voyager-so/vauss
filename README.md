@@ -80,6 +80,8 @@ vauss export-viewer runs/room
 
 Open **`runs/room/exports/viewer/index.html`** in your browser. Move around, find a shot and share the viewer folder. The standalone viewer opens directly from disk without a server; its JavaScript dependencies load from a CDN.
 
+**Fisheye or action-cam lens?** Add `--camera-model opencv-fisheye`. Cameras are solved and the splat is trained on the fisheye lens itself, with no undistorted crop. Circular fisheyes are detected automatically, and the black area outside the image circle is masked out. A calibrated fisheye capture (a Nerfstudio `transforms.json` or a COLMAP `images/` + `sparse/0` folder with `OPENCV_FISHEYE` cameras) works too, including with `--trust-poses`. 360° equirectangular video is not supported yet. [Fisheye guide →](docs/fisheye.md)
+
 **Still filming?** Run `vauss check room.mp4 --room` for a quick CPU-only check of light, sharpness, movement and room coverage, or `vauss check --guide` for capture advice. [Filming guide →](docs/filming-guide.md)
 
 ## What you get from one run

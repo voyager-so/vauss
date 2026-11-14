@@ -94,6 +94,7 @@ impl Backend for PreparedBackend {
     fn capabilities(&self) -> serde_json::Value { self.backend.capabilities() }
     forward!(inspect_input, InspectInput);
     forward!(extract_frames, ExtractFrames);
+    forward!(split_panoramas, SplitPanoramas);
     forward!(define_split, DefineSplit);
     forward!(train_splats, TrainSplats);
     forward!(render_views, RenderViews);

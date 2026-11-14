@@ -102,7 +102,10 @@ pub fn load(run: &dyn RunCtx, split_id: &str) -> Result<FrozenSplit> {
 }
 
 /// The caller reads its engine's registered image names; core stays independent of COLMAP/backend crates.
-/// Training membership may grow or shrink. Held-out identities and source bytes stay fixed.
+/// Training membership may grow or shrink. Held-out identities and source bytes stay fixed, except
+/// that a 360 split (`panorama_interval`) keeps a held-out panorama while any of its views is
+/// registered, so its held-out views are the registered subset of the frozen ones: compare
+/// candidates from different solves on the views both scored.
 pub fn resolve(
     run: &dyn RunCtx,
     split: &FrozenSplit,
@@ -115,7 +118,17 @@ pub fn resolve(
     ensure!(frames_id == frozen_frames, "Split belongs to frames {frozen_frames}, but SfM {sfm_id} belongs to {frames_id}");
     let registered: BTreeSet<_> = registered_names.iter().cloned().collect();
     ensure!(registered.len() == registered_names.len(), "SfM contains duplicate source frame names");
-    let missing = split.heldout_names.iter().filter(|n| !registered.contains(*n)).cloned().collect::<Vec<_>>();
+    // 360 splits hold out whole panoramas: a held-out panorama stays held out while any of its
+    // views is registered, and none of its views (even one this solve newly placed) trains.
+    let panorama = split.mode == "panorama_interval";
+    let group = |n: &str| crate::panorama::group_key(n).unwrap_or(n).to_owned();
+    let held_groups: BTreeSet<String> = if panorama { split.heldout_names.iter().map(|n| group(n)).collect() } else { BTreeSet::new() };
+    let missing: Vec<String> = if panorama {
+        let present: BTreeSet<String> = registered.iter().map(|n| group(n)).collect();
+        split.heldout_names.iter().filter(|n| !present.contains(&group(n))).cloned().collect()
+    } else {
+        split.heldout_names.iter().filter(|n| !registered.contains(*n)).cloned().collect()
+    };
     if !missing.is_empty() {
         return Err(MissingHeldoutFrames { sfm_id: sfm_id.into(), names: missing }.into());
     }
@@ -129,14 +142,20 @@ pub fn resolve(
         ensure!(hash(&image_path(&sfm_images, name)?)? == source_hash, "SfM image differs from source frame: {name}");
     }
     let heldout: BTreeSet<_> = split.heldout_names.iter().collect();
-    let train_names = registered.iter().filter(|n| !heldout.contains(n)).cloned().collect::<Vec<_>>();
+    let train_names = registered.iter().filter(|n| !heldout.contains(n) && !(panorama && held_groups.contains(&group(n)))).cloned().collect::<Vec<_>>();
     ensure!(!train_names.is_empty(), "No training frames remain after resolving the frozen split");
+    // The held-out views this solve registered (a 360 panorama may have lost some of its views).
+    let heldout_names = if panorama {
+        split.heldout_names.iter().filter(|n| registered.contains(*n)).cloned().collect()
+    } else {
+        split.heldout_names.clone()
+    };
     Ok(ResolvedSplit {
         frames_id,
         sfm_id: sfm_id.into(),
         interval: split.interval,
         registered_names: registered.into_iter().collect(),
-        heldout_names: split.heldout_names.clone(),
+        heldout_names,
         train_names,
     })
 }

@@ -9,6 +9,7 @@ use std::fs;
 fn stage(tool: &str) -> Option<(&'static str, usize, &'static str)> {
     Some(match tool {
         "extract_frames" => ("extract_frames", 1, "Extracting frames"),
+        "split_panoramas" => ("extract_frames", 1, "Splitting 360 frames into views"),
         "mask_distractors" => ("masks", 2, "Masking distractions"),
         "reconstruct_sfm" => ("sfm", 3, "Placing cameras (SfM)"),
         "train_splats" => ("train", 4, "Training splats"),
@@ -50,6 +51,7 @@ fn estimate(run: &Run, state: &RunState, tool: &str, req: &Value) -> (f64, u64) 
         .and_then(|v| v["step"].as_u64()).unwrap_or(0);
     let seconds = match tool {
         "extract_frames" => n * 0.04,
+        "split_panoramas" => n * 0.3,
         "mask_distractors" => pixels * 0.4,
         "reconstruct_sfm" => pixels * 2.3,
         "train_splats" => steps.saturating_sub(start) as f64 / rate,

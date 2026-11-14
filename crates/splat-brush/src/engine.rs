@@ -101,7 +101,8 @@ pub async fn load_scene(dataset: &Path, max_resolution: u32) -> anyhow::Result<L
 /// A dataset to render surfels (2DGS, pinhole cameras only): `dataset` itself when its cameras are
 /// pinhole, else a pinhole copy built at `scratch` (see [`splat_eval::undistort::pinhole_dataset`];
 /// the source frames stay untouched for the frozen split). The copy lives while the returned
-/// guard does. Errors for lenses that can't be undistorted (fisheye).
+/// guard does. Kannala-Brandt fisheyes become a pinhole crop of their central view; errors for
+/// lenses that can't be undistorted (thin-prism fisheye, FOV).
 pub fn surfel_dataset(dataset: &Path, scratch: &Path) -> anyhow::Result<(std::path::PathBuf, Option<ScratchDir>)> {
     match splat_eval::undistort::pinhole_dataset(dataset, scratch)? {
         Some(u) => {

@@ -45,7 +45,12 @@ pub(crate) struct Capture {
     pub frames: Vec<SourceFrame>,
     pub init_ply: Option<PathBuf>,
     pub heldout_images: Option<Vec<PathBuf>>,
+    /// A COLMAP model whose sparse points seed the capture's cameras (same world frame).
+    pub init_points: Option<PathBuf>,
 }
+
+/// Seed points carried from a COLMAP folder input into the frames artifact (COLMAP points3D.bin).
+const INIT_POINTS: &str = "init_points3D.bin";
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Manifest {
@@ -256,6 +261,16 @@ pub(crate) fn load(run: &dyn RunCtx) -> Result<Option<Capture>> {
             Some(nerfstudio(&root, &dir)?)
         } else if dir.join("lowres_wide.traj").is_file() {
             Some(arkitscenes(&root, &dir)?)
+        } else if let Some(sparse) = colmap_sparse(&dir) {
+            // A model the capture path can't take (unsupported camera models) keeps the old
+            // behaviour: the folder's images are solved as plain photos.
+            match colmap_folder(&root, &dir, &sparse) {
+                Ok(c) => Some(c),
+                Err(e) => {
+                    eprintln!("COLMAP model in {} not imported ({e:#}); solving its images as photos", sparse.display());
+                    None
+                }
+            }
         } else {
             None
         };
@@ -393,6 +408,57 @@ mod tests {
     }
 }
 
+/// The sparse model dir of a plain COLMAP folder (`images/` beside `sparse/0` or `sparse/`).
+fn colmap_sparse(dir: &Path) -> Option<PathBuf> {
+    if !dir.join("images").is_dir() {
+        return None;
+    }
+    [dir.join("sparse/0"), dir.join("sparse")].into_iter()
+        .find(|s| ["cameras.bin", "cameras.txt"].iter().any(|f| s.join(f).is_file()) && ["images.bin", "images.txt"].iter().any(|f| s.join(f).is_file()))
+}
+
+/// A COLMAP folder (`images/` + `sparse/0`, e.g. COLMAP's own output or a calibrated fisheye rig's
+/// model): every registered image with its own camera model, intrinsics and pose. COLMAP poses are
+/// world-to-camera in OpenCV axes; its sparse points are kept as a seed.
+fn colmap_folder(root: &Path, dir: &Path, sparse: &Path) -> Result<Capture> {
+    let model = splat_eval::read_model(sparse).with_context(|| format!("reading the COLMAP model in {}", sparse.display()))?;
+    let mut images: Vec<&splat_eval::colmap::Image> = model.images.values().collect();
+    images.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut out = vec![];
+    for (i, im) in images.into_iter().enumerate() {
+        let cam = model.cameras.get(&im.camera_id).with_context(|| format!("{}: camera {} missing from the model", im.name, im.camera_id))?;
+        ensure!(SUPPORTED_COLMAP_MODELS.contains(&cam.model.as_str()),
+            "COLMAP camera model {} ({}) is not supported; use one of {}", cam.model, im.name, SUPPORTED_COLMAP_MODELS.join(", "));
+        let image = inside(root, &dir.join("images"), &im.name)?;
+        let w2c = DMat4::from_rotation_translation(DQuat::from_xyzw(im.qvec[1], im.qvec[2], im.qvec[3], im.qvec[0]).normalize(), DVec3::from_array(im.tvec));
+        // Two-focal parameter layout (fx fy cx cy ...) for single-focal models, as the rest of the
+        // capture path expects params[0..4] = fx, fy, cx, cy.
+        let (model_name, params) = match cam.model.as_str() {
+            "SIMPLE_PINHOLE" => ("PINHOLE".to_string(), vec![cam.params[0], cam.params[0], cam.params[1], cam.params[2]]),
+            "SIMPLE_RADIAL" => ("OPENCV".to_string(), vec![cam.params[0], cam.params[0], cam.params[1], cam.params[2], cam.params[3], 0.0, 0.0, 0.0]),
+            "RADIAL" => ("OPENCV".to_string(), vec![cam.params[0], cam.params[0], cam.params[1], cam.params[2], cam.params[3], cam.params[4], 0.0, 0.0]),
+            "SIMPLE_RADIAL_FISHEYE" => ("OPENCV_FISHEYE".to_string(), vec![cam.params[0], cam.params[0], cam.params[1], cam.params[2], cam.params[3], 0.0, 0.0, 0.0]),
+            "RADIAL_FISHEYE" => ("OPENCV_FISHEYE".to_string(), vec![cam.params[0], cam.params[0], cam.params[1], cam.params[2], cam.params[3], cam.params[4], 0.0, 0.0]),
+            other => (other.to_string(), cam.params.clone()),
+        };
+        out.push(frame(image, i, cam.width as u32, cam.height as u32, model_name, params, w2c.inverse(), None));
+    }
+    // A model from a failed or partial solve (a few of the folder's images registered) is not a
+    // calibration of the capture: the caller then solves the images as photos, as before.
+    let on_disk = list_images(&dir.join("images"))?.len();
+    ensure!(out.len() >= 2 && out.len() * 2 >= on_disk,
+        "the COLMAP model in {} registers {} of {on_disk} images (needs at least two and half)", sparse.display(), out.len());
+    // Like an SfM-first solve, the model's points were triangulated from all its views, held-out
+    // ones included (unlike the sensor-depth seed, which leaves held-out frames out).
+    let init_points = (!model.points.is_empty()).then(|| sparse.to_path_buf());
+    Ok(Capture { format: "colmap".into(), frames: out, init_ply: None, heldout_images: None, init_points })
+}
+
+/// COLMAP camera models a COLMAP folder input may use: the ones the trainer and seed triangulation
+/// take (single-focal models are rewritten to their two-focal equivalents).
+const SUPPORTED_COLMAP_MODELS: [&str; 10] = ["SIMPLE_PINHOLE", "PINHOLE", "SIMPLE_RADIAL", "RADIAL", "OPENCV", "FULL_OPENCV",
+    "OPENCV_FISHEYE", "SIMPLE_RADIAL_FISHEYE", "RADIAL_FISHEYE", "THIN_PRISM_FISHEYE"];
+
 fn capture_first(c: &Capture) -> Option<&PathBuf> {
     c.frames.first().map(|f| &f.image)
 }
@@ -514,6 +580,7 @@ fn record3d(root: &Path, dir: &Path, v: &Value) -> Result<Capture> {
         frames,
         init_ply: None,
         heldout_images: None,
+        init_points: None,
     })
 }
 
@@ -656,7 +723,7 @@ fn nerfstudio(root: &Path, dir: &Path) -> Result<Capture> {
             heldout_images = Some(complement);
         }
     }
-    Ok(Capture { format: "nerfstudio".into(), frames: out, init_ply, heldout_images })
+    Ok(Capture { format: "nerfstudio".into(), frames: out, init_ply, heldout_images, init_points: None })
 }
 
 fn polycam(root: &Path, dir: &Path) -> Result<Capture> {
@@ -756,6 +823,7 @@ fn polycam(root: &Path, dir: &Path) -> Result<Capture> {
         frames: out,
         init_ply: None,
         heldout_images: None,
+        init_points: None,
     })
 }
 
@@ -841,6 +909,7 @@ fn arkitscenes(root: &Path, dir: &Path) -> Result<Capture> {
         frames: out,
         init_ply: None,
         heldout_images: None,
+        init_points: None,
     })
 }
 
@@ -960,6 +1029,11 @@ pub(crate) fn extract(
     if let Some(ply) = capture.init_ply {
         link_or_copy(&ply, &out.join("init.ply"))?;
     }
+    if let Some(sparse) = &capture.init_points {
+        let points: Vec<([f64; 3], [u8; 3])> = splat_eval::read_model(sparse)?.points.iter()
+            .filter(|p| p.xyz.iter().all(|v| v.is_finite())).map(|p| (p.xyz, p.rgb)).collect();
+        write_points3d(&out.join(INIT_POINTS), &points)?;
+    }
     let mut heldout_names = capture
         .heldout_images
         .as_ref()
@@ -1041,9 +1115,16 @@ pub(crate) fn reconstruct(
             }
         }
     }
-    for name in ["init.ply", "depths.json", MANIFEST] {
+    for name in ["init.ply", "depths.json", INIT_POINTS, MANIFEST] {
         if source.join(name).is_file() {
             if !out.join(name).exists() { link_or_copy(&source.join(name), &out.join(name))?; }
+        }
+    }
+    // Circular fisheye captures: mask the black sensor area outside the lens from training (and
+    // from the trusted seed's features). An SfM attempt that ran first already did this.
+    if manifest.frames.iter().any(|f| splat_eval::fisheye::is_fisheye_model(&f.model)) && !out.join(crate::lens::RECORD).is_file() {
+        if let Some(circles) = crate::lens::detect(&out.join("images")) {
+            crate::lens::write_masks(out, &circles, true, None)?;
         }
     }
     let sparse = out.join("sparse/0");
@@ -1075,10 +1156,17 @@ pub(crate) fn reconstruct(
     }
     splat_eval::colmap::write_cameras_bin(&sparse.join("cameras.bin"), &cameras)?;
     splat_eval::colmap::write_images_bin(&sparse.join("images.bin"), &images)?;
-    let points =
+    let mut points =
         capture_depth::initial_points(&out, &manifest.frames, manifest.heldout_names.as_deref())?;
+    let mut seed_source = (!points.is_empty()).then_some("sensor_depth");
+    // A COLMAP folder's own sparse points, when sensor depth gave none.
+    if points.is_empty() && out.join(INIT_POINTS).is_file() {
+        let seed = splat_eval::colmap::read_points_bin(&out.join(INIT_POINTS))?;
+        points = seed.into_iter().map(|p| (p.xyz, p.rgb)).collect();
+        seed_source = (!points.is_empty()).then_some("colmap_model_points");
+    }
     write_points3d(&sparse.join("points3D.bin"), &points)?;
-    let mut health = json!({"n_input":manifest.frames.len(),"n_registered":manifest.frames.len(),"registered_fraction":1.0,"n_points3d":points.len(),"engine":"capture_import","capture_format":manifest.format,"sfm_skipped":false});
+    let mut health = json!({"n_input":manifest.frames.len(),"n_registered":manifest.frames.len(),"registered_fraction":1.0,"n_points3d":points.len(),"initial_points_source":seed_source,"engine":"capture_import","capture_format":manifest.format,"sfm_skipped":false});
     health.as_object_mut().unwrap().extend(selection.as_object().unwrap().clone());
     write_json(&out.join("health.json"), &health)?;
     freeze_split(run, frames_id, &artifact, &source, &manifest)?;

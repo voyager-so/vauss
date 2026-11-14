@@ -61,6 +61,7 @@ fn request(name: &str, payload: Value) -> Result<Value> {
     let mut value = match name {
         "inspect_input" => normalize::<InspectInput>(payload),
         "extract_frames" => normalize::<ExtractFrames>(payload),
+        "split_panoramas" => normalize::<SplitPanoramas>(payload),
         "mask_distractors" => normalize::<MaskDistractors>(payload),
         "reconstruct_sfm" => normalize::<ReconstructSfm>(payload),
         "define_split" => normalize::<DefineSplit>(payload),
@@ -103,6 +104,8 @@ fn request(name: &str, payload: Value) -> Result<Value> {
         ("threshold", 0.1, 0.95),
         ("steps", 200., 10000.),
         ("height_offset", -2., 2.),
+        ("view_size", 256., 2048.),
+        ("nadir_mask_deg", 0., 60.),
     ] {
         if field == "target_count" && value["preserve_all"] == true { continue; }
         if let Some(n) = value.get(field).and_then(Value::as_f64) {
@@ -219,6 +222,7 @@ fn invoke(run: &Run, name: &str, payload: Value) -> Result<ToolResult> {
     match name {
         "inspect_input" => backend.inspect_input(run, decode(payload)?),
         "extract_frames" => backend.extract_frames(run, decode(payload)?),
+        "split_panoramas" => backend.split_panoramas(run, decode(payload)?),
         "mask_distractors" => backend.mask_distractors(run, decode(payload)?),
         "reconstruct_sfm" => backend.reconstruct_sfm(run, decode(payload)?),
         "define_split" => backend.define_split(run, decode(payload)?),

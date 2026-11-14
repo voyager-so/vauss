@@ -17,7 +17,7 @@ input schemas.
 | Stage | Tools |
 |---|---|
 | Whole pipeline in one call | `run_default_pipeline` (the fixed driver's pipeline: frames, cameras, split, preview, training, export, evaluation) |
-| Input | `inspect_input`, `extract_frames`, `mask_distractors` (mask people, cars… by name) |
+| Input | `inspect_input`, `extract_frames`, `split_panoramas` (360 equirect frames into 14 views), `mask_distractors` (mask people, cars… by name) |
 | Cameras | `reconstruct_sfm`, `define_split` (freeze the held-out frames once, before any training) |
 | Model | `train_splats`, `evaluate`, `render_views` |
 | Geometry | `extract_mesh` |

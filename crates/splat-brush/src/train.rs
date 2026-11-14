@@ -1429,10 +1429,12 @@ fn join_web_package(web: Option<std::thread::JoinHandle<()>>) {
 }
 
 /// Held-out metrics (PSNR/SSIM/LPIPS) of the trainer's final eval renders.
+/// A circular fisheye's area outside the image circle is left out (see [`crate::lens::EVAL_MASKS`]).
 fn score_heldout(dir: &Path, models_dir: Option<PathBuf>) -> anyhow::Result<splat_eval::EvalSummary> {
     let eval = dir.join("eval");
     let (pairs, missing) = splat_eval::pair_dirs(&eval.join("gt"), &eval.join("renders"))?;
-    let opts = splat_eval::MetricOptions { lpips: true, models_dir, cc_lpips: false, ..Default::default() };
+    let mask_dir = crate::lens::eval_masks_for_job(dir);
+    let opts = splat_eval::MetricOptions { lpips: true, models_dir, cc_lpips: false, mask_dir, ..Default::default() };
     splat_eval::evaluate_pairs(&pairs, &missing, &opts)
 }
 

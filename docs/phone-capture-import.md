@@ -17,6 +17,7 @@ Supported layouts:
 | Polycam raw | `keyframes/cameras` + `images`, or `corrected_cameras` + `corrected_images`; per-frame JSON or `cameras.json` | `depth/<stem>.png` or `depths/<stem>.png` |
 | Nerfstudio / Spectacular AI | `transforms.json` with `frames`, image paths, camera-to-world matrices, and focal lengths or camera angles | Per-frame `depth_file_path`; `depth_unit_scale_factor` for integer depth (default 0.001 metres) |
 | ARKitScenes | `lowres_wide.traj`, `lowres_wide` + `lowres_wide_intrinsics`, or matching `vga_wide` directories | `lowres_depth/<stem>.png` |
+| COLMAP folder | `images/` beside `sparse/0/` (or `sparse/`) holding `cameras`, `images` and `points3D` (`.bin` or `.txt`); every registered image (unregistered ones are left out), its own camera, the model's sparse points as the seed; a model with unsupported camera models is solved as plain photos instead | None |
 
 Spectacular Rec's raw video/IMU recordings require the capture application's pose export first. Use its Nerfstudio export; the importer does not run a VIO SDK or accept raw IMU streams.
 
@@ -26,7 +27,7 @@ Frames may be uniformly resized, with corresponding intrinsics scaled. Stored pi
 
 The generated dataset contains ordinary COLMAP `cameras.bin`, `images.bin`, and `points3D.bin`, plus a `capture.json` provenance manifest. `capture_selection.json` and `health.json` record the attempted SfM coverage and the winning camera source (`sfm` or `capture_fallback`). Sensor depth stays available with either camera source as `depths/<frame stem>.png`: uint16 optical-axis Z, zero invalid. Phone-pose fallback uses millimetres and a bounded sensor-depth point seed. With SfM cameras, depth is scaled to SfM world units using sparse observations from training views; training camera baselines provide a secondary scale estimate when depth observations are insufficient. The encoded value divided by 1000 gives Z in those world units. `depths.json` keeps `kind: "metric"` and records `units_per_meter`, fitting method, and any pixels discarded outside uint16 range. Confidence becomes `depths_conf/<stem>.png` with values 0, 128, 255. The depth-loss integration reads these sidecars separately. SfM retains its own sparse point seed.
 
-Nerfstudio pinhole, OpenCV, full OpenCV, and OpenCV fisheye camera models are accepted. Perspective radial `k3` is preserved with the full OpenCV model; Nerfstudio's eighth-order `k4` requires an undistorted export. Unsupported models, non-rigid poses, missing calibration, unsafe archive paths, and multiple captures fail with a diagnostic instead of falling back to SfM. Existing JPEG pixels are retained when no resize is needed; other frames are re-encoded as quality-90 JPEG. Canonical `frame_000123.jpg` filenames are preserved when every input frame follows that pattern, so paired video evaluations retain their source identities.
+Nerfstudio pinhole, OpenCV, full OpenCV, and OpenCV fisheye camera models are accepted. COLMAP folders accept SIMPLE_PINHOLE, PINHOLE, SIMPLE_RADIAL, RADIAL, OPENCV, FULL_OPENCV, OPENCV_FISHEYE, SIMPLE_RADIAL_FISHEYE, RADIAL_FISHEYE and THIN_PRISM_FISHEYE. Fisheye cameras train natively on the lens, and their SfM-first solve uses `OPENCV_FISHEYE` as well. A circular fisheye's black area outside the image circle is masked from SfM features and the training loss. See [fisheye.md](fisheye.md). Perspective radial `k3` is preserved with the full OpenCV model; Nerfstudio's eighth-order `k4` requires an undistorted export. Unsupported models, non-rigid poses, missing calibration, unsafe archive paths, and multiple captures fail with a diagnostic instead of falling back to SfM. Existing JPEG pixels are retained when no resize is needed; other frames are re-encoded as quality-90 JPEG. Canonical `frame_000123.jpg` filenames are preserved when every input frame follows that pattern, so paired video evaluations retain their source identities.
 
 Nerfstudio `test_filenames` is supported as an explicit frozen evaluation split. Its paths must name frames present in the capture and retained by extraction. Those frames are excluded from training and sensor-depth point initialization. Without an explicit split the normal every-eighth split applies. Keep enough training frames, and pass a sufficient `--target-count` count when importing a large capture with explicit test views.
 
@@ -38,8 +39,11 @@ vauss run ./calibrated-capture --trust-poses --driver fixed --goal "reconstruct 
 
 `--trust-poses` explicitly selects `camera_source: "imported"` and
 `sfm_skipped: true`. It requires the Brush backend and a supported calibrated
-layout from the table above. Plain photos, videos, raw IMU streams, and standalone
-COLMAP folders are not supported by this flag. No COLMAP solve, learned-camera
+layout from the table above, including a COLMAP folder. Plain photos, videos and raw
+IMU streams are not supported by this flag. Seed points come from sensor depth
+(pinhole and fisheye frames), else from a COLMAP folder's own sparse points, else
+from COLMAP triangulation under the imported cameras (all supported models,
+fisheyes included). No COLMAP solve, learned-camera
 rescue, matching, or quick SfM preview runs. Without this flag the SfM-first
 policy described above remains the default; `--preserve-all` and `--driver fixed`
 do not select imported cameras.

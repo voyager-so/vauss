@@ -169,7 +169,11 @@ Ordinary folders default to `images`; filenames alone never change their calibra
 
 Video auto-calibration uses the existing shared square-pixel RADIAL model and available focal
 prior. Photo auto-calibration retains PINHOLE with independent fx/fy. For known anisotropic frames,
-use `--camera-model pinhole` or `--camera-model opencv`, even with video provenance. When metadata is unavailable,
+use `--camera-model pinhole` or `--camera-model opencv`, even with video provenance.
+For fisheye and action-camera lenses, use `--camera-model opencv-fisheye` (COLMAP `OPENCV_FISHEYE`,
+Kannala-Brandt). Auto selects it on its own when the frames show a circular fisheye's image circle
+or a calibrated capture's cameras are fisheye; otherwise auto warns when its perspective solve is
+strongly barrel-distorted. See [fisheye.md](fisheye.md). When metadata is unavailable,
 the existing video recovery policy can use a labeled 65-degree default lens prior; explicit
 PINHOLE/OPENCV models retain independent fx/fy through video calibration retries.
 

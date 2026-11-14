@@ -56,7 +56,10 @@ pub(crate) fn seed_if_unseeded(out: &Path, colmap: Option<&Path>, timeout: std::
     let sparse = out.join("sparse/0");
     let existing = splat_eval::read_model(&sparse)?.points.len();
     let mut seed = if existing > 0 {
-        json!({"source": "sensor_depth", "points": existing})
+        // capture::reconstruct seeds from sensor depth, else from a COLMAP folder's own points.
+        let health: Value = read_json(&out.join("health.json")).unwrap_or_default();
+        let source = health["initial_points_source"].as_str().unwrap_or("sensor_depth").to_owned();
+        json!({"source": source, "points": existing})
     } else {
         match triangulate_seed(out, colmap, timeout) {
             Ok((points, mut info)) if points.len() >= MIN_SEED_POINTS => {
@@ -142,6 +145,9 @@ fn triangulate_in(out: &Path, colmap: &Path, timeout: std::time::Duration, work:
     opts.max_image_size = 1600;
     opts.max_features = 8192;
     if train.len() > 300 { opts.matching = splat_sfm::Matching::Sequential; }
+    // A circular fisheye's rim would yield static features matching across every view.
+    let lens_masks = out.join(crate::lens::FEATURE_MASKS);
+    if lens_masks.is_dir() { opts.mask_dir = Some(lens_masks); }
     let started = std::time::Instant::now();
     let seed = splat_sfm::triangulate_fixed_poses(&images, &cameras, &opts, timeout)?;
     let model = splat_eval::read_model(&seed.model_dir)?;

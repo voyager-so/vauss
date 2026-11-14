@@ -307,14 +307,14 @@ pub fn evaluate(cfg: &BrushConfig, run: &dyn RunCtx, req: Evaluate) -> anyhow::R
     let mut summary = match cached {
         Some(s) => s,
         None => {
-            let opts = splat_eval::MetricOptions { lpips: req.lpips, models_dir: cfg.models_dir.clone(), cc_lpips: false, ..Default::default() };
+            let opts = splat_eval::MetricOptions { lpips: req.lpips, models_dir: cfg.models_dir.clone(), cc_lpips: false, mask_dir: crate::lens::eval_masks_for_job(&dir), ..Default::default() };
             splat_eval::evaluate_pairs(&pairs, &missing, &opts)?
         }
     };
     if aligned.is_some() {
         // The same scorer on the unaligned renders (PSNR/SSIM only), per view and mean.
         let (pairs, missing) = splat_eval::pair_dirs(&src.join("gt"), &src.join("renders"))?;
-        let opts = splat_eval::MetricOptions { lpips: false, models_dir: cfg.models_dir.clone(), cc_lpips: false, ..Default::default() };
+        let opts = splat_eval::MetricOptions { lpips: false, models_dir: cfg.models_dir.clone(), cc_lpips: false, mask_dir: crate::lens::eval_masks_for_job(&dir), ..Default::default() };
         let unaligned = splat_eval::evaluate_pairs(&pairs, &missing, &opts)?;
         for k in ["psnr", "ssim"] {
             if let Some(v) = unaligned.mean.get(k) {

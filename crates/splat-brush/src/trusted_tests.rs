@@ -746,3 +746,129 @@ fn real_colmap_seeds_a_trusted_capture() -> Result<()> {
     assert!(loaded.init.is_some());
     Ok(())
 }
+
+/// A COLMAP folder (images/ + sparse/0) of a circular fisheye rig: two OPENCV_FISHEYE cameras,
+/// black outside the image circle, with sparse points.
+fn fisheye_colmap_folder(root: &Path) -> Result<()> {
+    fs::create_dir_all(root.join("images/cam1"))?;
+    fs::create_dir_all(root.join("images/cam2"))?;
+    fs::create_dir_all(root.join("sparse/0"))?;
+    let (w, h) = (320u32, 240u32);
+    let mut images = String::new();
+    for i in 0..6u32 {
+        let cam = 1 + i % 2;
+        let name = format!("cam{cam}/img_{i:03}.jpg");
+        image::RgbImage::from_fn(w, h, |x, y| {
+            let d = (x as f64 + 0.5 - 160.0).hypot(y as f64 + 0.5 - 120.0);
+            if d > 110.0 { image::Rgb([0, 0, 0]) } else { image::Rgb([60 + ((x * 7 + y * 3 + i * 11) % 150) as u8, 90, 120]) }
+        }).save(root.join("images").join(&name))?;
+        // World-to-camera: identity rotation, camera i at x = 0.2 i (t = -C).
+        images += &format!("{} 1 0 0 0 {} 0 0 {cam} {name}\n\n", i + 1, -0.2 * i as f64);
+    }
+    fs::write(root.join("sparse/0/cameras.txt"),
+        "1 OPENCV_FISHEYE 320 240 70 70.5 160 120 0.02 -0.004 0.0005 0\n2 RADIAL_FISHEYE 320 240 71 160 120 0.01 0.002\n")?;
+    fs::write(root.join("sparse/0/images.txt"), images)?;
+    let points: String = (0..1200).map(|i| format!("{} {} {} {} 200 100 50 0.5\n", i + 1, (i % 40) as f64 * 0.1 - 2.0, (i / 40) as f64 * 0.1 - 1.5, 4.0)).collect();
+    fs::write(root.join("sparse/0/points3D.txt"), points)?;
+    Ok(())
+}
+
+#[test]
+fn colmap_fisheye_folder_imports_with_its_points_and_lens_masks() -> Result<()> {
+    let tmp = tempfile::tempdir()?;
+    let input = tmp.path().join("source");
+    fisheye_colmap_folder(&input)?;
+    let cfg = unavailable_helpers();
+    let run = Run::create(tmp.path().join("run"), &input, "test", "brush")?;
+    let extracted = media::extract_frames(&cfg, &run, serde_json::from_value(json!({"trust_poses":true,"max_edge":1600}))?)?;
+    assert_eq!(extracted.metrics["capture_format"], "colmap");
+    let frames = run.path(&extracted.artifacts[0].id)?;
+    let manifest: Value = read_json(&frames.join("capture.json"))?;
+    let fr = manifest["frames"].as_array().unwrap();
+    assert_eq!(fr.len(), 6);
+    // Sorted by name: cam1/img_000, cam1/img_002, ... then cam2. RADIAL_FISHEYE is rewritten as the
+    // equivalent two-focal OPENCV_FISHEYE.
+    assert_eq!(fr[0]["model"], "OPENCV_FISHEYE");
+    assert_eq!(fr[3]["model"], "OPENCV_FISHEYE");
+    assert_eq!(fr[3]["params"], json!([71.0, 71.0, 160.0, 120.0, 0.01, 0.002, 0.0, 0.0]));
+    // cam1/img_002 sits at x = 0.4 (camera-to-world translation).
+    let c2w: Vec<f64> = serde_json::from_value(fr[1]["c2w"].clone())?;
+    assert!((c2w[12] - 0.4).abs() < 1e-9 && c2w[13].abs() < 1e-12, "{c2w:?}");
+    let imported = sfm::reconstruct_sfm(&cfg, &run, serde_json::from_value(json!({"frames_id":extracted.artifacts[0].id}))?)?;
+    assert_eq!(imported.metrics["seed_points"]["source"], "colmap_model_points");
+    assert_eq!(imported.metrics["seed_points"]["points"], 1200);
+    assert!(imported.warnings.is_empty(), "{:?}", imported.warnings);
+    let dataset = run.path(&imported.artifacts[0].id)?;
+    // The black area outside the lens is masked out of training.
+    let record: Value = read_json(&dataset.join(crate::lens::RECORD))?;
+    assert_eq!(record["training_masks"], 6);
+    let mask = image::open(dataset.join("masks/frame_000000.png"))?.to_luma8();
+    assert_eq!((mask.get_pixel(160, 120)[0], mask.get_pixel(2, 2)[0]), (255, 0));
+    assert!(dataset.join(crate::lens::FEATURE_MASKS).join("frame_000000.jpg.png").is_file());
+    let model = splat_eval::read_model(&dataset.join("sparse/0"))?;
+    assert!(model.cameras.values().all(|c| c.model == "OPENCV_FISHEYE"));
+    let loaded = engine::runtime()?.block_on(engine::load_scene(&dataset, 1600))?;
+    assert_eq!(loaded.views.len(), 6);
+    assert!(loaded.init.is_some(), "the folder's points must seed training");
+    Ok(())
+}
+
+#[test]
+fn fisheye_sfm_requests_mask_the_image_circle_and_solve_as_fisheye() -> Result<()> {
+    // Auto on photos of a circular fisheye: OPENCV_FISHEYE with lens masks and a fisheye focal prior.
+    let tmp = tempfile::tempdir()?;
+    let input = tmp.path().join("photos");
+    fs::create_dir_all(&input)?;
+    for i in 0..4u32 {
+        image::RgbImage::from_fn(320, 240, |x, y| {
+            let d = (x as f64 + 0.5 - 160.0).hypot(y as f64 + 0.5 - 120.0);
+            if d > 110.0 { image::Rgb([0, 0, 0]) } else { image::Rgb([60 + ((x * 5 + y * 9 + i * 7) % 150) as u8, 80, 100]) }
+        }).save(input.join(format!("p{i}.jpg")))?;
+    }
+    let mut cfg = unavailable_helpers();
+    cfg.colmap = Some(tmp.path().join("missing-colmap"));
+    let run = Run::create(tmp.path().join("run"), &input, "test", "brush")?.with_worker_exe(tmp.path().join("missing-worker"));
+    let extracted = media::extract_frames(&cfg, &run, serde_json::from_value(json!({"max_edge":1600}))?)?;
+    let r = sfm::reconstruct_sfm(&cfg, &run, serde_json::from_value(json!({"frames_id":extracted.artifacts[0].id}))?)?;
+    assert_eq!(r.metrics["camera_model"], "OPENCV_FISHEYE");
+    assert!(r.warnings.iter().any(|w| w.contains("Circular fisheye detected")), "{:?}", r.warnings);
+    let sfm_dir = run.path(&r.artifacts[0].id)?;
+    let job: sfm::SfmJob = read_json(&sfm_dir.join("sfm_job.json"))?;
+    assert_eq!(job.camera_model, "OPENCV_FISHEYE");
+    assert!(job.mask_dir.as_ref().unwrap().ends_with(crate::lens::FEATURE_MASKS));
+    assert!(job.da3_weights.is_none());
+    let f = job.fisheye_focal_factor.unwrap() * 320.0;
+    assert!((f - 110.0 / 95f64.to_radians()).abs() < 5.0, "focal prior {f}");
+    assert!(sfm_dir.join("masks").read_dir()?.count() == 4);
+
+    // An explicit perspective model keeps the old behaviour: no masks.
+    let run2 = Run::create(tmp.path().join("run2"), &input, "test", "brush")?.with_worker_exe(tmp.path().join("missing-worker"));
+    let extracted = media::extract_frames(&cfg, &run2, serde_json::from_value(json!({"max_edge":1600}))?)?;
+    let r = sfm::reconstruct_sfm(&cfg, &run2, serde_json::from_value(json!({"frames_id":extracted.artifacts[0].id,"camera_model":"pinhole"}))?)?;
+    assert_eq!(r.metrics["camera_model"], "PINHOLE");
+    assert!(!run2.path(&r.artifacts[0].id)?.join("masks").exists());
+    Ok(())
+}
+
+#[test]
+fn colmap_folder_with_an_unsupported_lens_model_stays_a_photo_set() -> Result<()> {
+    let tmp = tempfile::tempdir()?;
+    let input = tmp.path().join("source");
+    fisheye_colmap_folder(&input)?;
+    fs::write(input.join("sparse/0/cameras.txt"), "1 FOV 320 240 70 70 160 120 0.9\n2 FOV 320 240 70 70 160 120 0.9\n")?;
+    let run = Run::create(tmp.path().join("run"), &input, "test", "brush")?;
+    let extracted = media::extract_frames(&unavailable_helpers(), &run, serde_json::from_value(json!({"max_edge":1600}))?)?;
+    assert!(extracted.metrics.get("capture_format").is_none(), "{:?}", extracted.metrics.get("capture_format"));
+    assert!(!run.path(&extracted.artifacts[0].id)?.join("capture.json").exists());
+
+    // A partial model (one of six images registered) is not a calibration either.
+    let tmp = tempfile::tempdir()?;
+    let input = tmp.path().join("source");
+    fisheye_colmap_folder(&input)?;
+    let images = fs::read_to_string(input.join("sparse/0/images.txt"))?;
+    fs::write(input.join("sparse/0/images.txt"), images.split("\n\n").next().unwrap().to_owned() + "\n\n")?;
+    let run = Run::create(tmp.path().join("run"), &input, "test", "brush")?;
+    let extracted = media::extract_frames(&unavailable_helpers(), &run, serde_json::from_value(json!({"max_edge":1600}))?)?;
+    assert!(extracted.metrics.get("capture_format").is_none());
+    Ok(())
+}
