@@ -196,6 +196,9 @@ fn calibration_model(model: CameraModel, video: bool, fisheye_evidence: bool) ->
         CameraModel::Auto if video => "RADIAL",
         CameraModel::Auto | CameraModel::Pinhole => "PINHOLE",
         CameraModel::Opencv => "OPENCV",
+        // Never reached for real solves: reconstruct_sfm refuses equirect frames that were not split,
+        // and solves split views as PINHOLE.
+        CameraModel::Equirect => "PINHOLE",
     }
 }
 
@@ -260,6 +263,9 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
         invalid("COLMAP not found: set SPLAT_COLMAP to a COLMAP 4.x binary (or install it on PATH)")
     })?;
     let panorama = is_panorama(&frames);
+    if matches!(req.camera_model, CameraModel::Equirect) && !panorama {
+        return Err(invalid("equirect frames must be split first (split_panoramas), then solved with camera_model pinhole"));
+    }
     if panorama {
         anyhow::ensure!(req.mask_id.is_none() && req.mask_prompt.is_none(), "360 input does not support distractor masks yet");
         anyhow::ensure!(!matches!(req.pairs, Pairs::Exhaustive), "360 input matches sequentially; exhaustive pairs are not supported");

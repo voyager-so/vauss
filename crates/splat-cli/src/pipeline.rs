@@ -74,8 +74,15 @@ pub struct FixedOptions {
     pub seed: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub eval_every: Option<u32>,
+    /// 360 input: half-angle of the masked cone below the camera (0 off).
+    #[serde(default = "default_nadir_mask_deg")]
+    pub nadir_mask_deg: f32,
+    /// --target-count was given (360 input then keeps it, clamped to 20-250, instead of 100).
+    #[serde(default)]
+    pub target_count_explicit: bool,
 }
 fn auto_option() -> String { "auto".into() }
+fn default_nadir_mask_deg() -> f32 { splat_core::panorama::DEFAULT_NADIR_MASK_DEG }
 
 impl Default for FixedOptions {
     fn default() -> Self {
@@ -97,6 +104,8 @@ impl Default for FixedOptions {
             cap_max_explicit: false,
             seed: None,
             eval_every: None,
+            nadir_mask_deg: default_nadir_mask_deg(),
+            target_count_explicit: false,
         }
     }
 }
@@ -154,10 +163,16 @@ pub struct FixedOverrides {
     #[arg(long, value_parser = ["auto", "sequential", "exhaustive"])]
     pub pairs: Option<String>,
     /// Camera calibration model. Auto uses shared square-pixel RADIAL for video, PINHOLE for photos,
-    /// OPENCV_FISHEYE when it sees a circular fisheye's image circle or fisheye capture cameras.
-    /// Use opencv-fisheye for fisheye and action-camera lenses (solved and trained natively).
-    #[arg(long, value_parser = ["auto", "pinhole", "opencv", "opencv-fisheye"])]
+    /// OPENCV_FISHEYE when it sees a circular fisheye's image circle or fisheye capture cameras, and
+    /// detects 360 footage. Use opencv-fisheye for fisheye and action-camera lenses (solved and
+    /// trained natively). equirect: stitched 360 footage (2:1 equirectangular). Each frame is split
+    /// into 14 views.
+    #[arg(long, value_parser = ["auto", "pinhole", "opencv", "opencv-fisheye", "equirect"])]
     pub camera_model: Option<String>,
+    /// 360 input: half-angle in degrees of the cone below the camera (operator, tripod) that camera
+    /// solving and training ignore, 0-60 (default 30; 0 turns it off). Ignored for other input.
+    #[arg(long, value_parser = parse_nadir_mask_deg)]
+    pub nadir_mask_deg: Option<f32>,
     /// Training steps; overrides --fast/--max. Default run: 7000 (cloud may raise it).
     #[arg(long)]
     pub steps: Option<u32>,
@@ -183,6 +198,10 @@ pub struct FixedOverrides {
     #[arg(long, value_parser = clap::value_parser!(u32).range(1..))]
     pub eval_every: Option<u32>,
 }
+fn parse_nadir_mask_deg(value: &str) -> std::result::Result<f32, String> {
+    let deg: f32 = value.parse().map_err(|e| format!("{e}"))?;
+    if (0.0..=60.0).contains(&deg) { Ok(deg) } else { Err("must be between 0 and 60".into()) }
+}
 impl FixedOverrides {
     pub fn apply(self, mut options: FixedOptions) -> FixedOptions {
         if let Some(v) = self.trust_poses { options.trust_poses = v; }
@@ -196,6 +215,10 @@ impl FixedOverrides {
         }
         if let Some(v) = self.target_count {
             options.target_count = v;
+            options.target_count_explicit = true;
+        }
+        if let Some(v) = self.nadir_mask_deg {
+            options.nadir_mask_deg = v;
         }
         if let Some(v) = self.max_edge {
             options.max_edge = v;
@@ -327,6 +350,7 @@ pub fn run_default_pipeline(run: &Run, input: Value) -> Result<ToolResult> {
         no_mesh: None,
         seed: None,
         eval_every: None,
+        nadir_mask_deg: None,
     }.apply(options);
     ensure!(options.steps > 0 && (options.preserve_all || options.target_count > 0) && options.max_edge > 0
         && options.cap_max > 0 && options.resolution_divisor > 0, "Pipeline budgets must be positive");
@@ -353,11 +377,71 @@ fn extraction_request(options: &FixedOptions) -> Value {
         "preserve_all":options.preserve_all,"trust_poses":options.trust_poses,"input_kind":options.input_kind})
 }
 
+/// 360 frames kept by default, and the range an explicit --target-count is clamped to: ~1,400 views
+/// keep camera solving on a CPU-only COLMAP to minutes.
+const PANO_FRAMES_DEFAULT: u32 = 100;
+const PANO_FRAMES_RANGE: (u32, u32) = (20, 250);
+
+/// With 360 input --target-count counts 360 frames.
+fn pano_target_count(options: &FixedOptions) -> u32 {
+    if options.target_count_explicit {
+        options.target_count.clamp(PANO_FRAMES_RANGE.0, PANO_FRAMES_RANGE.1)
+    } else {
+        PANO_FRAMES_DEFAULT
+    }
+}
+
+/// The 360 extraction: equirect frames at the 4096 px contract maximum, in source order (photo
+/// folders too: 360 photo sets are treated as a sequence).
+fn pano_extraction_request(options: &FixedOptions) -> Value {
+    json!({"target_count":pano_target_count(options),"max_edge":4096,
+        "input_kind":if options.input_kind == "images" { "images" } else { "video" },"panorama":true})
+}
+
+/// Whether this run is 360 input: declared, or detected under `auto` (any other explicit model
+/// turns detection off).
+fn is_panorama(options: &FixedOptions, inspection: &ToolResult) -> bool {
+    options.camera_model == "equirect" || (options.camera_model == "auto" && inspection.metrics.get("equirect") == Some(&json!(true)))
+}
+
+/// The documented rejections for 360 input.
+fn check_panorama_options(options: &FixedOptions, backend: &str) -> Result<()> {
+    ensure!(!options.trust_poses, "--trust-poses is not supported for 360 input (bringing your own 360 poses is not supported yet)");
+    ensure!(backend == "brush", "360 input needs the default backend");
+    ensure!(options.pairs != "exhaustive", "--pairs exhaustive is not supported for 360 input (360 frames are matched in sequence)");
+    ensure!(!options.preserve_all, "--preserve-all is not supported for 360 input (it would keep every frame, 14 views each); use --target-count up to 250");
+    Ok(())
+}
+
+pub const PANO_DETECTED: &str = "360 footage detected (equirectangular). Splitting each frame into 14 views. If this is ordinary 2:1 video, add --camera-model pinhole.";
+
+/// Split the 360 frames into views: side min(1024, pano width / 4).
+fn split_panoramas(run: &Run, options: &FixedOptions, frames: &str) -> Result<String> {
+    let images = run.path(frames)?.join("images");
+    let first = std::fs::read_dir(&images)?.filter_map(|e| e.ok().map(|e| e.path())).filter(|p| p.is_file()).min()
+        .context("360 extraction wrote no frames")?;
+    let (width, _) = image::image_dimensions(&first)?;
+    let view_size = (width / 4).clamp(256, 1024);
+    let split = invoke(run, "split_panoramas", json!({"frames_id":frames,"view_size":view_size,"nadir_mask_deg":options.nadir_mask_deg}))?;
+    run.journal("panorama_split", json!({"frames_id":frames,"view_size":view_size,"nadir_mask_deg":options.nadir_mask_deg,
+        "panoramas":split.metrics.get("panoramas"),"views":split.metrics.get("views")}))?;
+    artifact(split, ArtifactKind::Frames)
+}
+
 fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: bool) -> Result<Value> {
-    let wants_preview = !options.trust_poses && !options.preserve_all && splat_core::remote::preset().is_some()
+    let inspection = invoke(run, "inspect_input", json!({}))?;
+    let pano = is_panorama(options, &inspection);
+    if pano {
+        check_panorama_options(options, &run.config().backend)?;
+        if options.camera_model == "auto" {
+            eprintln!("{PANO_DETECTED}");
+        }
+        run.journal("panorama_input", json!({"declared":options.camera_model == "equirect","reason":inspection.metrics.get("equirect_reason")}))?;
+    }
+    // 360 runs have no quick preview: their views come from the split, after the full extraction.
+    let wants_preview = !pano && !options.trust_poses && !options.preserve_all && splat_core::remote::preset().is_some()
         && run.config().backend == "brush"
         && !splat_core::remote::goal_wants_mesh(run.goal());
-    let inspection = invoke(run, "inspect_input", json!({}))?;
     // Videos: their full SfM takes minutes (night 6+). Photos from PHOTO_QUICK_MIN up: garden's (185)
     // full SfM took 279 s and its first view 5.8 min; the bench's room-every4 (78) waited 210 s for its
     // full SfM on a busy fleet.
@@ -384,9 +468,10 @@ fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: b
         }
     }
     let frames_before: std::collections::BTreeSet<String> = run.state()?.artifacts.into_keys().collect();
-    let mut prestage: Option<Option<splat_core::remote::FramePrestage>> = (!video).then_some(None);
+    // 360 runs solve the split views, not the extracted equirect frames: nothing to prestage.
+    let mut prestage: Option<Option<splat_core::remote::FramePrestage>> = (!video && !pano).then_some(None);
     let extraction_started = std::time::Instant::now();
-    let mut extraction = dispatch(run, "extract_frames", extraction_request(options));
+    let mut extraction = dispatch(run, "extract_frames", if pano { pano_extraction_request(options) } else { extraction_request(options) });
     while extraction.status == Status::Running {
         quick.advance(run)?;
         let state = run.state()?;
@@ -411,6 +496,7 @@ fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: b
     }
     ensure!(extraction.status == Status::Succeeded, "extract_frames: {:?}", extraction.error.map(|e| e.message));
     let frames = artifact(extraction, ArtifactKind::Frames)?;
+    let frames = if pano { split_panoramas(run, options, &frames)? } else { frames };
     // Videos may contain moving people; keep their feature masks inline on the SfM runner.
     // Photos only need automatic segmentation when the inspection samples suggest sky.
     let sky = inspection
@@ -424,8 +510,15 @@ fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: b
     } else {
         sky.then_some("sky; person")
     };
-    let mut sfm_request = json!({"frames_id":frames,"pairs":options.pairs,"camera_model":options.camera_model});
-    if let Some(prompt) = prompt.filter(|_| !options.trust_poses) {
+    // 360: exact pinhole views in a rig, matched in sequence; no distractor masks yet (the masking
+    // path is per frame and untested on split views).
+    let sfm_request = if pano {
+        json!({"frames_id":frames,"pairs":"sequential","camera_model":"pinhole"})
+    } else {
+        json!({"frames_id":frames,"pairs":options.pairs,"camera_model":options.camera_model})
+    };
+    let mut sfm_request = sfm_request;
+    if let Some(prompt) = prompt.filter(|_| !options.trust_poses && !pano) {
         if run.backend_capabilities()["sfm_inline_masks"] == true {
             sfm_request["mask_prompt"] = json!(prompt);
         } else if run.backend_capabilities()["mask_distractors"] == true {
@@ -455,7 +548,7 @@ fn reconstruction_pipeline(run: &Run, options: &FixedOptions, agent_continues: b
     }
     ensure!(full.status == Status::Succeeded, "reconstruct_sfm: {:?}", full.error.map(|e| e.message));
     let mut sfm = artifact(full, ArtifactKind::Sfm)?;
-    if !options.trust_poses && video && run.config().backend == "brush" {
+    if !options.trust_poses && video && !pano && run.config().backend == "brush" {
         sfm = placement_retry(run, options, &mut quick, &frames, sfm, &sfm_request)?;
     }
     quick.stop_solve(run)?;
@@ -1258,6 +1351,67 @@ fn remove_target(run: &Run, candidate: &str, (noun, singular): &(String, bool), 
 mod tests {
     use super::{FixedOptions, FixedOverrides};
     use serde_json::json;
+
+    fn inspection(equirect: bool) -> splat_contracts::ToolResult {
+        let mut r: splat_contracts::ToolResult = serde_json::from_value(json!({"schema_version":splat_contracts::SCHEMA_VERSION,
+            "tool":"inspect_input","status":"succeeded","job_id":null,"error":null})).unwrap();
+        r.metrics.insert("equirect".into(), json!(equirect));
+        r
+    }
+
+    #[test]
+    fn pano_budget_counts_360_frames() {
+        let default = FixedOptions::default();
+        assert_eq!(super::pano_target_count(&default), 100);
+        let request = super::pano_extraction_request(&default);
+        assert_eq!((request["target_count"].clone(), request["max_edge"].clone(), request["panorama"].clone(), request["input_kind"].clone()),
+            (json!(100), json!(4096), json!(true), json!("video")));
+        let many = FixedOverrides { target_count: Some(300), ..Default::default() }.apply(FixedOptions::default());
+        assert_eq!(super::pano_target_count(&many), 250);
+        let few = FixedOverrides { target_count: Some(5), ..Default::default() }.apply(FixedOptions::default());
+        assert_eq!(super::pano_target_count(&few), 20);
+        // Non-360 input is unchanged: no panorama field, the ordinary budget.
+        let ordinary = super::extraction_request(&many);
+        assert_eq!(ordinary["target_count"], 300);
+        assert!(ordinary.get("panorama").is_none());
+        assert_eq!(super::extraction_request(&default)["target_count"], 600);
+    }
+
+    #[test]
+    fn pano_detection_follows_the_camera_model_flag() {
+        let auto = FixedOptions::default();
+        assert!(super::is_panorama(&auto, &inspection(true)));
+        assert!(!super::is_panorama(&auto, &inspection(false)));
+        for (model, expected) in [("pinhole", false), ("opencv", false), ("equirect", true)] {
+            let options = FixedOverrides { camera_model: Some(model.into()), ..Default::default() }.apply(FixedOptions::default());
+            assert_eq!(super::is_panorama(&options, &inspection(true)), expected, "{model}");
+            assert_eq!(super::is_panorama(&options, &inspection(false)), expected, "{model}");
+        }
+    }
+
+    #[test]
+    fn pano_rejects_trusted_poses_spirula_and_exhaustive_pairs() {
+        let error = |o: FixedOverrides, backend: &str| super::check_panorama_options(&o.apply(FixedOptions::default()), backend).unwrap_err().to_string();
+        assert!(error(FixedOverrides { trust_poses: Some(true), ..Default::default() }, "brush").contains("--trust-poses"));
+        assert_eq!(error(FixedOverrides::default(), "spirula"), "360 input needs the default backend");
+        assert!(error(FixedOverrides { pairs: Some("exhaustive".into()), ..Default::default() }, "brush").contains("--pairs exhaustive"));
+        assert!(error(FixedOverrides { preserve_all: Some(true), ..Default::default() }, "brush").contains("--preserve-all"));
+        assert!(super::check_panorama_options(&FixedOptions::default(), "brush").is_ok());
+    }
+
+    #[test]
+    fn pano_options_keep_old_fixed_json_loading() {
+        // A fixed.json written before 360 input (no nadir_mask_deg / target_count_explicit).
+        let mut legacy = serde_json::to_value(FixedOptions::default()).unwrap();
+        legacy.as_object_mut().unwrap().remove("nadir_mask_deg");
+        legacy.as_object_mut().unwrap().remove("target_count_explicit");
+        let old: FixedOptions = serde_json::from_value(legacy).unwrap();
+        assert_eq!((old.nadir_mask_deg, old.target_count_explicit), (30.0, false));
+        let set = FixedOverrides { nadir_mask_deg: Some(0.0), ..Default::default() }.apply(FixedOptions::default());
+        assert_eq!(set.nadir_mask_deg, 0.0);
+        assert!(super::parse_nadir_mask_deg("61").is_err() && super::parse_nadir_mask_deg("-1").is_err());
+        assert_eq!(super::parse_nadir_mask_deg("45"), Ok(45.0));
+    }
 
     #[test]
     fn trusted_authority_survives_saved_options_and_extraction_request() {

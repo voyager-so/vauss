@@ -173,6 +173,7 @@ impl Backend for SpirulaBackend {
             } else {
                 None
             };
+            anyhow::ensure!(!matches!(req.camera_model, CameraModel::Equirect), "360 input needs the default backend");
             let pairs = spirula_pairs(req.pairs);
             let (artifact, out) = new_artifact(
                 run,

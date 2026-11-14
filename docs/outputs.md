@@ -27,6 +27,15 @@ Ids such as `candidate_66f47d0744ec` are content-addressed, so a retry never ove
 `report.json` → `deliverables` names the files that count (`splat`, `mesh`). The other candidates and solves
 are kept so you can see what was tried.
 
+## 360 runs
+
+A 360 run has two frames artifacts: the equirect frames, and the split views (`frames_*/images/` named
+`vNN_<frame>.jpg`, `v00_` to `v13_`, 14 per 360 frame). The split folder and the SfM dataset also hold
+`panorama.json` (the view layout and frame order) and `rig_config.json` (COLMAP's rig). The held-out
+split keeps whole 360 frames out of training (every 8th frame, all its views). Viewers, shots and the
+Blender cameras follow one camera per 360 frame: its level forward view (`v00_`).
+`reconstruction.json` → `panorama` reports registered 360 frames and the rig check.
+
 ## Metrics
 
 `report.md` and `report.json` give scores on held-out frames: every 8th registered frame, frozen before training

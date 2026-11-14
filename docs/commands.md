@@ -22,7 +22,12 @@ vauss run SOURCE --goal "what you want" --driver fixed [--run-dir runs/name]
 ```
 
 `SOURCE` is a video, a folder of images, or a phone capture export (Record3D, Polycam, Nerfstudio
-`transforms.json`, ARKitScenes; see [phone-capture-import.md](phone-capture-import.md)).
+`transforms.json`, ARKitScenes; see [phone-capture-import.md](phone-capture-import.md)). Stitched 360
+footage is detected by itself (see [360.md](360.md)).
+
+`--camera-model equirect`: stitched 360 footage (2:1 equirectangular). Each frame is split into 14 views.
+`--nadir-mask-deg D` (0–60, default 30) sets the cone below the camera that is ignored; 0 turns it off.
+It has no effect on other input.
 
 `--driver` picks who runs the pipeline:
 
@@ -140,6 +145,7 @@ vauss fetch colmap       # download a pinned helper ahead of time
 
 `--target-count` is a selection budget, not a promise that every file is included. Sampling,
 black-frame filtering, duplicate filtering, and camera registration can all reduce coverage.
+With 360 input it counts 360 frames: default 100 (each split into 14 views), clamped to 20–250.
 For calibrated capture exports, `vauss run ./capture --trust-poses` selects
 imported cameras explicitly, skips SfM, keeps every view and preserves the
 source split and world gauge. Camera refinement stays off. See
@@ -166,6 +172,12 @@ held-out views remain reserved for evaluation. Large all-frame videos may cost s
 Use filenames that express that order (`frame_2` sorts before `frame_10`); the selection manifest
 records each original filename and index. Video files carry video provenance automatically.
 Ordinary folders default to `images`; filenames alone never change their calibration assumptions.
+
+360 input (`--camera-model equirect`, or detected under `auto`) splits every frame into 14 exact
+pinhole views and solves them as one COLMAP rig: sequential matching with loop detection, fixed
+intrinsics, one low-angle retry. It refuses `--trust-poses`, `--pairs exhaustive`, `--preserve-all` and
+the Spirula backend, ignores `--max-edge` (360 frames decode at up to 4096 px wide), and 360 photo folders are read in file-name order. Any other explicit `--camera-model` turns
+360 detection off. `split_panoramas` is the tool behind it (`vauss tool split_panoramas`).
 
 Video auto-calibration uses the existing shared square-pixel RADIAL model and available focal
 prior. Photo auto-calibration retains PINHOLE with independent fx/fy. For known anisotropic frames,

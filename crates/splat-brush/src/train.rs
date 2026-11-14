@@ -277,12 +277,14 @@ pub fn train_splats(cfg: &BrushConfig, run: &dyn RunCtx, mut req: TrainSplats) -
     // -0.12 dB / +0.009 LPIPS (bench aadaf5c vs 86143f5), and the detector can't tell the two apart.
     let video = read_json::<crate::sfm::SfmJob>(&dataset.join("sfm_job.json")).is_ok_and(|j| j.video);
     let config_overrides = crate::capture_sfm::training_overrides(&dataset, req.preview)?;
+    let panorama = splat_core::panorama::Manifest::read(&dataset)?.is_some();
     let job = TrainJob {
         dataset,
         out: out.clone(),
         preview: req.preview,
         video,
-        train_names: contract_train_subset(&manifest.train_names, video, surfel, preserve_all),
+        // 360 views are 14 cuts of each frame: an even spread of 150 would drop most frames' views.
+        train_names: contract_train_subset(&manifest.train_names, video, surfel, preserve_all || panorama),
         heldout_names: manifest.heldout_names.clone(),
         total_steps: req.total_steps,
         blur_total_steps: preset
