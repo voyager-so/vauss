@@ -6410,7 +6410,7 @@ dependencies = [
 
 [[package]]
 name = "splat-agent"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "libc",
@@ -6423,7 +6423,7 @@ dependencies = [
 
 [[package]]
 name = "splat-assets"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "axum",
@@ -6450,7 +6450,7 @@ dependencies = [
 
 [[package]]
 name = "splat-brush"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "burn",
@@ -6462,6 +6462,7 @@ dependencies = [
  "image",
  "lzfse_rust",
  "rand 0.10.3",
+ "rusqlite",
  "serde",
  "serde_json",
  "sha2",
@@ -6488,7 +6489,7 @@ dependencies = [
 
 [[package]]
 name = "splat-cli"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "clap",
@@ -6520,7 +6521,7 @@ dependencies = [
 
 [[package]]
 name = "splat-contracts"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "schemars 0.8.22",
  "serde",
@@ -6530,7 +6531,7 @@ dependencies = [
 
 [[package]]
 name = "splat-core"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -6556,7 +6557,7 @@ dependencies = [
 
 [[package]]
 name = "splat-effects"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "burn",
  "burn-cubecl",
@@ -6573,7 +6574,7 @@ dependencies = [
 
 [[package]]
 name = "splat-eval"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "clap",
@@ -6590,7 +6591,7 @@ dependencies = [
 
 [[package]]
 name = "splat-fetch"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "flate2",
@@ -6606,7 +6607,7 @@ dependencies = [
 
 [[package]]
 name = "splat-fill"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "clap",
@@ -6624,7 +6625,7 @@ dependencies = [
 
 [[package]]
 name = "splat-inpaint"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "burn",
@@ -6649,7 +6650,7 @@ dependencies = [
 
 [[package]]
 name = "splat-mcp"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -6663,7 +6664,7 @@ dependencies = [
 
 [[package]]
 name = "splat-mesh"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "glam 0.30.10",
@@ -6677,7 +6678,7 @@ dependencies = [
 
 [[package]]
 name = "splat-sfm"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "clap",
@@ -6695,7 +6696,7 @@ dependencies = [
 
 [[package]]
 name = "splat-sfm-learned"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "burn",
@@ -6711,7 +6712,7 @@ dependencies = [
 
 [[package]]
 name = "splat-shots"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "chrono",
@@ -6730,7 +6731,7 @@ dependencies = [
 
 [[package]]
 name = "splat-spirula"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "image",
@@ -6747,7 +6748,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "ball-tree",
@@ -6777,7 +6778,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-async"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "futures",
  "js-sys",
@@ -6788,7 +6789,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-colmap"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "glam 0.30.10",
  "log",
@@ -6799,7 +6800,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-cube"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "ash",
  "burn",
@@ -6814,7 +6815,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-dataset"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "burn",
  "clap",
@@ -6842,7 +6843,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-loss"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "burn",
  "burn-cubecl",
@@ -6855,7 +6856,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-lpips"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "burn",
  "getrandom 0.3.4",
@@ -6868,7 +6869,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-render"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "assert_approx_eq",
  "burn",
@@ -6891,7 +6892,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-rrfd"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -6911,7 +6912,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-scan"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "burn",
  "burn-wgpu",
@@ -6924,7 +6925,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-serde"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "async-fn-stream",
  "burn",
@@ -6947,7 +6948,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-serde-macros"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6956,7 +6957,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-sort"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "burn",
  "burn-wgpu",
@@ -6973,7 +6974,7 @@ dependencies = [
 
 [[package]]
 name = "splat-train-vfs"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "async_zip",
  "futures-util",
@@ -6997,7 +6998,7 @@ dependencies = [
 
 [[package]]
 name = "splat-webexport"
-version = "0.1.22-rc"
+version = "0.1.23-rc"
 dependencies = [
  "anyhow",
  "base64 0.23.1",

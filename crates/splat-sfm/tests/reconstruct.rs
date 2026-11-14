@@ -324,3 +324,80 @@ printf '7 1 2 4 100 100 100 0.5 1 0\n' > "$out/0/points3D.txt"
         .unwrap_or_else(|| panic!("no incremental low-angle retry:\n{log}"));
     assert!(low.contains("--Mapper.init_min_tri_angle 4"), "{low}");
 }
+
+#[cfg(unix)]
+fn fixed_pose_run(model: &str, params: Vec<f64>, matching: splat_sfm::Matching) -> (Vec<String>, splat_eval::Model) {
+    use std::io::Write;
+    use std::os::unix::fs::PermissionsExt;
+    let tmp = tempfile::tempdir().unwrap();
+    let template = tmp.path().join("template.db");
+    let db = rusqlite::Connection::open(&template).unwrap();
+    db.execute_batch("CREATE TABLE images (image_id INTEGER PRIMARY KEY, name TEXT, camera_id INTEGER);
+        CREATE TABLE cameras (camera_id INTEGER PRIMARY KEY, model INTEGER, width INTEGER, height INTEGER, params BLOB, prior_focal_length INTEGER);
+        CREATE TABLE rigs (rig_id INTEGER PRIMARY KEY, ref_sensor_id INTEGER, ref_sensor_type INTEGER);
+        CREATE TABLE rig_sensors (rig_id INTEGER, sensor_id INTEGER, sensor_type INTEGER, sensor_from_rig BLOB);
+        CREATE TABLE frames (frame_id INTEGER PRIMARY KEY, rig_id INTEGER);
+        CREATE TABLE frame_data (frame_id INTEGER, data_id INTEGER, sensor_id INTEGER, sensor_type INTEGER);
+        INSERT INTO images VALUES (1,'a.png',1),(2,'b.png',3);
+        INSERT INTO cameras VALUES (1,2,100,80,X'00',0),(3,2,100,80,X'00',0);
+        INSERT INTO rigs VALUES (1,1,0),(3,3,0);
+        INSERT INTO frames VALUES (1,1),(2,3);
+        INSERT INTO frame_data VALUES (1,1,1,0),(2,2,3,0);").unwrap();
+    drop(db);
+    let ran = tmp.path().join("ran.txt");
+    let script = tmp.path().join("fake colmap");
+    let (mut file, staged) = tempfile::NamedTempFile::new_in(tmp.path()).unwrap().into_parts();
+    write!(file, r##"#!/bin/sh
+if [ "$1" = '-h' ]; then echo 'COLMAP 4.2.1 (test)'; exit 0; fi
+cmd="$1"; shift
+echo "$cmd" >> '{ran}'
+while [ "$#" -gt 1 ]; do
+  case "$1" in --output_path) out="$2";; --input_path) input="$2";; --database_path) database="$2";; esac
+  shift 2
+done
+if [ "$cmd" = 'feature_extractor' ]; then cp '{template}' "$database"; fi
+if [ "$cmd" = 'point_triangulator' ]; then cp "$input/cameras.txt" "$input/images.txt" "$out/"; printf '1 0 0 3 1 2 3 0.5 1 0\n' > "$out/points3D.txt"; fi
+"##, ran = ran.display(), template = template.display()).unwrap();
+    drop(file);
+    fs::set_permissions(&staged, fs::Permissions::from_mode(0o755)).unwrap();
+    fs::rename(&staged, &script).unwrap();
+    let frames = tmp.path().join("frames");
+    fs::create_dir(&frames).unwrap();
+    let cam = |name: &str| splat_sfm::FixedCamera {
+        name: name.into(), model: model.into(), width: 100, height: 80,
+        params: params.clone(), qvec: [1., 0., 0., 0.], tvec: [0., 0., 0.],
+    };
+    let mut opts = ReconstructOptions::new(tmp.path().join("out"));
+    opts.colmap = script;
+    opts.use_gpu = false;
+    opts.matching = matching;
+    let seed = splat_sfm::triangulate_fixed_poses(&frames, &[cam("a.png"), cam("b.png")], &opts, std::time::Duration::from_secs(60)).unwrap();
+    assert_eq!(seed.points, 1);
+    let ran = fs::read_to_string(ran).unwrap();
+    (ran.lines().map(String::from).collect(), splat_eval::read_model(&seed.model_dir).unwrap())
+}
+
+#[cfg(unix)]
+#[test]
+fn fixed_pose_triangulation_runs_the_verifier_for_sequential_matching() {
+    let (ran, _) = fixed_pose_run("PINHOLE", vec![100., 100., 50., 40.], splat_sfm::Matching::Sequential);
+    assert_eq!(ran, ["feature_extractor", "sequential_matcher", "geometric_verifier", "point_triangulator"]);
+}
+
+#[cfg(unix)]
+#[test]
+fn fixed_pose_triangulation_keeps_every_supported_camera_model_and_database_ids() {
+    for (model, params) in [
+        ("SIMPLE_PINHOLE", vec![100., 50., 40.]),
+        ("PINHOLE", vec![100., 101., 50., 40.]),
+        ("SIMPLE_RADIAL", vec![100., 50., 40., 0.01]),
+        ("RADIAL", vec![100., 50., 40., 0.01, 0.001]),
+        ("OPENCV", vec![100., 101., 50., 40., 0.01, 0.001, 0.0001, 0.0002]),
+    ] {
+        let (_, m) = fixed_pose_run(model, params.clone(), splat_sfm::Matching::Exhaustive);
+        // Camera ids are the database's (1 and 3), not renumbered 1..n; models/params are the authored ones.
+        assert_eq!(m.cameras.keys().copied().collect::<Vec<_>>(), [1, 3], "{model}");
+        assert!(m.cameras.values().all(|c| c.model == model && c.params == params), "{model}");
+        assert_eq!(m.images.values().map(|i| i.id).collect::<Vec<_>>(), [1, 2], "{model}");
+    }
+}

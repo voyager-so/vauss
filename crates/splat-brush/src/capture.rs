@@ -1006,6 +1006,21 @@ pub(crate) fn extract(
     })
 }
 
+pub(crate) fn write_points3d(path: &Path, points: &[([f64; 3], [u8; 3])]) -> Result<()> {
+    let mut file = fs::File::create(path)?;
+    file.write_all(&(points.len() as u64).to_le_bytes())?;
+    for (i, (xyz, rgb)) in points.iter().enumerate() {
+        file.write_all(&((i + 1) as u64).to_le_bytes())?;
+        for x in xyz {
+            file.write_all(&x.to_le_bytes())?;
+        }
+        file.write_all(rgb)?;
+        file.write_all(&0f64.to_le_bytes())?;
+        file.write_all(&0u64.to_le_bytes())?;
+    }
+    Ok(())
+}
+
 /// Materialize calibrated cameras, either explicitly trusted or after an SfM coverage fallback.
 pub(crate) fn reconstruct(
     run: &dyn RunCtx, frames_id: &str, artifact: Artifact, out: &Path,
@@ -1062,17 +1077,7 @@ pub(crate) fn reconstruct(
     splat_eval::colmap::write_images_bin(&sparse.join("images.bin"), &images)?;
     let points =
         capture_depth::initial_points(&out, &manifest.frames, manifest.heldout_names.as_deref())?;
-    let mut file = fs::File::create(sparse.join("points3D.bin"))?;
-    file.write_all(&(points.len() as u64).to_le_bytes())?;
-    for (i, (xyz, rgb)) in points.iter().enumerate() {
-        file.write_all(&((i + 1) as u64).to_le_bytes())?;
-        for x in xyz {
-            file.write_all(&x.to_le_bytes())?;
-        }
-        file.write_all(rgb)?;
-        file.write_all(&0f64.to_le_bytes())?;
-        file.write_all(&0u64.to_le_bytes())?;
-    }
+    write_points3d(&sparse.join("points3D.bin"), &points)?;
     let mut health = json!({"n_input":manifest.frames.len(),"n_registered":manifest.frames.len(),"registered_fraction":1.0,"n_points3d":points.len(),"engine":"capture_import","capture_format":manifest.format,"sfm_skipped":false});
     health.as_object_mut().unwrap().extend(selection.as_object().unwrap().clone());
     write_json(&out.join("health.json"), &health)?;

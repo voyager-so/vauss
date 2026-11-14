@@ -199,7 +199,7 @@ pub fn reconstruct_sfm(cfg: &BrushConfig, run: &dyn RunCtx, req: ReconstructSfm)
             && req.mask_id.is_none() && req.mask_prompt.is_none() && !req.preview
             && req.preview_train.is_none() && req.mapper_seed.is_none(),
             "trusted camera authority is incompatible with SfM overrides, masks or previews");
-        return crate::capture_sfm::import_trusted(run, &req.frames_id);
+        return crate::capture_sfm::import_trusted(run, &req.frames_id, cfg.colmap.as_deref());
     }
     let colmap = cfg.colmap.clone().ok_or_else(|| {
         invalid("COLMAP not found: set SPLAT_COLMAP to a COLMAP 4.x binary (or install it on PATH)")

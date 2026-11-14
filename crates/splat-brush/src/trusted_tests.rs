@@ -492,3 +492,257 @@ fn trusted_import_health_split_resize_and_default_policy() -> Result<()> {
     assert!(error.to_string().contains("supported calibrated capture"));
     Ok(())
 }
+
+/// Fake COLMAP: the extractor installs a database listing every authored frame, matching is a
+/// no-op, and `point_triangulator` echoes its input cameras/images (poses untouched) with `points`
+/// synthetic points. The images it was shown are recorded for the split assertion.
+#[cfg(unix)]
+fn fake_colmap(dir: &Path, points: usize) -> Result<std::path::PathBuf> {
+    fake_colmap_with(dir, points, "")
+}
+
+/// `tri_extra` is shell run after the fake triangulator echoes its input (e.g. to sabotage it).
+#[cfg(unix)]
+fn fake_colmap_with(dir: &Path, points: usize, tri_extra: &str) -> Result<std::path::PathBuf> {
+    // The fixture's held-out frames never reach COLMAP.
+    let train: Vec<usize> = (0..25).filter(|i| ![7, 15, 23].contains(i)).collect();
+    fake_colmap_for(dir, points, tri_extra, &train)
+}
+
+/// Same, for a database holding exactly the frames with these indices.
+#[cfg(unix)]
+fn fake_colmap_for(dir: &Path, points: usize, tri_extra: &str, frames: &[usize]) -> Result<std::path::PathBuf> {
+    use std::{io::Write, os::unix::fs::PermissionsExt};
+    let template = dir.join("template.db");
+    let db = rusqlite::Connection::open(&template)?;
+    // The shape COLMAP 4 writes: one single-camera rig and frame per image, a guessed camera.
+    db.execute_batch("CREATE TABLE images (image_id INTEGER PRIMARY KEY, name TEXT, camera_id INTEGER);
+        CREATE TABLE cameras (camera_id INTEGER PRIMARY KEY, model INTEGER, width INTEGER, height INTEGER, params BLOB, prior_focal_length INTEGER);
+        CREATE TABLE rigs (rig_id INTEGER PRIMARY KEY, ref_sensor_id INTEGER, ref_sensor_type INTEGER);
+        CREATE TABLE rig_sensors (rig_id INTEGER, sensor_id INTEGER, sensor_type INTEGER, sensor_from_rig BLOB);
+        CREATE TABLE frames (frame_id INTEGER PRIMARY KEY, rig_id INTEGER);
+        CREATE TABLE frame_data (frame_id INTEGER, data_id INTEGER, sensor_id INTEGER, sensor_type INTEGER);")?;
+    for &i in frames {
+        let i = i as i64;
+        // Deliberately non-sequential, non-aligned ids.
+        let (image, camera, rig, frame) = (i + 1, i + 11, i + 21, i + 31);
+        db.execute("INSERT INTO images VALUES (?1, ?2, ?3)", rusqlite::params![image, format!("frame_{i:06}.jpg"), camera])?;
+        db.execute("INSERT INTO cameras VALUES (?1, 2, 1024, 576, X'00', 0)", [camera])?;
+        db.execute("INSERT INTO rigs VALUES (?1, ?2, 0)", [rig, camera])?;
+        db.execute("INSERT INTO frames VALUES (?1, ?2)", [frame, rig])?;
+        db.execute("INSERT INTO frame_data VALUES (?1, ?2, ?3, 0)", [frame, image, camera])?;
+    }
+    drop(db);
+    let (mut file, staged) = tempfile::NamedTempFile::new_in(dir)?.into_parts();
+    file.write_all(format!(r##"#!/bin/sh
+if [ "$1" = '-h' ]; then echo 'COLMAP 4.2.1 (test)'; exit 0; fi
+cmd="$1"; shift
+while [ "$#" -gt 1 ]; do
+  case "$1" in
+    --output_path) out="$2";; --input_path) input="$2";;
+    --image_path) images="$2";; --database_path) database="$2";;
+  esac
+  shift 2
+done
+if [ "$cmd" = 'feature_extractor' ]; then cp '{template}' "$database"; fi
+if [ "$cmd" = 'point_triangulator' ]; then
+  ls "$images" > '{seen}'
+  # COLMAP 4 aborts unless the input rigs/frames/cameras match the database's ids.
+  [ -s "$input/rigs.txt" ] && [ -s "$input/frames.txt" ] || {{ echo 'missing rigs/frames' >&2; exit 3; }}
+  rm -rf '{input_seen}'; cp -r "$input" '{input_seen}'
+  cp "$input/cameras.txt" "$input/images.txt" "$out/"
+  {tri_extra}
+  awk 'BEGIN {{ for (i = 1; i <= {points}; i++) printf "%d %f %f %f 10 20 30 0.5 1 0\n", i, i % 7, i % 11, 3 + i % 5 }}' > "$out/points3D.txt"
+fi
+"##, template = template.display(), seen = dir.join("seen.txt").display(), input_seen = dir.join("input_seen").display(), points = points, tri_extra = tri_extra).as_bytes())?;
+    drop(file);
+    fs::set_permissions(&staged, fs::Permissions::from_mode(0o755))?;
+    let script = dir.join("fake colmap");
+    fs::rename(&staged, &script)?;
+    Ok(script)
+}
+
+/// Extract + trusted-import the lane C fixture; returns (run, sfm artifact id, result).
+fn trusted_import(root: &Path, cfg: &BrushConfig) -> Result<(Run, ToolResult)> {
+    let meta = metadata();
+    source(&root.join("source"), &meta)?;
+    let run = Run::create(root.join("run"), root.join("source"), "test", "brush")?
+        .with_worker_exe(root.join("missing-worker"));
+    let extracted = media::extract_frames(cfg, &run, serde_json::from_value(json!({"trust_poses":true,"max_edge":1600}))?)?;
+    let imported = sfm::reconstruct_sfm(cfg, &run, serde_json::from_value(json!({"frames_id":extracted.artifacts[0].id}))?)?;
+    assert_eq!(imported.status, Status::Succeeded);
+    assert_eq!(imported.metrics["camera_source"], "imported");
+    Ok((run, imported))
+}
+
+#[cfg(unix)]
+#[test]
+fn trusted_import_without_points_is_seeded_by_fixed_pose_triangulation() -> Result<()> {
+    let tmp = tempfile::tempdir()?;
+    let mut cfg = unavailable_helpers();
+    cfg.colmap = Some(fake_colmap(tmp.path(), 1500)?);
+    let (run, imported) = trusted_import(tmp.path(), &cfg)?;
+    let dataset = run.path(&imported.artifacts[0].id)?;
+    // Honest provenance and counts, no warning.
+    assert_eq!(imported.metrics["seed_points"]["source"], "colmap_triangulated_fixed_poses");
+    assert_eq!(imported.metrics["seed_points"]["points"], 1500);
+    assert_eq!(imported.metrics["n_points3d"], 1500);
+    assert_eq!(imported.metrics["seed_points"]["n_train_images"], 22);
+    assert!(imported.warnings.is_empty(), "{:?}", imported.warnings);
+    assert_eq!(read_json::<Value>(&dataset.join("health.json"))?["seed_points"]["points"], 1500);
+    // Held-out views never reach feature extraction/triangulation.
+    let seen = fs::read_to_string(tmp.path().join("seen.txt"))?;
+    let seen: Vec<_> = seen.lines().collect();
+    assert_eq!(seen.len(), 22);
+    for held in ["frame_000007.jpg", "frame_000015.jpg", "frame_000023.jpg"] {
+        assert!(!seen.contains(&held));
+    }
+    // Camera authority: the written model still holds all 25 authored poses, now with points.
+    let model = splat_eval::read_model(&dataset.join("sparse/0"))?;
+    assert_eq!(model.images.len(), 25);
+    assert_eq!(model.points.len(), 1500);
+    // The input model's ids/models match the database's (COLMAP 4 aborts otherwise).
+    let seen = tmp.path().join("input_seen");
+    let lines = |f: &str| -> Vec<Vec<String>> { fs::read_to_string(seen.join(f)).unwrap().lines()
+        .filter(|l| !l.starts_with('#') && !l.is_empty()).map(|l| l.split_whitespace().map(String::from).collect()).collect() };
+    let (cams, rigs, frames) = (lines("cameras.txt"), lines("rigs.txt"), lines("frames.txt"));
+    assert_eq!((cams.len(), rigs.len(), frames.len()), (22, 22, 22));
+    for c in &cams { assert_eq!(c[1..4], ["OPENCV", "1024", "576"]); assert!((11..36).contains(&c[0].parse::<i64>()?)); }
+    for r in &rigs { assert_eq!(r[1..3], ["1", "CAMERA"]); assert_eq!(r[3].parse::<i64>()? - r[0].parse::<i64>()?, -10); }
+    for f in &frames {
+        let n = |k: usize| f[k].parse::<i64>().unwrap();
+        assert_eq!((n(0) - n(1), n(11) - n(12), n(1) - n(11)), (10, 10, 10));
+        assert_eq!(f[9..11], ["1", "CAMERA"]);
+    }
+    // No scratch COLMAP model may live in the dataset root: the loader would prefer it to sparse/0.
+    fn models(dir: &Path, found: &mut Vec<std::path::PathBuf>) {
+        for e in fs::read_dir(dir).unwrap().flatten() {
+            let p = e.path();
+            if p.is_dir() { models(&p, found) } else if p.file_name().is_some_and(|n| n.to_string_lossy().starts_with("cameras.")) { found.push(p) }
+        }
+    }
+    let mut found = vec![];
+    models(&dataset, &mut found);
+    assert_eq!(found, [dataset.join("sparse/0/cameras.bin")], "scratch models leaked into the dataset");
+    // The training loader gets seed points, so the +Z random initializer is not used.
+    let split = split::define_split(&run, serde_json::from_value(json!({"sfm_id":imported.artifacts[0].id}))?)?;
+    assert_eq!(splat_core::split::load(&run, &split.artifacts[0].id)?.heldout_names.len(), 3);
+    let loaded = engine::runtime()?.block_on(engine::load_scene(&dataset, 1600))?;
+    assert!(loaded.init.is_some(), "seeded trusted import must provide init points");
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn trusted_import_with_too_few_triangulated_points_warns_and_reports_the_fallback() -> Result<()> {
+    let tmp = tempfile::tempdir()?;
+    let mut cfg = unavailable_helpers();
+    cfg.colmap = Some(fake_colmap(tmp.path(), 10)?);
+    let (run, imported) = trusted_import(tmp.path(), &cfg)?;
+    let seed = &imported.metrics["seed_points"];
+    assert_eq!(seed["source"], "none_plus_z_fallback");
+    assert_eq!(seed["points"], 0);
+    assert_eq!(seed["triangulated_points"], 10);
+    assert!(imported.warnings.iter().any(|w| w.contains("lost >10 dB")), "{:?}", imported.warnings);
+    let dataset = run.path(&imported.artifacts[0].id)?;
+    assert_eq!(splat_eval::read_model(&dataset.join("sparse/0"))?.points.len(), 0);
+    assert_eq!(read_json::<Value>(&dataset.join("health.json"))?["seed_points"]["source"], "none_plus_z_fallback");
+    Ok(())
+}
+
+#[test]
+fn trusted_import_without_colmap_warns_loudly() -> Result<()> {
+    let tmp = tempfile::tempdir()?;
+    let (run, imported) = trusted_import(tmp.path(), &unavailable_helpers())?;
+    assert_eq!(imported.metrics["seed_points"]["source"], "none_plus_z_fallback");
+    assert!(imported.warnings.iter().any(|w| w.contains("lost >10 dB") && w.contains("COLMAP not found")));
+    let dataset = run.path(&imported.artifacts[0].id)?;
+    let loaded = engine::runtime()?.block_on(engine::load_scene(&dataset, 1600))?;
+    assert!(loaded.init.is_none());
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn trusted_import_with_empty_heldout_still_loads_seed_points() -> Result<()> {
+    let tmp = tempfile::tempdir()?;
+    let mut meta = metadata();
+    meta["frames"] = Value::Array(meta["frames"].as_array().unwrap()[..3].to_vec());
+    meta["test_filenames"] = json!([]);
+    source(&tmp.path().join("source"), &meta)?;
+    let mut cfg = unavailable_helpers();
+    cfg.colmap = Some(fake_colmap_for(tmp.path(), 1500, "", &[0, 1, 2])?);
+    let run = Run::create(tmp.path().join("run"), tmp.path().join("source"), "test", "brush")?;
+    let extracted = media::extract_frames(&cfg, &run, serde_json::from_value(json!({"trust_poses":true,"max_edge":1600}))?)?;
+    let imported = sfm::reconstruct_sfm(&cfg, &run, serde_json::from_value(json!({"frames_id":extracted.artifacts[0].id}))?)?;
+    assert_eq!(imported.metrics["seed_points"]["source"], "colmap_triangulated_fixed_poses");
+    assert_eq!(imported.metrics["seed_points"]["n_train_images"], 3);
+    let dataset = run.path(&imported.artifacts[0].id)?;
+    let loaded = engine::runtime()?.block_on(engine::load_scene(&dataset, 1600))?;
+    assert!(loaded.init.is_some(), "seed points must reach the loader");
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn trusted_seeding_rejects_changed_intrinsics_and_kills_hangs() -> Result<()> {
+    // COLMAP echoing a different image size is rejected, with the fallback warning.
+    let tmp = tempfile::tempdir()?;
+    let mut cfg = unavailable_helpers();
+    cfg.colmap = Some(fake_colmap_with(tmp.path(), 1500, r#"awk '/^#/ {print; next} {$3=$3+1} 1' "$out/cameras.txt" > "$out/c.tmp" && mv "$out/c.tmp" "$out/cameras.txt""#)?);
+    let (_run, imported) = trusted_import(tmp.path(), &cfg)?;
+    assert_eq!(imported.metrics["seed_points"]["source"], "none_plus_z_fallback");
+    assert!(imported.metrics["seed_points"]["reason"].as_str().unwrap().contains("intrinsics"));
+    assert!(imported.warnings.iter().any(|w| w.contains("lost >10 dB")));
+
+    // A hung triangulator is killed at the deadline instead of blocking the import.
+    let tmp = tempfile::tempdir()?;
+    let (run, mut imported) = trusted_import(tmp.path(), &unavailable_helpers())?;
+    let hang = fake_colmap_with(tmp.path(), 1500, "sleep 7191907 & wait")?;
+    let dataset = run.path(&imported.artifacts[0].id)?;
+    let started = std::time::Instant::now();
+    capture_sfm::seed_if_unseeded(&dataset, Some(&hang), std::time::Duration::from_secs(2), &mut imported)?;
+    assert!(started.elapsed().as_secs() < 30);
+    assert_eq!(imported.metrics["seed_points"]["source"], "none_plus_z_fallback");
+    assert!(imported.metrics["seed_points"]["reason"].as_str().unwrap().contains("timed out"));
+    // The shell's descendant must die with it. Scoped to this test's unique marker only.
+    let alive = |marker: &str| fs::read_dir("/proc").unwrap().flatten().any(|e| {
+        fs::read(e.path().join("cmdline")).is_ok_and(|c| String::from_utf8_lossy(&c).contains(marker))
+    });
+    std::thread::sleep(std::time::Duration::from_millis(300));
+    assert!(!alive("sleep\x007191907"), "timeout left a descendant running");
+
+    // Non-finite poses from COLMAP are rejected (f64::max would hide a NaN).
+    let tmp = tempfile::tempdir()?;
+    let mut cfg = unavailable_helpers();
+    cfg.colmap = Some(fake_colmap_with(tmp.path(), 1500, r#"awk '/^#/ || NF == 0 {print; next} {$6 = "nan"} 1' "$out/images.txt" > "$out/i.tmp" && mv "$out/i.tmp" "$out/images.txt""#)?);
+    let (_run, imported) = trusted_import(tmp.path(), &cfg)?;
+    assert_eq!(imported.metrics["seed_points"]["source"], "none_plus_z_fallback");
+    assert!(imported.metrics["seed_points"]["reason"].as_str().unwrap().contains("not finite"), "{}", imported.metrics["seed_points"]);
+    Ok(())
+}
+
+/// Real-COLMAP validation (the fake-COLMAP tests cannot see COLMAP's own model/rig/frame checks).
+/// Skipped, with the reason printed, unless SPLAT_REAL_COLMAP (a COLMAP 4.x binary) and
+/// SPLAT_REAL_CAPTURE (a nerfstudio capture dir with transforms.json + images/) are set.
+/// Run: SPLAT_REAL_COLMAP=... SPLAT_REAL_CAPTURE=... cargo test -p splat-brush real_colmap -- --nocapture
+#[test]
+fn real_colmap_seeds_a_trusted_capture() -> Result<()> {
+    let (Some(colmap), Some(capture)) = (std::env::var_os("SPLAT_REAL_COLMAP"), std::env::var_os("SPLAT_REAL_CAPTURE")) else {
+        eprintln!("SKIPPED real_colmap_seeds_a_trusted_capture: set SPLAT_REAL_COLMAP and SPLAT_REAL_CAPTURE to run against real COLMAP");
+        return Ok(());
+    };
+    let tmp = tempfile::tempdir()?;
+    let mut cfg = unavailable_helpers();
+    cfg.colmap = Some(colmap.into());
+    let run = Run::create(tmp.path().join("run"), &capture, "test", "brush")?;
+    let extracted = media::extract_frames(&cfg, &run, serde_json::from_value(json!({"trust_poses":true,"max_edge":1600}))?)?;
+    let imported = sfm::reconstruct_sfm(&cfg, &run, serde_json::from_value(json!({"frames_id":extracted.artifacts[0].id}))?)?;
+    eprintln!("seed_points {} warnings {:?}", imported.metrics["seed_points"], imported.warnings);
+    assert_eq!(imported.metrics["seed_points"]["source"], "colmap_triangulated_fixed_poses", "{:?}", imported.metrics["seed_points"]);
+    assert!(imported.metrics["seed_points"]["points"].as_u64().unwrap() >= 1000);
+    let dataset = run.path(&imported.artifacts[0].id)?;
+    let loaded = engine::runtime()?.block_on(engine::load_scene(&dataset, 1600))?;
+    assert!(loaded.init.is_some());
+    Ok(())
+}
