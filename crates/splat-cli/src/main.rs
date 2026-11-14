@@ -274,7 +274,10 @@ fn print(value: &impl serde::Serialize) -> Result<()> {
 /// their upload for it (splat_core::remote, at most 20 s) and refuse it on a FAIL. A FAIL (unless
 /// `ignore`) also asks the run to stop. Photo folders are not checked, and an error in the check
 /// never blocks a run. The handle yields whether the check stopped the run.
-fn start_capture_check(cfg: &Config, root: &Path, source: &Path, room: bool, ignore: bool) -> Option<thread::JoinHandle<bool>> {
+/// `pano`: the run may be 360 input (`--camera-model auto|equirect`). The check measures a phone
+/// video's motion and coverage, which mean nothing for stitched 360 footage, so a 2:1 video at least
+/// 1920 px wide is then reported but never stopped.
+fn start_capture_check(cfg: &Config, root: &Path, source: &Path, room: bool, ignore: bool, pano: bool) -> Option<thread::JoinHandle<bool>> {
     if source.is_dir() {
         return None;
     }
@@ -287,10 +290,15 @@ fn start_capture_check(cfg: &Config, root: &Path, source: &Path, room: bool, ign
             Ok(c) => {
                 eprint!("{}", c.render());
                 let mut value = serde_json::to_value(&c).unwrap_or_default();
+                let (w, h) = (value["metrics"]["width"].as_u64().unwrap_or(0), value["metrics"]["height"].as_u64().unwrap_or(0));
+                let equirect = pano && h > 0 && w >= 1920 && w.abs_diff(2 * h) <= 1;
+                let ignore = ignore || equirect;
                 value["ignored"] = json!(ignore);
                 let _ = splat_core::atomic_json(root.join(splat_core::report::CAPTURE_CHECK), &value);
                 let fail = c.verdict == splat_eval::precheck::Verdict::Fail;
-                if fail && ignore {
+                if fail && equirect {
+                    eprintln!("Capture check does not apply to 360 footage; going on.");
+                } else if fail && ignore {
                     eprintln!("Capture check failed; going on anyway (--ignore-check).");
                 } else if fail {
                     eprintln!("Stopping before upload: {} Re-film it (`vauss check --guide`), or pass --ignore-check to try anyway.", c.summary);
@@ -1298,7 +1306,7 @@ fn execute(cli: Cli) -> Result<i32> {
             .with_registry(registry);
             splat_core::atomic_json(run.root().join("toolchain.json"), &cfg)?;
             eprintln!("Run: {}", run.root().display());
-            let check = start_capture_check(&cfg, run.root(), run.source(), room, ignore_check);
+            let check = start_capture_check(&cfg, run.root(), run.source(), room, ignore_check, matches!(fixed.camera_model.as_str(), "auto" | "equirect"));
             if cloud {
                 let c = splat_core::remote::enable(run.root())?;
                 eprintln!(

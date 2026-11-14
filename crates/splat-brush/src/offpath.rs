@@ -134,6 +134,16 @@ pub fn load_cameras(sparse: &Path, max_resolution: u32) -> anyhow::Result<PathCa
     let points: HashMap<u64, [f64; 3]> = model.points.iter().map(|p| (p.id, p.xyz)).collect();
     let mut images: Vec<_> = model.images.values().collect();
     images.sort_by(|a, b| a.name.cmp(&b.name));
+    // 360 runs: the capture path is each 360 frame's level forward view, in time order.
+    if let Some(dataset) = sparse.parent().and_then(Path::parent) {
+        let names: Vec<String> = images.iter().map(|im| im.name.clone()).collect();
+        let path = splat_core::panorama::path_names(dataset, &names);
+        if path != names && !path.is_empty() {
+            let order: HashMap<&str, usize> = path.iter().enumerate().map(|(i, n)| (n.as_str(), i)).collect();
+            images.retain(|im| order.contains_key(im.name.as_str()));
+            images.sort_by_key(|im| order[im.name.as_str()]);
+        }
+    }
     let (mut frames, mut median_depths) = (vec![], vec![]);
     for im in images {
         let cam = model.cameras.get(&im.camera_id).with_context(|| format!("{}: camera {} missing", im.name, im.camera_id))?;

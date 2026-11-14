@@ -72,6 +72,11 @@ vauss run room.mp4 --goal "walk-through of my living room" --driver fixed --run-
 
 That one command checks your capture, selects frames, solves cameras, trains the splat, evaluates held-out views and writes the exports. `--driver fixed` needs no AI account. Use `--fast` for a preview or `--max` for a larger training budget.
 
+**360 cameras.** Vauss reads stitched 360 video and photos (the 2:1 equirectangular files your camera's app exports).
+It notices 360 footage by itself. Add `--camera-model equirect` if it doesn't.
+Raw `.insv` / `.360` files are not read yet: export a stitched video first.
+[360 cameras →](docs/360.md)
+
 ### 3. Explore your scene
 
 ```sh

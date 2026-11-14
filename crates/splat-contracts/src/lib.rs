@@ -260,6 +260,9 @@ pub enum CameraModel {
     Pinhole,
     Opencv,
     OpencvFisheye,
+    /// Stitched 360 footage (2:1 equirectangular): the pipeline splits each frame into 14 pinhole
+    /// views (split_panoramas) and solves them as a rig with `pinhole`.
+    Equirect,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]

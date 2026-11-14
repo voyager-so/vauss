@@ -43,6 +43,16 @@ section below (Length, Light, Sharpness, Movement, Detail, Speed, Coverage).
    lets you turn a little faster). One take of about 1 minute, no cuts or pauses (longer clips only take longer to process).
    Hold the phone with both hands, elbows in.
 
+## With a 360 camera
+
+- **Walk, don't stand and spin.** Turning in place gives a 360 camera nothing new; carry it along a path.
+- **Keep the stick steady** and the camera upright, above your head or in front of you.
+- **Move at least a few steps between loops**, so each place is seen from more than one position.
+- **Shoot at the highest resolution** the camera offers (5.7K or more).
+- **Export stitched** (2:1 equirectangular) from the camera's app; raw `.insv` / `.360` files are not read yet.
+
+See [360.md](360.md) for what Vauss does with the footage.
+
 ## What the check's report means
 
 A **FAIL** stops `vauss run` before anything is uploaded (`--ignore-check` runs it anyway).
