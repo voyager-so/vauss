@@ -402,18 +402,22 @@ pub struct Risk {
 /// Per frame: distance to the nearest capture camera whose view direction is within 30 deg, in
 /// scene radii (2.0 if none looks that way). Within ~0.25 radii of a similarly-oriented capture
 /// camera renders cleanly; beyond ~0.6 expect floaters and holes.
+///
+/// A 360 rig capture ([`SceneFrame::rig_centers`]) saw every direction from each rig centre, so
+/// there only the distance to the nearest rig centre counts and view direction is ignored.
 pub fn score_risk(frame: &SceneFrame, frames: &[PathFrame]) -> Risk {
     let cos30 = 30f64.to_radians().cos();
     let d: Vec<f64> = frames
         .iter()
         .map(|f| {
             let (pos, fwd) = (f.c2w.w_axis.truncate(), f.c2w.z_axis.truncate());
-            frame
-                .cameras
-                .iter()
-                .filter(|c| c.forward().dot(fwd) > cos30)
-                .map(|c| c.center().distance(pos) / frame.radius)
-                .fold(2.0, f64::min)
+            let near = |centers: &mut dyn Iterator<Item = DVec3>| {
+                centers.map(|c| c.distance(pos) / frame.radius).fold(2.0, f64::min)
+            };
+            match &frame.rig_centers {
+                Some(rigs) => near(&mut rigs.iter().copied()),
+                None => near(&mut frame.cameras.iter().filter(|c| c.forward().dot(fwd) > cos30).map(|c| c.center())),
+            }
         })
         .collect();
     let worst = d.iter().copied().fold(0.0, f64::max);
@@ -430,6 +434,7 @@ pub fn score_risk(frame: &SceneFrame, frames: &[PathFrame]) -> Risk {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scene::CaptureCamera;
 
     #[test]
     fn prompt_parsing() {
@@ -470,5 +475,63 @@ mod tests {
         assert_eq!(a.len(), 24);
         assert!(a.iter().zip(&b).all(|(x, y)| x.c2w.abs_diff_eq(y.c2w, 1e-12)));
         assert!((a[23].vfov_deg - 50.0).abs() < 1e-9);
+    }
+
+    /// Capture cameras on a circle of radius 4 around the origin (y down), all facing +z.
+    fn risk_frame(rig: bool) -> SceneFrame {
+        let cameras: Vec<CaptureCamera> = (0..8)
+            .map(|i| {
+                let a = i as f64 * std::f64::consts::TAU / 8.0;
+                let c2w = look_at_c2w(DVec3::new(4.0 * a.cos(), 0.0, 4.0 * a.sin()), DVec3::new(4.0 * a.cos(), 0.0, 4.0 * a.sin() + 1.0), DVec3::new(0.0, -1.0, 0.0), 0.0);
+                CaptureCamera { name: format!("v00_{i}.jpg"), c2w, width: 8, height: 8, fx: 4.0, fy: 4.0, cx: 4.0, cy: 4.0,
+                    model: "PINHOLE".into(), params: vec![4.0; 4] }
+            })
+            .collect();
+        let rig_centers = rig.then(|| cameras.iter().map(|c| c.center()).collect());
+        SceneFrame { cameras, points: vec![], up: DVec3::new(0.0, -1.0, 0.0), target: DVec3::ZERO, radius: 4.0, ground: 0.0,
+            image_dir: None, rig_centers }
+    }
+
+    /// One frame at `pos` facing `yaw_deg` from +z about world up.
+    fn shot(pos: DVec3, yaw_deg: f64) -> Vec<PathFrame> {
+        let (s, c) = yaw_deg.to_radians().sin_cos();
+        vec![PathFrame { c2w: look_at_c2w(pos, pos + DVec3::new(s, 0.0, c), DVec3::new(0.0, -1.0, 0.0), 0.0), vfov_deg: 40.0 }]
+    }
+
+    #[test]
+    fn rig_risk_on_path_is_low_at_any_yaw() {
+        let frame = risk_frame(true);
+        let on_path = frame.cameras[3].center() + DVec3::new(0.0, 0.0, 0.1);
+        for yaw in [0.0, 45.0, 90.0, 180.0, 270.0] {
+            let r = score_risk(&frame, &shot(on_path, yaw));
+            assert_eq!(r.risk, "low", "yaw {yaw}: {r:?}");
+            assert!(r.novelty_max < 0.05, "yaw {yaw}: {r:?}");
+        }
+    }
+
+    #[test]
+    fn rig_risk_off_path_is_high_at_any_yaw() {
+        let frame = risk_frame(true);
+        // The circle's centre: 4 units (1 scene radius) from every rig centre.
+        for yaw in [0.0, 90.0, 180.0] {
+            let r = score_risk(&frame, &shot(DVec3::ZERO, yaw));
+            assert_eq!(r.risk, "high", "yaw {yaw}: {r:?}");
+            assert_eq!(r.novelty_max, 1.0);
+            assert_eq!(r.frac_frames_far, 1.0);
+        }
+    }
+
+    #[test]
+    fn pinhole_risk_still_needs_a_camera_facing_the_same_way() {
+        let frame = risk_frame(false);
+        let on_path = frame.cameras[3].center();
+        let r = score_risk(&frame, &shot(on_path, 0.0));
+        assert_eq!((r.risk.as_str(), r.novelty_max), ("low", 0.0));
+        // Turned 90 deg: no capture camera looks that way.
+        let r = score_risk(&frame, &shot(on_path, 90.0));
+        assert_eq!((r.risk.as_str(), r.novelty_max), ("high", 2.0));
+        // Facing the same way, the nearest camera counts: centre is 1 radius from all of them.
+        let r = score_risk(&frame, &shot(DVec3::ZERO, 0.0));
+        assert_eq!((r.risk.as_str(), r.novelty_max), ("high", 1.0));
     }
 }

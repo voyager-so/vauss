@@ -72,6 +72,7 @@ mod tests {
             radius: 1.0,
             ground: -1.0,
             image_dir: None,
+            rig_centers: None,
         };
         let g = crate::ply::Gaussians {
             pos: vec![[-3.0, 0.0, 2.0], [2.0, 0.0, 2.0], [0.0, 0.45, 2.0]],
@@ -148,6 +149,7 @@ mod tests {
             radius: 4.0,
             ground: -1.0,
             image_dir: None,
+            rig_centers: None,
         };
         let transform = DMat4::from_scale_rotation_translation(
             DVec3::splat(3173.2133),
