@@ -51,6 +51,10 @@ pub struct SceneFrame {
     pub ground: f64,
     /// Capture photos, named as in the SfM model.
     pub image_dir: Option<PathBuf>,
+    /// A 360 rig capture: the centre of each registered panorama (from any of its views). Each one
+    /// saw every direction, so only distance to these matters, not view direction. `None` for
+    /// pinhole captures and unrigged 360 baselines.
+    pub rig_centers: Option<Vec<DVec3>>,
 }
 
 impl SceneFrame {
@@ -191,16 +195,30 @@ fn cameras_from_model(model: &Model) -> Result<Vec<CaptureCamera>> {
 }
 
 /// Keep the cameras on the capture path ([`splat_core::panorama::path_names`]), in its order.
-fn retain_capture_path(data_dir: &Path, cams: &mut Vec<CaptureCamera>) {
+/// For a 360 rig capture, returns the rig centres: one per 360 frame with any registered view.
+fn retain_capture_path(data_dir: &Path, cams: &mut Vec<CaptureCamera>) -> Option<Vec<DVec3>> {
+    if !matches!(splat_core::panorama::Manifest::read(data_dir), Ok(Some(_))) {
+        return None; // not a 360 dataset
+    }
     let names: Vec<String> = cams.iter().map(|c| c.name.clone()).collect();
     let path = splat_core::panorama::path_names(data_dir, &names);
     // A solve that placed none of the path views (an unrigged 360 baseline) keeps every camera.
-    if path == names || path.is_empty() {
-        return;
+    if path.is_empty() {
+        return None;
     }
+    // Every view of a rig frame shares its centre (zero cam_from_rig translation); average anyway.
+    let mut groups: std::collections::BTreeMap<&str, (DVec3, f64)> = Default::default();
+    for c in cams.iter() {
+        if let Some(g) = splat_core::panorama::group_key(&c.name) {
+            let e = groups.entry(g).or_insert((DVec3::ZERO, 0.0));
+            *e = (e.0 + c.center(), e.1 + 1.0);
+        }
+    }
+    let centers = groups.into_values().map(|(sum, n)| sum / n).collect();
     let order: std::collections::HashMap<&str, usize> = path.iter().enumerate().map(|(i, n)| (n.as_str(), i)).collect();
     cams.retain(|c| order.contains_key(c.name.as_str()));
     cams.sort_by_key(|c| order[c.name.as_str()]);
+    Some(centers)
 }
 
 fn nearest_point_to_rays(origins: &[DVec3], dirs: &[DVec3]) -> Option<DVec3> {
@@ -222,7 +240,7 @@ pub fn load_scene(data_dir: &Path, scene_transform: Option<&Path>) -> Result<Sce
     let mut cams = cameras_from_model(&model)?;
     // A 360 run's capture path is one camera per 360 frame (its level forward view) in time order,
     // not 14 views per position sorted by view name.
-    retain_capture_path(data_dir, &mut cams);
+    let mut rig_centers = retain_capture_path(data_dir, &mut cams);
     if cams.is_empty() {
         bail!("COLMAP model has no registered images");
     }
@@ -238,7 +256,7 @@ pub fn load_scene(data_dir: &Path, scene_transform: Option<&Path>) -> Result<Sce
                 }
                 c.c2w = m;
             }
-            for p in &mut pts {
+            for p in pts.iter_mut().chain(rig_centers.iter_mut().flatten()) {
                 *p = t.transform_point3(*p);
             }
         }
@@ -285,7 +303,7 @@ pub fn load_scene(data_dir: &Path, scene_transform: Option<&Path>) -> Result<Sce
         pts.iter().filter(|p| p.distance(target) < 3.0 * radius).map(|p| (*p - target).dot(up)).collect();
     let ground = if near_h.is_empty() { 0.0 } else { quantile(&mut near_h, 0.05) };
     let images = data_dir.join("images");
-    Ok(SceneFrame { cameras: cams, points: pts, up, target, radius, ground, image_dir: images.is_dir().then_some(images) })
+    Ok(SceneFrame { cameras: cams, points: pts, up, target, radius, ground, image_dir: images.is_dir().then_some(images), rig_centers })
 }
 
 #[cfg(test)]
@@ -303,15 +321,24 @@ mod capture_path_tests {
         std::fs::create_dir_all(&dir).unwrap();
         let names = |c: &[CaptureCamera]| c.iter().map(|c| c.name.clone()).collect::<Vec<_>>();
         let mut cams: Vec<CaptureCamera> = ["v00_b.jpg", "v00_a.jpg", "v04_a.jpg", "v13_b.jpg"].iter().map(|n| cam(n)).collect();
-        // Not a 360 dataset: unchanged.
-        retain_capture_path(&dir, &mut cams);
+        // Not a 360 dataset: unchanged, no rig.
+        assert_eq!(retain_capture_path(&dir, &mut cams), None);
         assert_eq!(names(&cams).len(), 4);
-        splat_core::panorama::Manifest::new(8, 30.0, vec!["b.jpg".into(), "a.jpg".into()]).write(&dir).unwrap();
-        retain_capture_path(&dir, &mut cams);
+        splat_core::panorama::Manifest::new(8, 30.0, vec!["b.jpg".into(), "a.jpg".into(), "c.jpg".into()]).write(&dir).unwrap();
+        // Frame c registered only a side view: off the path list, but still a rig centre.
+        let mut side = cam("v07_c.jpg");
+        side.c2w = DMat4::from_translation(DVec3::new(5.0, 0.0, 0.0));
+        cams.push(side);
+        let centers = retain_capture_path(&dir, &mut cams).unwrap();
         assert_eq!(names(&cams), ["v00_b.jpg", "v00_a.jpg"]);
-        // No path view registered (an unrigged baseline): every camera stays.
+        assert_eq!(centers, [DVec3::ZERO, DVec3::ZERO, DVec3::new(5.0, 0.0, 0.0)]); // frames a, b, c
+        // Only path views registered: all stay, still a rig.
+        let mut fwd: Vec<CaptureCamera> = ["v00_a.jpg", "v00_b.jpg"].iter().map(|n| cam(n)).collect();
+        assert_eq!(retain_capture_path(&dir, &mut fwd), Some(vec![DVec3::ZERO, DVec3::ZERO]));
+        assert_eq!(names(&fwd), ["v00_b.jpg", "v00_a.jpg"]);
+        // No path view registered (an unrigged baseline): every camera stays, no rig.
         let mut others: Vec<CaptureCamera> = ["v04_a.jpg", "v13_b.jpg"].iter().map(|n| cam(n)).collect();
-        retain_capture_path(&dir, &mut others);
+        assert_eq!(retain_capture_path(&dir, &mut others), None);
         assert_eq!(names(&others), ["v04_a.jpg", "v13_b.jpg"]);
         let _ = std::fs::remove_dir_all(&dir);
     }
