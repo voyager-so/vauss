@@ -14,6 +14,8 @@ use anyhow::{Context, Result, bail, ensure};
 use fs2::FileExt;
 use serde::Serialize;
 mod union;
+pub mod rig_pairs;
+pub use rig_pairs::RigPairs;
 pub use union::pose_agreement;
 use splat_eval::{SfmHealth, SfmHealthOptions, read_model, sfm_health};
 
@@ -156,6 +158,10 @@ pub struct RigOptions {
     /// Configure the rig; false solves the views as independent photos with the same fixed
     /// intrinsics (SPLAT_PANO_RIG=0, the acceptance baseline).
     pub enforce: bool,
+    /// With `enforce` and sequential matching: match only the view pairs whose owned directions
+    /// overlap ([`rig_pairs`]). None runs COLMAP's sequential matcher with every view of each
+    /// neighbouring frame (`expand_rig_images`).
+    pub pairs: Option<RigPairs>,
 }
 
 impl ReconstructOptions {
@@ -348,6 +354,11 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
         extract.number("AlikedExtraction.max_num_features", opts.max_features);
     }
 
+    let rig = opts.rig.as_ref().filter(|r| r.enforce);
+    let rig_pairs = rig.and_then(|r| r.pairs.as_ref()).filter(|_| matches!(opts.matching, Matching::Sequential | Matching::Hybrid));
+    if let Some(pairs) = rig_pairs {
+        return Ok(rig_pair_stages(opts, extract, mapper_stage(frames_dir, opts, &database), pairs));
+    }
     let mut matching = StageCommand::new(
         opts,
         match opts.matching {
@@ -368,7 +379,6 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
     );
     matching.number("TwoViewGeometry.random_seed", 0);
     matching.number("TwoViewGeometry.max_num_trials", opts.ransac_max_trials);
-    let rig = opts.rig.as_ref().filter(|r| r.enforce);
     if rig.is_some() {
         // Pairs inside one 360 frame share its centre (no baseline); verification checks the rig.
         matching.number("FeatureMatching.rig_verification", 1);
@@ -424,6 +434,21 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
         calibrate.option("database_path", &database);
         stages.push(calibrate);
     }
+    stages.push(mapper_stage(frames_dir, opts, &database));
+    Ok(with_log_target(stages))
+}
+
+/// 4.2.1 uses log_target, not older glog flags.
+fn with_log_target(mut stages: Vec<StageCommand>) -> Vec<StageCommand> {
+    for stage in &mut stages {
+        stage.option("log_target", "stderr");
+    }
+    stages
+}
+
+/// The mapper stage of [`commands`].
+fn mapper_stage(frames_dir: &Path, opts: &ReconstructOptions, database: &Path) -> StageCommand {
+    let rig = opts.rig.as_ref().filter(|r| r.enforce);
     let mut mapper = StageCommand::new(
         opts,
         match opts.mapper {
@@ -505,13 +530,83 @@ pub fn commands(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Vec<Stag
             }
         }
     }
-    stages.push(mapper);
-    // 4.2.1 uses log_target, not older glog flags.
-    for stage in &mut stages {
-        stage.option("log_target", "stderr");
-    }
-    Ok(stages)
+    mapper
 }
+
+/// Writes the list the rig-aware matcher `stage` reads, from the database in `dir`.
+fn write_rig_pair_list(stage: &str, rig: &RigOptions, dir: &Path) -> Result<()> {
+    let database = dir.join("database.db");
+    let layout = rig_pairs::Rig::read(&rig.config, &rig.camera_params)?;
+    if stage == RIG_PROBE_MATCHER {
+        let probes = rig_pairs::write_probe(&database, &layout, &dir.join(RIG_PROBE_PAIRS))?;
+        let queries = rig_pairs::write_loop_queries(&database, &dir.join(RIG_LOOP_QUERIES))?;
+        eprintln!("[sfm] rig pairs: probing {probes} same-view pairs; {queries} loop queries");
+    } else {
+        let options = rig.pairs.clone().unwrap_or_default();
+        let s = rig_pairs::write_pairs(&database, &layout, &options, &dir.join(RIG_PAIRS))?;
+        eprintln!("[sfm] rig pairs: {}/{} probed frame rotations fitted (median residual {:.2} deg, {} chain(s)); \
+            {} image pairs over {} frame pairs ({} without a rotation), {} with every view pair",
+            s.rotations_fitted, s.rotations_probed, s.median_residual_deg.unwrap_or(f64::NAN), s.rotation_chains,
+            s.image_pairs, s.frame_pairs, s.frame_pairs_unknown, s.image_pairs_all_views);
+    }
+    Ok(())
+}
+
+/// The rig-aware matching stages ([`rig_pairs`]): a probe of same-view pairs, vocabulary-tree loop
+/// retrieval (with a tree), then the overlapping view pairs. The pair lists are written from the
+/// database just before each matcher runs (see [`reconstruct_once`]). Rig verification runs once,
+/// in the last matcher, over every matched frame pair.
+fn rig_pair_stages(opts: &ReconstructOptions, extract: StageCommand, mapper: StageCommand, rig_pairs: &RigPairs) -> Vec<StageCommand> {
+    let database = opts.output_dir.join("database.db");
+    let rig = opts.rig.as_ref().expect("rig pairs need a rig");
+    let mut configure = StageCommand::new(opts, "rig_configurator");
+    configure.option("database_path", &database);
+    configure.option("rig_config_path", &rig.config);
+    let matcher = |name: &str, program: &str, rig_verification: bool| {
+        let mut m = StageCommand::new(opts, name);
+        m.args = vec![program.into()];
+        m.option("database_path", &database);
+        m.number("FeatureMatching.use_gpu", u8::from(opts.use_gpu));
+        m.number("FeatureMatching.num_threads", opts.num_threads);
+        m.number("FeatureMatching.guided_matching", u8::from(opts.guided_matching));
+        m.number("TwoViewGeometry.random_seed", 0);
+        m.number("TwoViewGeometry.max_num_trials", opts.ransac_max_trials);
+        m.number("FeatureMatching.rig_verification", u8::from(rig_verification));
+        // Pairs inside one 360 frame share its centre (no baseline).
+        m.number("FeatureMatching.skip_image_pairs_in_same_frame", 1);
+        m
+    };
+    let mut probe = matcher(RIG_PROBE_MATCHER, "matches_importer", false);
+    probe.option("match_list_path", opts.output_dir.join(RIG_PROBE_PAIRS));
+    probe.option("match_type", "pairs");
+    let mut stages = vec![extract, configure, probe];
+    if let Some(tree) = &opts.vocab_tree {
+        let mut lp = matcher(RIG_LOOP_MATCHER, "vocab_tree_matcher", false);
+        lp.option("VocabTreeMatching.vocab_tree_path", tree);
+        lp.option("VocabTreeMatching.match_list_path", opts.output_dir.join(RIG_LOOP_QUERIES));
+        // The sequential matcher's loop detection: 50 retrieved images per query, one nearest
+        // visual word per feature.
+        lp.number("VocabTreeMatching.num_images", 50);
+        lp.number("VocabTreeMatching.num_nearest_neighbors", 1);
+        lp.number("VocabTreeMatching.max_num_features", rig_pairs.loop_features);
+        stages.push(lp);
+    }
+    let mut pairs = matcher(RIG_PAIR_MATCHER, "matches_importer", true);
+    pairs.option("match_list_path", opts.output_dir.join(RIG_PAIRS));
+    pairs.option("match_type", "pairs");
+    stages.push(pairs);
+    stages.push(mapper);
+    with_log_target(stages)
+}
+
+/// Rig-aware matching's stage names (each COLMAP's `matches_importer` or `vocab_tree_matcher`) and
+/// the lists they read from the attempt directory.
+pub const RIG_PROBE_MATCHER: &str = "rig_probe_matcher";
+pub const RIG_LOOP_MATCHER: &str = "rig_loop_matcher";
+pub const RIG_PAIR_MATCHER: &str = "rig_pair_matcher";
+const RIG_PROBE_PAIRS: &str = "rig_probe_pairs.txt";
+const RIG_LOOP_QUERIES: &str = "rig_loop_queries.txt";
+const RIG_PAIRS: &str = "rig_pairs.txt";
 
 #[derive(Debug, Serialize, serde::Deserialize)]
 pub struct StageTiming {
@@ -909,7 +1004,7 @@ fn model_rank(h: &SfmHealth) -> (bool, std::cmp::Reverse<usize>, usize, usize, s
 /// extraction and matching do; both mappers run predominantly (global: entirely) on CPU.
 /// `rig_configurator` only edits the database (no GPU).
 pub fn stage_needs_gpu_lock(stage: &str) -> bool {
-    matches!(stage, "feature_extractor" | "exhaustive_matcher" | "sequential_matcher")
+    matches!(stage, "feature_extractor" | "exhaustive_matcher" | "sequential_matcher" | RIG_PROBE_MATCHER | RIG_LOOP_MATCHER | RIG_PAIR_MATCHER)
 }
 
 /// `opts` for one attempt of the ladder whose options are `base`, named `rung`.
@@ -1099,6 +1194,9 @@ fn reconstruct_once(frames_dir: &Path, opts: &ReconstructOptions) -> Result<Reco
                 let cameras = split_cameras_by_prefix(&opts.output_dir.join("database.db"), &rig_prefixes(&rig.config)?)?;
                 eprintln!("[sfm] rig: one camera per view prefix ({cameras} cameras)");
             }
+        }
+        if let Some(rig) = opts.rig.as_ref().filter(|_| matches!(stage.name.as_str(), RIG_PROBE_MATCHER | RIG_PAIR_MATCHER)) {
+            write_rig_pair_list(&stage.name, rig, &opts.output_dir)?;
         }
         if matches!(stage.name.as_str(), "mapper" | "global_mapper") {
             if let Some(masks) = &opts.late_masks {

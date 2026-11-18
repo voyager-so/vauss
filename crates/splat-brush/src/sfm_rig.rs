@@ -1,5 +1,5 @@
 //! The 360 camera solve: 14 exact pinhole views per frame (splat-core panorama split) as one COLMAP
-//! rig. A short ladder: sequential matching with loop detection, the incremental mapper with fixed
+//! rig. A short ladder: rig-aware matching (splat-sfm rig_pairs) with loop retrieval, the incremental mapper with fixed
 //! intrinsics and rig, one low-angle retry from the same database, then the rig check. None of the
 //! video ladder (keyframes, lens-last, flip retry, focal guard, learned fallbacks) applies: they
 //! assume one camera whose name order is time order.
@@ -49,8 +49,30 @@ pub(crate) fn rig_options(job: &SfmJob, manifest: &Manifest, colmap_dir: &std::p
         config: job.dir.join(panorama::RIG_CONFIG),
         camera_params: format!("{f},{f},{f},{f}"),
         enforce: !job.rig_off,
+        pairs: rig_pairs(),
     });
     opts
+}
+
+/// Rig-aware pairs (splat-sfm rig_pairs) unless SPLAT_PANO_PAIRS=sequential, which matches every
+/// view of each neighbouring frame as before (COLMAP's expand_rig_images). Hidden tuning knobs:
+/// SPLAT_PANO_PAIR_LEVELS (frame offsets 1, 2, 4, ...), SPLAT_PANO_PAIR_MARGIN (degrees), SPLAT_PANO_LOOP_FEATURES.
+fn rig_pairs() -> Option<splat_sfm::RigPairs> {
+    let var = |k: &str| std::env::var(k).ok().filter(|v| !v.is_empty());
+    if var("SPLAT_PANO_PAIRS").as_deref() == Some("sequential") {
+        return None;
+    }
+    let mut pairs = splat_sfm::RigPairs::default();
+    if let Some(levels) = var("SPLAT_PANO_PAIR_LEVELS").and_then(|v| v.parse().ok()).filter(|&l: &usize| (1..=8).contains(&l)) {
+        pairs.levels = levels;
+    }
+    if let Some(margin) = var("SPLAT_PANO_PAIR_MARGIN").and_then(|v| v.parse().ok()).filter(|&m: &f64| (0.0..=90.0).contains(&m)) {
+        pairs.margin_deg = margin;
+    }
+    if let Some(n) = var("SPLAT_PANO_LOOP_FEATURES").and_then(|v| v.parse().ok()).filter(|&n: &usize| n >= 64) {
+        pairs.loop_features = n;
+    }
+    Some(pairs)
 }
 
 fn share(rec: &splat_sfm::Reconstruction) -> f64 {
@@ -78,10 +100,14 @@ pub(crate) fn run_rig_job(job: &SfmJob) -> anyhow::Result<i32> {
     opts.mask_dir = job.mask_dir.as_deref().map(|m| crate::sfm::colmap_masks(m, &images, &images, &feature_masks)).transpose()?;
     println!("[sfm] 360 solve: {} frames x {} views, rig {}", manifest.frames.len(), manifest.views, if job.rig_off { "off" } else { "on" });
     let first = splat_sfm::reconstruct(&images, &opts);
+    // What rig-aware matching chose (splat-sfm rig_pairs), before a retry replaces colmap/.
+    let pairs: Option<serde_json::Value> = std::fs::read(colmap_dir.join("rig_pairs.json")).ok().and_then(|b| serde_json::from_slice(&b).ok());
     let first_share = first.as_ref().map_or(0.0, share);
     let mut retried = None;
     // One low-angle retry from the frozen database when the first solve failed or placed too little.
-    let rec = if first_share < RETRY_BELOW && !splat_sfm::deadline_passed(&opts, "the 360 low-angle retry") {
+    // A first attempt that failed before mapping froze no database: its matches are incomplete.
+    let matched = colmap_dir.join(splat_sfm::FROZEN_DB).is_file();
+    let rec = if first_share < RETRY_BELOW && matched && !splat_sfm::deadline_passed(&opts, "the 360 low-angle retry") {
         match &first {
             Ok(r) => println!("[sfm] 360 solve placed {}/{} views; mapping again at a 4 deg initial pair", r.health.n_registered, r.health.n_input),
             Err(e) => println!("[sfm] 360 solve failed ({e:#}); mapping again at a 4 deg initial pair"),
@@ -144,7 +170,8 @@ pub(crate) fn run_rig_job(job: &SfmJob) -> anyhow::Result<i32> {
     let mut rec_json = serde_json::to_value(&rec)?;
     rec_json["component_sizes"] = json!(components.iter().map(|c| c.1).collect::<Vec<_>>());
     rec_json["panorama"] = json!({"views": manifest.views, "panoramas_registered": registered,
-        "panoramas_input": manifest.frames.len(), "rig": !job.rig_off, "rig_check": rig_check, "low_angle_retry": retried});
+        "panoramas_input": manifest.frames.len(), "rig": !job.rig_off, "rig_check": rig_check, "low_angle_retry": retried,
+        "pairs": pairs});
     write_json(&dir.join("reconstruction.json"), &rec_json)?;
     Ok(0)
 }
@@ -198,6 +225,35 @@ mod tests {
 
     fn render(c: [f64; 3], w: u32, h: u32) -> RgbImage {
         RgbImage::from_fn(w, h, |x, y| image::Rgb(room(c, equirect_dir(x as f64 + 0.5, y as f64 + 0.5, w, h))))
+    }
+
+    /// splat-sfm's rig pairs read splat-core's rig config back as the same layout and ownership.
+    #[test]
+    fn rig_pairs_read_the_split_layout() -> anyhow::Result<()> {
+        let tmp = tempfile::tempdir()?;
+        let config = tmp.path().join(panorama::RIG_CONFIG);
+        std::fs::write(&config, serde_json::to_vec(&panorama::rig_config_json(960))?)?;
+        let rig = splat_sfm::rig_pairs::Rig::read(&config, "480,480,480,480")?;
+        assert_eq!(rig.views.len(), panorama::VIEWS);
+        for (i, v) in rig.views.iter().enumerate() {
+            let m = panorama::cam_from_pano(i);
+            let cols = v.cam_from_rig.to_cols_array_2d();
+            for (r, row) in m.iter().enumerate() {
+                for (c, value) in row.iter().enumerate() {
+                    assert!((cols[c][r] - value).abs() < 1e-9, "view {i} [{r}][{c}]");
+                }
+            }
+            assert_eq!(v.prefix, panorama::Layout::v14().views[i].prefix);
+        }
+        // Same owner as the split's feature masks, over the sphere.
+        for k in 0..2000 {
+            let y = 1.0 - 2.0 * (k as f64 + 0.5) / 2000.0;
+            let t = 2.399963229728653 * k as f64;
+            let r = (1.0 - y * y).sqrt();
+            let d = [r * t.cos(), y, r * t.sin()];
+            assert_eq!(rig.owner(glam::DVec3::from_array(d)), Some(panorama::owner(d)), "{d:?}");
+        }
+        Ok(())
     }
 
     /// Real-COLMAP 360 solve (spec section 7). Skipped, with the reason printed, unless SPLAT_REAL_COLMAP

@@ -174,7 +174,8 @@ records each original filename and index. Video files carry video provenance aut
 Ordinary folders default to `images`; filenames alone never change their calibration assumptions.
 
 360 input (`--camera-model equirect`, or detected under `auto`) splits every frame into 14 exact
-pinhole views and solves them as one COLMAP rig: sequential matching with loop detection, fixed
+pinhole views and solves them as one COLMAP rig: each view is matched with the views of nearby frames
+that look the same way (after each frame's turn is measured), plus loop detection; fixed
 intrinsics, one low-angle retry. It refuses `--trust-poses`, `--pairs exhaustive`, `--preserve-all` and
 the Spirula backend, ignores `--max-edge` (360 frames decode at up to 4096 px wide), and 360 photo folders are read in file-name order. Any other explicit `--camera-model` turns
 360 detection off. `split_panoramas` is the tool behind it (`vauss tool split_panoramas`).
