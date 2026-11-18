@@ -5,7 +5,7 @@ exclude = ["vendor/cubecl-common", "vendor/cubecl-wgpu"]
 
 [workspace.package]
 edition = "2024"
-version = "0.1.26-rc"
+version = "0.1.27-rc"
 license-file = "LICENSE"
 repository = "https://github.com/voyager-so/vauss"
 

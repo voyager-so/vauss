@@ -17,7 +17,7 @@ fn rig_options(dir: &Path, enforce: bool) -> ReconstructOptions {
     opts.ransac_max_trials = 2000;
     opts.init_min_tri_angle = 8.0;
     opts.ba_global_ratio = Some(1.3);
-    opts.rig = Some(RigOptions { config, camera_params: "512,512,512,512".into(), enforce });
+    opts.rig = Some(RigOptions { config, camera_params: "512,512,512,512".into(), enforce, pairs: None });
     opts
 }
 
@@ -204,4 +204,46 @@ fn each_view_prefix_gets_its_own_camera_before_rig_configuration() {
     let tmp_config = tmp.path().join("rig.json");
     std::fs::write(&tmp_config, serde_json::to_vec(&serde_json::json!([{"cameras": [{"image_prefix": "v00_"}, {"image_prefix": "v01_"}]}])).unwrap()).unwrap();
     assert_eq!(splat_sfm::rig_prefixes(&tmp_config).unwrap(), ["v00_", "v01_"]);
+}
+
+#[test]
+fn rig_pairs_probe_retrieve_then_match_overlapping_views_with_rig_verification_last() {
+    let tmp = tempfile::tempdir().unwrap();
+    let mut opts = rig_options(tmp.path(), true);
+    opts.vocab_tree = Some(tmp.path().join("tree.bin"));
+    std::fs::write(tmp.path().join("tree.bin"), b"").unwrap();
+    opts.rig.as_mut().unwrap().pairs = Some(splat_sfm::RigPairs::default());
+    let stages = splat_sfm::commands(tmp.path(), &opts).unwrap();
+    let names: Vec<&str> = stages.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(names, ["feature_extractor", "rig_configurator", "rig_probe_matcher", "rig_loop_matcher", "rig_pair_matcher", "mapper"]);
+    let programs: Vec<String> = stages.iter().map(|s| args(s)[0].clone()).collect();
+    assert_eq!(programs, ["feature_extractor", "rig_configurator", "matches_importer", "vocab_tree_matcher", "matches_importer", "mapper"]);
+    let [_, _, probe, retrieve, pairs, mapper] = &stages[..] else { unreachable!() };
+    let out = tmp.path().join("out");
+    assert_eq!(value(probe, "match_list_path").map(std::path::PathBuf::from), Some(out.join("rig_probe_pairs.txt")));
+    assert_eq!(value(pairs, "match_list_path").map(std::path::PathBuf::from), Some(out.join("rig_pairs.txt")));
+    assert_eq!(value(retrieve, "VocabTreeMatching.match_list_path").map(std::path::PathBuf::from), Some(out.join("rig_loop_queries.txt")));
+    assert_eq!(value(retrieve, "VocabTreeMatching.num_images").as_deref(), Some("50"));
+    assert_eq!(value(retrieve, "VocabTreeMatching.max_num_features").as_deref(), Some("512"));
+    // Rig verification runs once, after every pair is matched.
+    for (stage, rig) in [(probe, "0"), (retrieve, "0"), (pairs, "1")] {
+        assert_eq!(value(stage, "FeatureMatching.rig_verification").as_deref(), Some(rig), "{}", stage.name);
+        assert_eq!(value(stage, "FeatureMatching.skip_image_pairs_in_same_frame").as_deref(), Some("1"), "{}", stage.name);
+        assert_eq!(value(stage, "TwoViewGeometry.max_num_trials").as_deref(), Some("2000"), "{}", stage.name);
+        assert_eq!(value(stage, "SequentialMatching.expand_rig_images"), None);
+    }
+    assert_eq!(value(mapper, "Mapper.ba_refine_sensor_from_rig").as_deref(), Some("0"));
+    for stage in &stages {
+        let keys: Vec<String> = args(stage).into_iter().filter(|a| a.starts_with("--")).collect();
+        let unique: std::collections::BTreeSet<&String> = keys.iter().collect();
+        assert_eq!(unique.len(), keys.len(), "{}: {keys:?}", stage.name);
+        assert_eq!(value(stage, "log_target").as_deref(), Some("stderr"));
+    }
+    // Without a tree there is no retrieval; a reused database maps only.
+    opts.vocab_tree = None;
+    let names: Vec<String> = splat_sfm::commands(tmp.path(), &opts).unwrap().into_iter().map(|s| s.name).collect();
+    assert_eq!(names, ["feature_extractor", "rig_configurator", "rig_probe_matcher", "rig_pair_matcher", "mapper"]);
+    opts.reuse_database = Some(tmp.path().join("frozen.db"));
+    let names: Vec<String> = splat_sfm::reused_stages(splat_sfm::commands(tmp.path(), &opts).unwrap(), &opts).into_iter().map(|s| s.name).collect();
+    assert_eq!(names, ["mapper"]);
 }
